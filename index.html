@@ -1,0 +1,1335 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+  <title>Travel Expense Tracker</title>
+  
+  <!-- Custom "SF" Favicon to replace the Globe icon -->
+  <link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><rect width='100' height='100' rx='20' fill='%232563eb'/><text x='50' y='50' font-family='Arial, sans-serif' font-size='50' font-weight='900' fill='white' text-anchor='middle' dominant-baseline='central'>SF</text></svg>">
+
+  <script src="https://cdn.tailwindcss.com"></script>
+  <style>
+    /* Mobile Touch Scrolling Optimization */
+    .overflow-x-auto {
+      -webkit-overflow-scrolling: touch;
+    }
+
+    /* Styling for Preview Window, Printable PDF Table, & UI Table */
+    #printAreaDetailed table,
+    #printAreaSummary table,
+    #modalContent table,
+    .excel-style-table {
+      font-family: Calibri, 'Segoe UI', Arial, sans-serif !important;
+      font-size: 9pt !important;
+    }
+
+    #printAreaDetailed tr,
+    #printAreaSummary tr,
+    #modalContent tr,
+    .excel-style-table tr {
+      height: 14pt !important;
+      line-height: 1.2 !important;
+    }
+
+    #printAreaDetailed th, #printAreaDetailed td,
+    #printAreaSummary th, #printAreaSummary td,
+    #modalContent th, #modalContent td,
+    .excel-style-table th, .excel-style-table td {
+      font-size: 9pt !important;
+      padding: 4px 6px !important;
+      border: 1px solid #9ca3af !important;
+    }
+
+    #printAreaDetailed th, #printAreaSummary th, #modalContent th {
+      background-color: #f3f4f6 !important;
+    }
+
+    .no-border-table, .no-border-table th, .no-border-table td, .no-border-table tr {
+      border: none !important;
+    }
+
+    /* Print Specific Styles */
+    @media print {
+      body {
+        -webkit-print-color-adjust: exact !important;
+        print-color-adjust: exact !important;
+        background-color: white !important;
+        margin: 0 !important;
+        padding: 10px !important;
+        font-family: Calibri, 'Segoe UI', Arial, sans-serif !important;
+      }
+      .no-print {
+        display: none !important;
+      }
+      .print-active {
+        display: block !important;
+        width: 100% !important;
+      }
+      #printAreaDetailed:not(.print-active),
+      #printAreaSummary:not(.print-active) {
+        display: none !important;
+      }
+      * {
+        box-shadow: none !important;
+        border-radius: 0 !important;
+      }
+      table { border-collapse: collapse !important; }
+      th, td { border: 1px solid #000 !important; }
+      .no-border-table, .no-border-table th, .no-border-table td, .no-border-table tr {
+        border: none !important;
+      }
+    }
+  </style>
+</head>
+<body class="bg-gray-100 font-sans min-h-screen">
+
+  <!-- ========================================== -->
+  <!-- 0. LOGIN PAGE SCREEN                      -->
+  <!-- ========================================== -->
+  <div id="loginScreen" class="min-h-screen flex items-center justify-center p-4 bg-slate-100">
+    <div class="max-w-md w-full bg-white rounded-2xl shadow-xl border border-gray-200 p-6 sm:p-8">
+      
+      <div class="text-center mb-6">
+        <div class="inline-flex items-center justify-center w-16 h-16 bg-blue-600 text-white rounded-2xl font-black text-2xl mb-3 shadow-md">
+          SF
+        </div>
+        <h2 class="text-2xl font-bold text-gray-800">Travel Expense Tracker</h2>
+        <p class="text-xs text-gray-500 mt-1">Please log in to manage your expenses</p>
+      </div>
+
+      <form id="loginForm" onsubmit="handleLogin(event)" class="space-y-4">
+        <div id="loginError" class="hidden p-3 bg-red-50 border border-red-200 text-red-600 text-xs rounded-lg text-center font-semibold">
+          Invalid Username or Password!
+        </div>
+
+        <div>
+          <label class="block text-xs font-bold text-gray-700 mb-1">Username</label>
+          <input 
+            type="text" 
+            id="usernameInput" 
+            required 
+            placeholder="e.g. j.cagang" 
+            class="w-full p-2.5 border rounded-lg text-sm border-gray-300 focus:ring-2 focus:ring-blue-500 focus:outline-none"
+          >
+        </div>
+
+        <div>
+          <label class="block text-xs font-bold text-gray-700 mb-1">Password</label>
+          <input 
+            type="password" 
+            id="passwordInput" 
+            required 
+            placeholder="Enter password" 
+            class="w-full p-2.5 border rounded-lg text-sm border-gray-300 focus:ring-2 focus:ring-blue-500 focus:outline-none"
+          >
+        </div>
+
+        <button 
+          type="submit" 
+          class="w-full bg-blue-600 text-white font-bold py-2.5 rounded-lg hover:bg-blue-700 transition duration-200 text-sm shadow-md"
+        >
+          Sign In 🔑
+        </button>
+      </form>
+    </div>
+  </div>
+
+  
+  <!-- ========================================== -->
+  <!-- MAIN APP DASHBOARD                         -->
+  <!-- ========================================== -->
+  <div id="mainDashboard" class="hidden p-2 sm:p-4 md:p-8">
+    
+    <div class="max-w-7xl mx-auto bg-white rounded-xl shadow-md p-3 sm:p-6 no-print mb-10">
+      
+      <div id="toast" class="hidden fixed top-5 right-5 bg-green-600 text-white px-4 py-2 rounded shadow-lg transition-opacity duration-300 z-50 font-bold text-sm sm:text-base">
+        💾 Progress Saved!
+      </div>
+
+      <!-- Top Utility Bar: Live Date/Time, User Display, Signature PNG, & Logout -->
+      <div class="mb-4 p-2 bg-blue-50/80 rounded-lg border border-blue-100 flex flex-col md:flex-row items-stretch md:items-center justify-between gap-3 text-xs sm:text-sm">
+        
+        <!-- Live Date & Time -->
+        <div class="flex items-center gap-1.5 font-bold text-blue-800 whitespace-nowrap">
+          <span>🕒</span>
+          <span id="liveClockDisplay">Loading Date & Time...</span>
+        </div>
+
+        <!-- Logged-in User Display, Signature PNG, & Logout -->
+        <div class="flex flex-wrap items-center justify-between sm:justify-end gap-3 w-full md:w-auto">
+          
+          <!-- Automatically Displayed User Name -->
+          <div class="flex items-center gap-1.5 bg-blue-100/80 px-2.5 py-1 rounded-md border border-blue-200">
+            <span>👤</span>
+            <span id="loggedInUserDisplay" class="font-bold text-blue-900">Name of Account</span>
+          </div>
+
+          <!-- Signature PNG Upload Button -->
+          <div class="flex items-center gap-1.5">
+            <label class="font-semibold text-gray-700 whitespace-nowrap">Signature PNG:</label>
+            <div class="flex items-center gap-1">
+              <label class="bg-blue-100 text-blue-800 border border-blue-300 text-xs font-bold px-2 py-1.5 rounded cursor-pointer hover:bg-blue-200 transition whitespace-nowrap">
+                ✒️ Upload PNG
+                <input type="file" id="signatureInput" accept="image/png, image/jpeg" class="hidden" onchange="handleSignatureUpload(event)">
+              </label>
+              <button type="button" id="removeSigBtn" onclick="removeSignature()" class="hidden bg-red-100 text-red-700 border border-red-300 text-xs font-bold px-1.5 py-1.5 rounded hover:bg-red-200 transition" title="Remove Signature">✕</button>
+            </div>
+          </div>
+
+          <!-- Logout Button -->
+          <button onclick="handleLogout()" title="Log out" class="bg-red-600 text-white text-xs font-bold px-3 py-1.5 rounded hover:bg-red-700 transition whitespace-nowrap">🚪 Logout</button>
+        </div>
+
+      </div>
+
+      <!-- Header Section: Logo & Action Buttons -->
+      <div class="flex flex-col md:flex-row justify-between items-center mb-4 gap-3">
+        <h1 class="text-xl sm:text-2xl font-bold text-gray-800 text-center md:text-left flex items-center justify-center md:justify-start">
+          <span class="bg-blue-600 text-white px-2 py-0.5 rounded-lg text-lg font-black mr-2 tracking-wide">SF</span> Travel Expense Tracker
+        </h1>
+        
+        <!-- Responsive Action Buttons -->
+        <div class="flex flex-wrap justify-center items-center gap-1.5 sm:gap-2 w-full md:w-auto">
+          <button onclick="savePartialProgress()" title="Save Partial Progress" class="bg-blue-600 text-white text-sm font-bold px-3 py-2 rounded hover:bg-blue-700 flex-1 sm:flex-none text-center">💾 Save</button>
+          <button onclick="openPreviewModal('detailed')" class="bg-purple-600 text-white text-xs sm:text-sm font-bold px-3 py-2 rounded hover:bg-purple-700 flex-1 sm:flex-none text-center">👁️ Preview</button>
+          <button onclick="openPreviewModal('summary')" class="bg-green-600 text-white text-xs sm:text-sm font-bold px-3 py-2 rounded hover:bg-green-700 flex-1 sm:flex-none text-center">🖨️ Print Summary</button>
+          <label class="bg-amber-600 text-white text-xs sm:text-sm font-bold px-3 py-2 rounded hover:bg-amber-700 cursor-pointer flex-1 sm:flex-none text-center">
+            📂 Restore
+            <input type="file" id="importFile" accept=".json" class="hidden" onchange="restoreBackup(event)">
+          </label>
+          <button onclick="resetAllData()" title="Reset All Tracker Data" class="bg-slate-600 text-white text-xs sm:text-sm font-bold px-3 py-2 rounded hover:bg-slate-700 flex-1 sm:flex-none text-center">🔄 Reset</button>
+        </div>
+      </div>
+
+      <!-- Setup Box: Cash Advance & Region(s) -->
+      <div class="mb-4 p-3 bg-blue-50 rounded-lg border border-blue-100 flex flex-col sm:flex-row items-stretch sm:items-center justify-between gap-3">
+        
+        <!-- Cash Advance -->
+        <div class="flex items-center justify-between sm:justify-start gap-2">
+          <label class="text-xs sm:text-sm font-semibold text-gray-700 whitespace-nowrap">Cash Advance:</label>
+          <div class="relative flex items-center">
+            <span class="text-blue-900 font-bold mr-1">₱</span>
+            <input 
+              type="text" 
+              inputmode="decimal"
+              id="cashAdvanceInput" 
+              placeholder="0.00" 
+              class="p-2 border rounded w-36 sm:w-44 font-bold text-blue-900 border-blue-300 text-right focus:outline-none focus:ring-2 focus:ring-blue-500 text-sm bg-white" 
+              oninput="handleCashAdvanceInput(this)" 
+              onfocus="focusCashAdvanceInput(this)" 
+              onblur="blurCashAdvanceInput(this)"
+            >
+          </div>
+        </div>
+
+        <!-- Region(s) -->
+        <div class="flex items-center justify-between sm:justify-start gap-2">
+          <label class="text-xs sm:text-sm font-semibold text-gray-700 whitespace-nowrap">Region(s):</label>
+          <input 
+            type="text" 
+            id="regionNameInput" 
+            placeholder="e.g. Region VII" 
+            class="p-2 border rounded w-full sm:w-56 text-sm font-semibold text-gray-800 border-gray-300 focus:outline-none focus:ring-2 focus:ring-blue-500 bg-white"
+            oninput="handleRegionNameInput(this)"
+          >
+        </div>
+
+      </div>
+
+      <!-- 1.5 Date Range Filter Bar for Reports -->
+      <div class="mb-5 p-3 bg-purple-50 rounded-lg border border-purple-200 flex flex-col sm:flex-row items-stretch sm:items-center justify-between gap-3">
+        <div class="flex items-center gap-2 flex-wrap">
+          <span class="text-xs sm:text-sm font-bold text-purple-900 whitespace-nowrap">📅 Report Date Range:</span>
+          <input type="date" id="filterStartDate" class="p-1.5 border rounded text-xs sm:text-sm border-purple-300 bg-white" onchange="updateTracker()">
+          <span class="text-xs font-bold text-gray-600">to</span>
+          <input type="date" id="filterEndDate" class="p-1.5 border rounded text-xs sm:text-sm border-purple-300 bg-white" onchange="updateTracker()">
+          <button type="button" onclick="clearDateFilter()" class="bg-gray-200 text-gray-700 text-xs px-2.5 py-1.5 rounded font-bold hover:bg-gray-300">Clear Filter</button>
+        </div>
+        <div class="text-[11px] sm:text-xs text-purple-800 italic">
+          * Applies <b>Cash Advance ÷ 2</b> ONLY IF a Date Range is specified.
+        </div>
+      </div>
+
+      <!-- 2. Top Summary Cards Section -->
+      <div class="grid grid-cols-2 sm:grid-cols-4 lg:grid-cols-7 gap-2 mb-5 text-center">
+        <div class="p-2 sm:p-3 bg-purple-50 rounded border border-purple-200">
+          <p class="text-[10px] sm:text-xs text-purple-600 font-semibold">TRANSPO</p>
+          <p id="totalTranspoDisplay" class="text-sm sm:text-base font-bold text-purple-800">₱0.00</p>
+        </div>
+        <div class="p-2 sm:p-3 bg-amber-50 rounded border border-amber-200">
+          <p class="text-[10px] sm:text-xs text-amber-600 font-semibold">MEALS</p>
+          <p id="totalMealsDisplay" class="text-sm sm:text-base font-bold text-amber-800">₱0.00</p>
+        </div>
+        <div class="p-2 sm:p-3 bg-teal-50 rounded border border-teal-200">
+          <p class="text-[10px] sm:text-xs text-teal-600 font-semibold">PER DIEM</p>
+          <p id="totalPerDiemDisplay" class="text-sm sm:text-base font-bold text-teal-800">₱0.00</p>
+        </div>
+        <div class="p-2 sm:p-3 bg-orange-50 rounded border border-orange-200">
+          <p class="text-[10px] sm:text-xs text-orange-600 font-semibold">TERMINAL FEE</p>
+          <p id="totalTerminalFeeDisplay" class="text-sm sm:text-base font-bold text-orange-800">₱0.00</p>
+        </div>
+        <div class="p-2 sm:p-3 bg-indigo-50 rounded border border-indigo-200">
+          <p class="text-[10px] sm:text-xs text-indigo-600 font-semibold">MISC / OTHERS</p>
+          <p id="totalMiscDisplay" class="text-sm sm:text-base font-bold text-indigo-800">₱0.00</p>
+        </div>
+        <div class="p-2 sm:p-3 bg-red-50 rounded border border-red-200">
+          <p class="text-[10px] sm:text-xs text-red-600 font-semibold">TOTAL SPENT</p>
+          <p id="totalSpentDisplay" class="text-sm sm:text-base font-bold text-red-700">₱0.00</p>
+        </div>
+        <div class="p-2 sm:p-3 bg-green-50 rounded border border-green-200 col-span-2 sm:col-span-2 lg:col-span-1">
+          <p class="text-[10px] sm:text-xs text-green-600 font-semibold">REMAINING</p>
+          <p id="remainingDisplay" class="text-sm sm:text-base font-bold text-green-700">₱0.00</p>
+        </div>
+      </div>
+
+      <!-- 3. Add Expense Form -->
+      <form id="expenseForm" class="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-4 gap-3 mb-6 bg-gray-50 p-3 sm:p-4 rounded-lg border">
+        <div>
+          <label class="block text-xs font-semibold text-gray-600 mb-1">Date</label>
+          <input type="date" id="dateInput" required class="p-2.5 sm:p-2 border rounded w-full text-sm">
+        </div>
+        <div>
+          <label class="block text-xs font-semibold text-gray-600 mb-1">Category</label>
+          <select id="category" class="p-2.5 sm:p-2 border rounded w-full text-sm" onchange="handleCategoryChange()">
+            <option value="Transportation">Transportation</option>
+            <option value="Meals">Meals</option>
+            <option value="Per Diem">Per Diem</option>
+            <option value="Terminal Fee">Terminal Fee</option>
+            <option value="Miscellaneous">Miscellaneous</option>
+            <option value="Others">Others</option>
+          </select>
+        </div>
+        <div>
+          <label id="subOptionLabel" class="block text-xs font-semibold text-gray-600 mb-1">Transportation Type</label>
+          <select id="subOptionSelect" class="p-2.5 sm:p-2 border rounded w-full text-sm" onchange="handleSubOptionChange()"></select>
+        </div>
+        <div>
+          <label class="block text-xs font-semibold text-gray-600 mb-1">Description / Particulars</label>
+          <input type="text" id="desc" placeholder="e.g. Hotel to Port" class="p-2.5 sm:p-2 border rounded w-full text-sm">
+        </div>
+        <div>
+          <label id="ticketLabel" class="block text-xs font-semibold text-gray-600 mb-1">Ticket # / Remarks</label>
+          <input type="text" id="ticketNo" placeholder="e.g. w/ luggage, 123, vv" class="p-2.5 sm:p-2 border rounded w-full text-sm">
+        </div>
+        <div>
+          <label id="customInputLabel" class="block text-xs font-semibold text-gray-600 mb-1">Specify Transpo / Category</label>
+          <input type="text" id="customSubtype" placeholder="e.g. Grab, Hotel, Supplies" disabled class="p-2.5 sm:p-2 border rounded w-full bg-gray-200 cursor-not-allowed opacity-50 text-sm">
+        </div>
+        <div>
+          <label class="block text-xs font-semibold text-gray-600 mb-1">Amount (₱)</label>
+          <input type="number" step="any" inputmode="decimal" id="amount" placeholder="0.00" required class="p-2.5 sm:p-2 border rounded w-full text-sm">
+        </div>
+        <div class="flex items-end gap-2">
+          <button type="submit" id="submitBtn" class="bg-blue-600 text-white font-bold p-2.5 sm:p-2 rounded hover:bg-blue-700 w-full text-sm">+ Add Expense</button>
+          <button type="button" id="cancelEditBtn" onclick="cancelEdit()" class="hidden bg-gray-500 text-white font-bold p-2.5 sm:p-2 rounded hover:bg-gray-600 text-sm">Cancel</button>
+        </div>
+      </form>
+
+      <!-- 4. UI Expense List Table -->
+      <div class="overflow-x-auto rounded-lg border border-gray-300">
+        <table class="w-full text-left border-collapse min-w-[600px] excel-style-table">
+          <thead>
+            <tr class="text-gray-800 font-bold bg-gray-100">
+              <th class="w-20 text-center">Date</th>
+              <th class="w-auto whitespace-nowrap">Description</th>
+              <th class="w-24 text-center">Type</th>
+              <th class="w-28 text-center">Ticket / Remarks</th>
+              <th class="w-24 text-center">Transpo (₱)</th>
+              <th class="w-28 text-center">Meals/Per Diem (₱)</th>
+              <th class="w-24 text-center">Total (₱)</th>
+              <th class="w-20 text-center">Action</th>
+            </tr>
+          </thead>
+          <tbody id="uiTableBody">
+          </tbody>
+        </table>
+      </div>
+    </div>
+
+  </div>
+
+
+  <!-- ========================================== -->
+  <!-- PRINT / PREVIEW TEMPLATES                   -->
+  <!-- ========================================== -->
+  <div id="printAreaDetailed" class="hidden font-sans print-active">
+    <h2 class="text-2xl font-bold text-gray-800 mb-6 font-sans">CA Liquidation Preview</h2>
+    <div class="overflow-x-auto mb-6">
+      <table class="w-full text-left border-collapse border border-gray-400">
+        <thead>
+          <tr class="text-gray-800 font-bold bg-gray-100">
+            <th class="text-center w-24">Date</th>
+            <th class="text-left w-auto whitespace-nowrap">Description</th>
+            <th class="text-center w-28">Type</th>
+            <th class="text-center w-32">Ticket # / Remarks</th>
+            <th class="text-center w-28">Transpo / Fee (₱)</th>
+            <th class="text-center w-32">Meals / Per Diem (₱)</th>
+            <th class="text-center w-28">Total (₱)</th>
+          </tr>
+        </thead>
+        <tbody id="printMainTableBodyDetailed"></tbody>
+      </table>
+    </div>
+
+    <div id="miscTableWrapperDetailed" class="overflow-x-auto max-w-2xl mb-8 hidden">
+      <h3 class="font-bold text-base text-gray-800 mb-1">Miscellaneous</h3>
+      <table class="w-full text-left border-collapse border border-gray-400">
+        <thead>
+          <tr class="text-gray-800 font-bold bg-gray-100">
+            <th class="text-center w-28">Date</th>
+            <th class="text-center w-auto whitespace-nowrap">Description</th>
+            <th class="text-center w-28">OR No.</th>
+            <th class="text-center w-32">Amount</th>
+          </tr>
+        </thead>
+        <tbody id="printMiscTableBodyDetailed"></tbody>
+      </table>
+    </div>
+
+    <div class="space-y-10">
+      <div class="w-80">
+        <h3 class="font-bold text-base text-gray-800 mb-1">Summary</h3>
+        <table class="w-full text-left border-collapse border border-gray-400">
+          <tbody>
+            <tr><td class="text-gray-800">Total Transpo</td><td id="detailedTotalTranspo" class="text-right font-medium text-gray-900 w-32">0.00</td></tr>
+            <tr><td class="text-gray-800">Total Meals</td><td id="detailedTotalMeals" class="text-right font-medium text-gray-900 w-32">0.00</td></tr>
+            <tr><td class="text-gray-800">Total Per Diem</td><td id="detailedTotalPerDiem" class="text-right font-medium text-gray-900 w-32">0.00</td></tr>
+            <tr><td class="text-gray-800">Terminal Fee</td><td id="detailedTotalTerminalFee" class="text-right font-medium text-gray-900 w-32">0.00</td></tr>
+            <tr><td class="text-gray-800">Miscellaneous</td><td id="detailedTotalMisc" class="text-right font-medium text-gray-900 w-32">0.00</td></tr>
+            <tr class="bg-gray-100 font-bold"><td class="text-gray-800">TOTAL Expenses</td><td id="detailedTotalExpenses" class="text-right text-gray-900 w-32">0.00</td></tr>
+            <tr><td id="detailedCALabel" class="text-gray-800 font-bold">TOTAL Cash Advance</td><td id="detailedTotalCA" class="text-right font-bold text-gray-900 w-32">0.00</td></tr>
+            <tr class="bg-gray-50 font-bold"><td class="text-gray-800">Amount for Return(Refund)</td><td id="detailedReturnRefund" class="text-right text-gray-900 w-32">0.00</td></tr>
+          </tbody>
+        </table>
+      </div>
+
+      <table class="w-full mt-8 no-border-table" style="border: none !important;">
+        <tr style="border: none !important;">
+          <td style="border: none !important; width: 50%; vertical-align: bottom; padding-right: 40px;">
+            <p class="font-bold text-gray-800 text-sm" style="margin-bottom: 5px;">Submitted by:</p>
+            <div style="height: 45px; display: flex; align-items: flex-end;">
+              <img id="detailedSignatureImg" src="" class="hidden" style="max-height: 45px; max-width: 160px; object-fit: contain; margin-bottom: -5px;" />
+            </div>
+            <p id="detailedAccountName1" class="font-bold text-gray-800 text-sm" style="margin:0; padding:0;">Name of Account</p>
+            <div style="border-top: 1px solid black; width: 100%; margin-top: 2px;"></div>
+            <p class="text-xs text-gray-600 mt-1">Signature over printed name</p>
+          </td>
+          <td style="border: none !important; width: 50%; vertical-align: bottom; padding-left: 40px;">
+            <p class="font-bold text-gray-800 text-sm" style="margin-bottom: 50px;">Checked by:</p>
+            <p class="font-bold text-gray-800 text-sm" style="margin:0; padding:0;">&nbsp;</p>
+            <div style="border-top: 1px solid black; width: 100%; margin-top: 2px;"></div>
+            <p class="text-xs text-gray-600 mt-1">Signature over printed name</p>
+          </td>
+        </tr>
+      </table>
+    </div>
+  </div>
+
+
+  <div id="printAreaSummary" class="hidden font-sans">
+    <h2 class="text-2xl font-bold text-gray-800 mb-2 font-sans">CA Liquidation Report</h2>
+    <div class="mb-5 text-sm font-semibold text-gray-800 space-y-1">
+      <p>Region(s): <span id="printRegionName" class="font-bold underline">N/A</span></p>
+      <p>Date(s): <span id="printDateRange" class="font-bold underline">N/A</span></p>
+    </div>
+
+    <div class="overflow-x-auto mb-8">
+      <table class="w-full max-w-xl text-left border-collapse border border-gray-400">
+        <tbody>
+          <tr><td class="font-bold text-gray-800 w-52">Name of Account</td><td id="printAccountNameMainSummary" class="font-bold text-gray-900">Name of Account</td></tr>
+          <tr><td class="text-gray-800">Total Transpo</td><td id="printTotalTranspoSummary" class="text-right font-medium text-gray-900">0.00</td></tr>
+          <tr><td class="text-gray-800">Total Meals</td><td id="printTotalMealsSummary" class="text-right font-medium text-gray-900">0.00</td></tr>
+          <tr><td class="text-gray-800">Total Per Diem</td><td id="printTotalPerDiemSummary" class="text-right font-medium text-gray-900">0.00</td></tr>
+          <tr><td class="text-gray-800">Terminal Fee</td><td id="printTotalTerminalFeeSummary" class="text-right font-medium text-gray-900">0.00</td></tr>
+          <tr><td class="text-gray-800">Miscellaneous</td><td id="printTotalMiscSummary" class="text-right font-medium text-gray-900">0.00</td></tr>
+          <tr class="bg-gray-100 font-bold"><td class="text-gray-800">Total Expenses</td><td id="printTotalExpensesSummary1" class="text-right text-gray-900">0.00</td></tr>
+          <tr><td id="summaryCALabel1" class="text-gray-800 font-bold">Cash Advance</td><td id="printTotalCASummary1" class="text-right font-bold text-gray-900">0.00</td></tr>
+          <tr class="bg-gray-50 font-bold"><td class="text-gray-800">Amount for Return / Refund</td><td id="printReturnRefundSummary1" class="text-right text-gray-900">0.00</td></tr>
+        </tbody>
+      </table>
+    </div>
+
+    <div class="space-y-10">
+      <div class="w-80">
+        <h3 class="font-bold text-base text-gray-800 mb-1">Summary</h3>
+        <table class="w-full text-left border-collapse border border-gray-400">
+          <tbody>
+            <tr><td class="text-gray-800 font-bold">TOTAL Expenses</td><td id="printSummaryTotalExpenses" class="text-right font-bold text-gray-900 w-32">0.00</td></tr>
+            <tr><td id="summaryCALabel2" class="text-gray-800 font-bold">TOTAL Cash Advance</td><td id="printSummaryTotalCA" class="text-right font-bold text-gray-900 w-32">0.00</td></tr>
+            <tr><td class="text-gray-800 font-bold">Amount for Return(Refund)</td><td id="printSummaryReturnRefund" class="text-right font-bold text-gray-900 w-32">0.00</td></tr>
+          </tbody>
+        </table>
+      </div>
+
+      <table class="w-full mt-8 no-border-table" style="border: none !important;">
+        <tr style="border: none !important;">
+          <td style="border: none !important; width: 50%; vertical-align: bottom; padding-right: 40px;">
+            <p class="font-bold text-gray-800 text-sm" style="margin-bottom: 5px;">Submitted by:</p>
+            <div style="height: 45px; display: flex; align-items: flex-end;">
+              <img id="summarySignatureImg" src="" class="hidden" style="max-height: 45px; max-width: 160px; object-fit: contain; margin-bottom: -5px;" />
+            </div>
+            <p id="printAccountNameSubSummary" class="font-bold text-gray-800 text-sm" style="margin:0; padding:0;">Name of Account</p>
+            <div style="border-top: 1px solid black; width: 100%; margin-top: 2px;"></div>
+            <p class="text-xs text-gray-600 mt-1">Signature over printed name</p>
+          </td>
+          <td style="border: none !important; width: 50%; vertical-align: bottom; padding-left: 40px;">
+            <p class="font-bold text-gray-800 text-sm" style="margin-bottom: 50px;">Checked by:</p>
+            <p class="font-bold text-gray-800 text-sm" style="margin:0; padding:0;">&nbsp;</p>
+            <div style="border-top: 1px solid black; width: 100%; margin-top: 2px;"></div>
+            <p class="text-xs text-gray-600 mt-1">Signature over printed name</p>
+          </td>
+        </tr>
+      </table>
+    </div>
+  </div>
+
+
+  <!-- Dynamic Modal -->
+  <div id="previewModal" class="hidden fixed inset-0 bg-black bg-opacity-50 flex justify-center items-center p-2 sm:p-4 z-50 no-print">
+    <div class="bg-white rounded-md shadow-xl max-w-5xl w-full p-4 sm:p-8 max-h-[95vh] overflow-y-auto">
+      <div class="flex justify-between items-center mb-4">
+        <h2 id="modalTitle" class="text-lg sm:text-2xl font-bold text-gray-800">Preview</h2>
+        <button onclick="closePreviewModal()" class="text-gray-500 hover:text-gray-700 font-bold text-xl sm:text-2xl">✕</button>
+      </div>
+      
+      <div id="modalContent" class="mb-6 border border-gray-200 p-2 sm:p-6 rounded bg-white overflow-x-auto"></div>
+      
+      <div class="flex flex-wrap justify-end gap-2 sm:gap-3">
+        <button onclick="closePreviewModal()" class="bg-gray-500 text-white font-bold px-3 py-2 rounded hover:bg-gray-600 text-xs sm:text-sm flex-1 sm:flex-none">Close</button>
+        <button onclick="window.print()" class="bg-red-600 text-white font-bold px-3 py-2 rounded hover:bg-red-700 text-xs sm:text-sm flex-1 sm:flex-none">📄 Print / Export PDF</button>
+      </div>
+    </div>
+  </div>
+
+  <script>
+    // Enrolled Users Database
+    const USERS_DB = [
+      { username: "m.aca-ac", password: "aca-ac", name: "Michaelfel T. Aca-ac" },
+      { username: "r.duero", password: "duero", name: "Rey John A. Duero" },
+      { username: "s.genobaten", password: "genobaten", name: "Samuel IV F. Genobaten" },
+      { username: "m.nambatac", password: "nambatac", name: "Mario B. Nambatac" },
+      { username: "e.agsoy", password: "agsoy", name: "Eduardo R. Agsoy, Jr." },
+      { username: "n.calasang", password: "calasang", name: "Neil Erick D. Calasang" },
+      { username: "n.salva", password: "salva", name: "Nestor N. Salva" },
+      { username: "e.interone", password: "interone", name: "Edgardo T. Interone" },
+      { username: "l.ugay", password: "ugay", name: "Le Cris L. Ugay" },
+      { username: "a.ortega", password: "ortega", name: "Ace G. Ortega" },
+      { username: "j.cagang", password: "cagang", name: "Jonathan R. Cagang" },
+      { username: "r.cenera", password: "cenera", name: "Ricardo R. Cenera" },
+      { username: "h.entienza", password: "entienza", name: "Hendrix T. Entienza" },
+      { username: "admin", password: "1234", name: "Administrator" }
+    ];
+
+    let currentUsername = sessionStorage.getItem('travel_logged_username') || '';
+    let accountName = sessionStorage.getItem('travel_logged_user_name') || '';
+    let expenses = [];
+    let cashAdvance = 0;
+    let regionName = '';
+    let signatureDataUrl = '';
+    let editingId = null;
+    let fileHandle = null;
+
+    function getStorageKey(keyName) {
+      return currentUsername ? `${keyName}_${currentUsername}` : keyName;
+    }
+
+    function checkAuthStatus() {
+      const isLoggedIn = sessionStorage.getItem('travel_is_logged_in') === 'true';
+      if (isLoggedIn) {
+        document.getElementById('loginScreen').classList.add('hidden');
+        document.getElementById('mainDashboard').classList.remove('hidden');
+        
+        currentUsername = sessionStorage.getItem('travel_logged_username') || '';
+        accountName = sessionStorage.getItem('travel_logged_user_name') || 'User Account';
+        
+        const userDisplay = document.getElementById('loggedInUserDisplay');
+        if (userDisplay) userDisplay.textContent = accountName;
+
+        loadUserData();
+      } else {
+        document.getElementById('loginScreen').classList.remove('hidden');
+        document.getElementById('mainDashboard').classList.add('hidden');
+      }
+    }
+
+    function loadUserData() {
+      expenses = JSON.parse(localStorage.getItem(getStorageKey('travel_expenses_v40'))) || [];
+      cashAdvance = parseFloat(localStorage.getItem(getStorageKey('travel_cash_advance'))) || 0;
+      regionName = localStorage.getItem(getStorageKey('travel_region_name')) || '';
+      signatureDataUrl = localStorage.getItem(getStorageKey('travel_signature_image')) || '';
+
+      const caInputElem = document.getElementById('cashAdvanceInput');
+      if (caInputElem) caInputElem.value = cashAdvance > 0 ? cashAdvance.toLocaleString('en-US', {minimumFractionDigits: 2, maximumFractionDigits: 2}) : '';
+
+      const regInputElem = document.getElementById('regionNameInput');
+      if (regInputElem) regInputElem.value = regionName;
+
+      updateTracker();
+    }
+
+    function handleLogin(event) {
+      event.preventDefault();
+      const user = document.getElementById('usernameInput').value.trim().toLowerCase();
+      const pass = document.getElementById('passwordInput').value.trim();
+      const errorDiv = document.getElementById('loginError');
+
+      const foundUser = USERS_DB.find(u => u.username.toLowerCase() === user && u.password === pass);
+
+      if (foundUser) {
+        sessionStorage.setItem('travel_is_logged_in', 'true');
+        sessionStorage.setItem('travel_logged_username', foundUser.username);
+        sessionStorage.setItem('travel_logged_user_name', foundUser.name);
+        
+        currentUsername = foundUser.username;
+        accountName = foundUser.name;
+
+        errorDiv.classList.add('hidden');
+        document.getElementById('usernameInput').value = '';
+        document.getElementById('passwordInput').value = '';
+        checkAuthStatus();
+      } else {
+        errorDiv.classList.remove('hidden');
+      }
+    }
+
+    function handleLogout() {
+      if (confirm("Are you sure you want to log out?")) {
+        sessionStorage.removeItem('travel_is_logged_in');
+        sessionStorage.removeItem('travel_logged_username');
+        sessionStorage.removeItem('travel_logged_user_name');
+        checkAuthStatus();
+      }
+    }
+
+    // Real-Time Live Clock Function
+    function updateLiveClock() {
+      const now = new Date();
+      const options = { year: 'numeric', month: 'short', day: 'numeric', weekday: 'short' };
+      const dateStr = now.toLocaleDateString('en-US', options);
+      const timeStr = now.toLocaleTimeString('en-US', { hour12: true, hour: '2-digit', minute: '2-digit', second: '2-digit' });
+      const clockElem = document.getElementById('liveClockDisplay');
+      if (clockElem) {
+        clockElem.textContent = `${dateStr} | ${timeStr}`;
+      }
+    }
+    setInterval(updateLiveClock, 1000);
+    updateLiveClock();
+
+    setCurrentDateInput();
+
+    function setCurrentDateInput() {
+      document.getElementById('dateInput').valueAsDate = new Date();
+    }
+
+    function clearDateFilter() {
+      document.getElementById('filterStartDate').value = '';
+      document.getElementById('filterEndDate').value = '';
+      updateTracker();
+    }
+
+    function resetAllData() {
+      if (confirm("Are you sure you want to reset your tracker data? This action cannot be undone.")) {
+        expenses = [];
+        cashAdvance = 0;
+        regionName = '';
+        signatureDataUrl = '';
+
+        localStorage.removeItem(getStorageKey('travel_expenses_v40'));
+        localStorage.removeItem(getStorageKey('travel_cash_advance'));
+        localStorage.removeItem(getStorageKey('travel_region_name'));
+        localStorage.removeItem(getStorageKey('travel_signature_image'));
+
+        document.getElementById('cashAdvanceInput').value = '';
+        document.getElementById('regionNameInput').value = '';
+        document.getElementById('signatureInput').value = '';
+        document.getElementById('filterStartDate').value = '';
+        document.getElementById('filterEndDate').value = '';
+
+        if (editingId !== null) cancelEdit();
+
+        setCurrentDateInput();
+        updateTracker();
+
+        const toast = document.getElementById('toast');
+        toast.textContent = '🔄 Tracker Reset Successfully!';
+        toast.classList.remove('hidden');
+        setTimeout(() => toast.classList.add('hidden'), 2500);
+      }
+    }
+
+    function handleSignatureUpload(event) {
+      const file = event.target.files[0];
+      if (!file) return;
+
+      const reader = new FileReader();
+      reader.onload = function(e) {
+        signatureDataUrl = e.target.result;
+        saveDataToStorage();
+        updateTracker();
+      };
+      reader.readAsDataURL(file);
+    }
+
+    function removeSignature() {
+      signatureDataUrl = '';
+      localStorage.removeItem(getStorageKey('travel_signature_image'));
+      document.getElementById('signatureInput').value = '';
+      updateTracker();
+    }
+
+    function handleCashAdvanceInput(elem) {
+      let rawVal = elem.value.replace(/[^0-9.]/g, '');
+      let caVal = parseFloat(rawVal) || 0;
+      cashAdvance = caVal;
+      saveDataToStorage();
+      updateTracker();
+    }
+
+    function handleRegionNameInput(elem) {
+      regionName = elem.value.trim();
+      saveDataToStorage();
+      updateTracker();
+    }
+
+    function focusCashAdvanceInput(elem) {
+      if (cashAdvance > 0) {
+        elem.value = cashAdvance;
+      } else {
+        elem.value = '';
+      }
+    }
+
+    function blurCashAdvanceInput(elem) {
+      if (cashAdvance > 0) {
+        elem.value = cashAdvance.toLocaleString('en-US', {minimumFractionDigits: 2, maximumFractionDigits: 2});
+      } else {
+        elem.value = '';
+      }
+    }
+
+    function formatDateShort(dateStr) {
+      if (!dateStr) return '';
+      const parts = dateStr.split('-');
+      if (parts.length === 3) {
+        const yearShort = parts[0].slice(-2);
+        const m = parseInt(parts[1], 10);
+        return `${m}/${parts[2]}/${yearShort}`;
+      }
+      return dateStr;
+    }
+
+    function formatDateFullYear(dateStr) {
+      if (!dateStr) return '';
+      const parts = dateStr.split('-');
+      if (parts.length === 3) {
+        const m = parseInt(parts[1], 10);
+        return `${m}/${parts[2]}/${parts[0]}`;
+      }
+      return dateStr;
+    }
+
+    function handleCategoryChange() {
+      const category = document.getElementById('category').value;
+      const subOptionLabel = document.getElementById('subOptionLabel');
+      const subOptionSelect = document.getElementById('subOptionSelect');
+      const customInputLabel = document.getElementById('customInputLabel');
+      const customSubtypeInput = document.getElementById('customSubtype');
+      const descInput = document.getElementById('desc');
+      const ticketLabel = document.getElementById('ticketLabel');
+      const ticketInput = document.getElementById('ticketNo');
+      const amountInput = document.getElementById('amount');
+
+      subOptionSelect.innerHTML = '';
+      subOptionSelect.disabled = false;
+      subOptionSelect.classList.remove('bg-gray-200', 'cursor-not-allowed', 'opacity-50');
+
+      descInput.disabled = false;
+      descInput.classList.remove('bg-gray-200', 'cursor-not-allowed', 'opacity-50');
+
+      ticketInput.disabled = false;
+      ticketInput.classList.remove('bg-gray-200', 'cursor-not-allowed', 'opacity-50');
+
+      customSubtypeInput.disabled = true;
+      customSubtypeInput.classList.add('bg-gray-200', 'cursor-not-allowed', 'opacity-50');
+      customSubtypeInput.value = '';
+      customInputLabel.textContent = 'Specify Transpo / Category';
+      ticketLabel.textContent = 'Ticket # / Remarks';
+
+      if (category === 'Transportation') {
+        subOptionLabel.textContent = 'Transportation Type';
+        ['Boat', 'Bus', 'Jeep', 'Taxi', 'Tricycle', 'Van', 'Others'].forEach(opt => {
+          const o = document.createElement('option'); o.value = opt; o.textContent = opt; subOptionSelect.appendChild(o);
+        });
+        descInput.placeholder = 'e.g. Hotel to Port'; descInput.required = true;
+        ticketInput.placeholder = 'e.g. w/ luggage, 123, vv';
+        if (editingId === null) amountInput.value = '';
+
+      } else if (category === 'Meals') {
+        subOptionLabel.textContent = 'Meals Rate (₱)';
+        [{v: '150', t: '₱150'}, {v: '300', t: '₱300'}, {v: '450', t: '₱450'}, {v: '600', t: '₱600'}].forEach(opt => {
+          const o = document.createElement('option'); o.value = opt.v; o.textContent = opt.t; subOptionSelect.appendChild(o);
+        });
+        descInput.disabled = true; descInput.classList.add('bg-gray-200', 'cursor-not-allowed', 'opacity-50'); descInput.value = ''; descInput.required = false;
+        ticketInput.disabled = true; ticketInput.classList.add('bg-gray-200', 'cursor-not-allowed', 'opacity-50'); ticketInput.value = '';
+        if (editingId === null) amountInput.value = subOptionSelect.value;
+
+      } else if (category === 'Per Diem') {
+        subOptionLabel.textContent = 'Per Diem Rate (₱)';
+        [{v: '1500', t: '₱1,500'}, {v: '1300', t: '₱1,300'}, {v: '2000', t: '₱2,000'}].forEach(opt => {
+          const o = document.createElement('option'); o.value = opt.v; o.textContent = opt.t; subOptionSelect.appendChild(o);
+        });
+        descInput.disabled = true; descInput.classList.add('bg-gray-200', 'cursor-not-allowed', 'opacity-50'); descInput.value = ''; descInput.required = false;
+        ticketInput.disabled = true; ticketInput.classList.add('bg-gray-200', 'cursor-not-allowed', 'opacity-50'); ticketInput.value = '';
+        if (editingId === null) amountInput.value = subOptionSelect.value;
+
+      } else if (category === 'Terminal Fee') {
+        subOptionLabel.textContent = 'Option (N/A)';
+        const o = document.createElement('option'); o.value = 'N/A'; o.textContent = 'N/A'; subOptionSelect.appendChild(o);
+        subOptionSelect.disabled = true; subOptionSelect.classList.add('bg-gray-200', 'cursor-not-allowed', 'opacity-50');
+        descInput.disabled = true; descInput.classList.add('bg-gray-200', 'cursor-not-allowed', 'opacity-50'); descInput.value = ''; descInput.required = false;
+        ticketInput.placeholder = 'Optional Ticket / Receipt #';
+        if (editingId === null) amountInput.value = '';
+
+      } else if (category === 'Miscellaneous') {
+        subOptionLabel.textContent = 'Option (N/A)';
+        const o = document.createElement('option'); o.value = 'N/A'; o.textContent = 'N/A'; subOptionSelect.appendChild(o);
+        subOptionSelect.disabled = true; subOptionSelect.classList.add('bg-gray-200', 'cursor-not-allowed', 'opacity-50');
+        descInput.placeholder = 'e.g. Laundry, Supplies'; descInput.required = true;
+        ticketLabel.textContent = 'OR No. / Receipt #'; ticketInput.placeholder = 'Optional OR No.';
+        if (editingId === null) amountInput.value = '';
+
+      } else if (category === 'Others') {
+        subOptionLabel.textContent = 'Option (N/A)';
+        const o = document.createElement('option'); o.value = 'N/A'; o.textContent = 'N/A'; subOptionSelect.appendChild(o);
+        subOptionSelect.disabled = true; subOptionSelect.classList.add('bg-gray-200', 'cursor-not-allowed', 'opacity-50');
+        customInputLabel.textContent = 'Specify Category Name';
+        customSubtypeInput.disabled = false; customSubtypeInput.classList.remove('bg-gray-200', 'cursor-not-allowed', 'opacity-50');
+        customSubtypeInput.placeholder = 'e.g. Hotel, Flight'; customSubtypeInput.required = true;
+        descInput.placeholder = 'Particulars / Details'; descInput.required = true;
+        ticketInput.placeholder = 'Optional Receipt # / Remarks';
+        if (editingId === null) amountInput.value = '';
+      }
+    }
+
+    function handleSubOptionChange() {
+      const category = document.getElementById('category').value;
+      const subOptionSelect = document.getElementById('subOptionSelect');
+      const customSubtypeInput = document.getElementById('customSubtype');
+      const customInputLabel = document.getElementById('customInputLabel');
+      const amountInput = document.getElementById('amount');
+
+      if (category === 'Transportation') {
+        if (subOptionSelect.value === 'Others') {
+          customInputLabel.textContent = 'Specify Transpo Type';
+          customSubtypeInput.disabled = false; customSubtypeInput.classList.remove('bg-gray-200', 'cursor-not-allowed', 'opacity-50');
+          customSubtypeInput.placeholder = 'e.g. Grab, Habal-habal'; customSubtypeInput.focus();
+        } else {
+          customSubtypeInput.disabled = true; customSubtypeInput.classList.add('bg-gray-200', 'cursor-not-allowed', 'opacity-50'); customSubtypeInput.value = '';
+        }
+      } else if (category === 'Meals' || category === 'Per Diem') {
+        amountInput.value = subOptionSelect.value;
+      }
+    }
+
+    document.getElementById('expenseForm').addEventListener('submit', function(e) {
+      e.preventDefault();
+      const date = document.getElementById('dateInput').value;
+      const category = document.getElementById('category').value;
+      const subOptionSelect = document.getElementById('subOptionSelect');
+      
+      let selectedSubType = '';
+      let customSubtypeVal = '';
+
+      if (category === 'Transportation') {
+        selectedSubType = subOptionSelect.value;
+        if (selectedSubType === 'Others') {
+          customSubtypeVal = document.getElementById('customSubtype').value.trim();
+        }
+      } else if (category === 'Others') {
+        customSubtypeVal = document.getElementById('customSubtype').value.trim();
+      }
+
+      const rawTicket = document.getElementById('ticketNo').value.trim();
+      let desc = document.getElementById('desc').value.trim();
+      const amount = parseFloat(document.getElementById('amount').value);
+
+      if (editingId !== null) {
+        const index = expenses.findIndex(item => item.id === editingId);
+        if (index !== -1) {
+          expenses[index] = { id: editingId, date, mainCategory: category, subType: selectedSubType, customSubtype: customSubtypeVal, ticketNo: rawTicket, desc, amount };
+        }
+        cancelEdit();
+      } else {
+        expenses.push({ id: Date.now(), date, mainCategory: category, subType: selectedSubType, customSubtype: customSubtypeVal, ticketNo: rawTicket, desc, amount });
+        resetForm();
+      }
+
+      saveDataToStorage();
+      updateTracker();
+    });
+
+    async function savePartialProgress() {
+      saveDataToStorage();
+      
+      const dataStr = JSON.stringify({
+        cashAdvance: cashAdvance,
+        accountName: accountName,
+        regionName: regionName,
+        signatureDataUrl: signatureDataUrl,
+        expenses: expenses
+      }, null, 2);
+
+      try {
+        if (!window.showSaveFilePicker) {
+          downloadBackup();
+          return;
+        }
+
+        if (!fileHandle) {
+          fileHandle = await window.showSaveFilePicker({
+            suggestedName: `travel_tracker_${currentUsername || 'backup'}_${new Date().toISOString().slice(0,10)}.json`,
+            types: [{
+              description: 'JSON Backup File',
+              accept: {'application/json': ['.json']},
+            }],
+          });
+        }
+
+        const writable = await fileHandle.createWritable();
+        await writable.write(dataStr);
+        await writable.close();
+
+        const toast = document.getElementById('toast');
+        toast.textContent = '💾 Progress Saved!';
+        toast.classList.remove('hidden');
+        setTimeout(() => toast.classList.add('hidden'), 2500);
+
+      } catch (error) {
+        console.error("Failed to save or cancelled by user:", error);
+      }
+    }
+
+    function saveDataToStorage() {
+      if (!currentUsername) return;
+      localStorage.setItem(getStorageKey('travel_expenses_v40'), JSON.stringify(expenses));
+      localStorage.setItem(getStorageKey('travel_cash_advance'), cashAdvance);
+      localStorage.setItem(getStorageKey('travel_region_name'), regionName);
+      if (signatureDataUrl) {
+        localStorage.setItem(getStorageKey('travel_signature_image'), signatureDataUrl);
+      } else {
+        localStorage.removeItem(getStorageKey('travel_signature_image'));
+      }
+    }
+
+    function editExpense(id) {
+      const item = expenses.find(e => e.id === id);
+      if (!item) return;
+
+      editingId = id;
+      document.getElementById('dateInput').value = item.date;
+      document.getElementById('category').value = item.mainCategory || 'Transportation';
+      
+      handleCategoryChange();
+
+      if (item.mainCategory === 'Transportation') {
+        document.getElementById('subOptionSelect').value = item.subType || 'Boat';
+        handleSubOptionChange();
+        if (item.subType === 'Others') {
+          document.getElementById('customSubtype').value = item.customSubtype || '';
+        }
+      } else if (item.mainCategory === 'Others') {
+        document.getElementById('customSubtype').value = item.customSubtype || '';
+      } else if (item.mainCategory === 'Meals' || item.mainCategory === 'Per Diem') {
+        document.getElementById('subOptionSelect').value = item.amount;
+      }
+
+      document.getElementById('ticketNo').value = item.ticketNo || '';
+      document.getElementById('desc').value = item.desc || '';
+      document.getElementById('amount').value = item.amount;
+
+      const submitBtn = document.getElementById('submitBtn');
+      submitBtn.textContent = '✏️ Save';
+      submitBtn.className = 'bg-green-600 text-white font-bold p-2.5 sm:p-2 rounded hover:bg-green-700 w-full text-sm';
+      document.getElementById('cancelEditBtn').classList.remove('hidden');
+    }
+
+    function cancelEdit() {
+      editingId = null;
+      const submitBtn = document.getElementById('submitBtn');
+      submitBtn.textContent = '+ Add Expense';
+      submitBtn.className = 'bg-blue-600 text-white font-bold p-2.5 sm:p-2 rounded hover:bg-blue-700 w-full text-sm';
+      document.getElementById('cancelEditBtn').classList.add('hidden');
+      resetForm();
+    }
+
+    function resetForm() {
+      document.getElementById('desc').value = '';
+      document.getElementById('amount').value = '';
+      document.getElementById('ticketNo').value = '';
+      document.getElementById('customSubtype').value = '';
+      setCurrentDateInput();
+      handleCategoryChange();
+    }
+
+    function deleteExpense(id) {
+      expenses = expenses.filter(item => item.id !== id);
+      saveDataToStorage();
+      if (editingId === id) cancelEdit();
+      updateTracker();
+    }
+
+    function formatNum(val) {
+      if (val === 0 || !val) return '';
+      return val.toLocaleString('en-US', {minimumFractionDigits: 2, maximumFractionDigits: 2});
+    }
+
+    function formatCurrency(val) {
+      return '₱' + val.toLocaleString('en-US', {minimumFractionDigits: 2, maximumFractionDigits: 2});
+    }
+
+    function updateTracker() {
+      saveDataToStorage();
+
+      const tbodyUI = document.getElementById('uiTableBody');
+      const tbodyPrintMainDetailed = document.getElementById('printMainTableBodyDetailed');
+      const tbodyPrintMiscDetailed = document.getElementById('printMiscTableBodyDetailed');
+      
+      tbodyUI.innerHTML = '';
+      tbodyPrintMainDetailed.innerHTML = '';
+      tbodyPrintMiscDetailed.innerHTML = '';
+
+      let totalTranspo = 0, totalMeals = 0, totalPerDiem = 0, totalTerminalFee = 0, totalMisc = 0;
+
+      // Filter Range for Reports
+      const startDate = document.getElementById('filterStartDate').value;
+      const endDate = document.getElementById('filterEndDate').value;
+
+      expenses.forEach(item => {
+        if (item.mainCategory === 'Transportation') totalTranspo += item.amount;
+        else if (item.mainCategory === 'Terminal Fee') totalTerminalFee += item.amount;
+        else if (item.mainCategory === 'Miscellaneous' || item.mainCategory === 'Others') totalMisc += item.amount;
+        else if (item.mainCategory === 'Meals') totalMeals += item.amount;
+        else if (item.mainCategory === 'Per Diem') totalPerDiem += item.amount;
+      });
+
+      function renderMainTable(tbody, itemsList, isPrint) {
+        const grouped = {};
+        itemsList.forEach(item => {
+          if (!grouped[item.date]) grouped[item.date] = [];
+          grouped[item.date].push(item);
+        });
+
+        const sortedDates = Object.keys(grouped).sort((a, b) => new Date(a) - new Date(b));
+
+        sortedDates.forEach(date => {
+          const items = grouped[date];
+
+          items.sort((a, b) => {
+            const getRank = (cat) => {
+              if (cat === 'Meals') return 2;
+              if (cat === 'Per Diem') return 3;
+              return 1;
+            };
+            return getRank(a.mainCategory) - getRank(b.mainCategory);
+          });
+
+          let dayTranspoFee = 0;
+          let dayMealsPerDiem = 0;
+
+          items.forEach((item, index) => {
+            let typeDisplay = '';
+            let descDisplay = item.desc || '';
+            let isTranspoFee = false;
+            let isMealsPerDiem = false;
+
+            if (item.mainCategory === 'Transportation') {
+              isTranspoFee = true;
+              typeDisplay = item.subType === 'Others' ? (item.customSubtype || 'Others') : item.subType;
+            } else if (item.mainCategory === 'Terminal Fee') {
+              isTranspoFee = true;
+              typeDisplay = 'Terminal Fee';
+              if (!descDisplay) descDisplay = 'Terminal Fee';
+            } else if (item.mainCategory === 'Miscellaneous') {
+              isTranspoFee = true;
+              typeDisplay = 'Misc';
+            } else if (item.mainCategory === 'Others') {
+              isTranspoFee = true;
+              typeDisplay = item.customSubtype || 'Others';
+            } else if (item.mainCategory === 'Meals') {
+              isMealsPerDiem = true;
+              typeDisplay = 'Meals';
+              if (!descDisplay) descDisplay = 'Meals Allowance';
+            } else if (item.mainCategory === 'Per Diem') {
+              isMealsPerDiem = true;
+              typeDisplay = 'Per Diem';
+              if (!descDisplay) descDisplay = 'Per Diem Allowance';
+            }
+
+            const transpoAmt = isTranspoFee ? item.amount : 0;
+            const mealsAmt = isMealsPerDiem ? item.amount : 0;
+            dayTranspoFee += transpoAmt;
+            dayMealsPerDiem += mealsAmt;
+
+            const row = document.createElement('tr');
+            row.className = isPrint ? '' : 'hover:bg-gray-50';
+
+            let dateTd = index === 0 
+              ? `<td class="font-bold text-center" rowspan="${items.length + 1}">${formatDateShort(date)}</td>`
+              : '';
+
+            let actionCol = isPrint ? '' : `
+              <td class="text-center whitespace-nowrap no-print">
+                <button onclick="editExpense(${item.id})" class="text-blue-600 hover:text-blue-800 font-bold mr-2">✏️</button>
+                <button onclick="deleteExpense(${item.id})" class="text-red-500 hover:text-red-700 font-bold">✕</button>
+              </td>`;
+
+            row.innerHTML = `
+              ${dateTd}
+              <td class="text-gray-800 w-auto whitespace-nowrap">${descDisplay}</td>
+              <td class="text-center text-gray-700">${typeDisplay}</td>
+              <td class="text-center text-gray-600">${item.ticketNo || ''}</td>
+              <td class="text-right text-gray-800">${formatNum(transpoAmt)}</td>
+              <td class="text-right text-gray-800">${formatNum(mealsAmt)}</td>
+              <td class="text-right font-bold text-gray-800"></td>
+              ${actionCol}
+            `;
+            tbody.appendChild(row);
+          });
+
+          const subtotalRow = document.createElement('tr');
+          const dayTotal = dayTranspoFee + dayMealsPerDiem;
+          
+          let actionColEmpty = isPrint ? '' : `<td class="text-center no-print"></td>`;
+
+          subtotalRow.innerHTML = `
+            <td></td>
+            <td></td>
+            <td></td>
+            <td class="text-center font-bold text-red-600">subtotal</td>
+            <td class="text-right font-bold text-red-600">${formatNum(dayTranspoFee)}</td>
+            <td class="text-right font-bold text-gray-800">${formatNum(dayMealsPerDiem)}</td>
+            <td class="text-right font-bold text-blue-700">${formatNum(dayTotal)}</td>
+            ${actionColEmpty}
+          `;
+          tbody.appendChild(subtotalRow);
+        });
+      }
+
+      // Filtered List for Reports
+      const filteredReportExpenses = expenses.filter(item => {
+        if (startDate && item.date < startDate) return false;
+        if (endDate && item.date > endDate) return false;
+        return true;
+      });
+
+      // 1. Render Screen UI Table (Shows All)
+      renderMainTable(tbodyUI, expenses, false);
+
+      // 2. Render DETAILED Print Table (Filtered Range)
+      renderMainTable(tbodyPrintMainDetailed, filteredReportExpenses.filter(e => e.mainCategory !== 'Miscellaneous'), true);
+
+      const miscItemsDetailed = filteredReportExpenses.filter(e => e.mainCategory === 'Miscellaneous');
+      miscItemsDetailed.sort((a, b) => new Date(a.date) - new Date(b.date));
+      
+      miscItemsDetailed.forEach(item => {
+        const row = document.createElement('tr');
+        row.innerHTML = `
+          <td class="text-center font-bold text-gray-800">${formatDateFullYear(item.date)}</td>
+          <td class="text-center text-gray-800 w-auto whitespace-nowrap">${item.desc || ''}</td>
+          <td class="text-center text-gray-700">${item.ticketNo || ''}</td>
+          <td class="text-right text-gray-800 font-medium">${formatNum(item.amount)}</td>
+        `;
+        tbodyPrintMiscDetailed.appendChild(row);
+      });
+
+      const miscWrapperDetailed = document.getElementById('miscTableWrapperDetailed');
+      if (miscItemsDetailed.length > 0) {
+        const miscTotalRow = document.createElement('tr');
+        miscTotalRow.innerHTML = `
+          <td></td>
+          <td class="text-center font-bold text-gray-800">Total</td>
+          <td></td>
+          <td class="text-right font-bold text-gray-900">${formatNum(miscItemsDetailed.reduce((acc, i) => acc + i.amount, 0))}</td>
+        `;
+        tbodyPrintMiscDetailed.appendChild(miscTotalRow);
+        miscWrapperDetailed.classList.remove('hidden');
+      } else {
+        miscWrapperDetailed.classList.add('hidden');
+      }
+
+      // 3. Compute Filtered Breakdown for Both Print/Preview Views
+      let rTranspo = 0, rMeals = 0, rPerDiem = 0, rTerminal = 0, rMisc = 0;
+      filteredReportExpenses.forEach(i => {
+        if (i.mainCategory === 'Transportation') rTranspo += i.amount;
+        else if (i.mainCategory === 'Terminal Fee') rTerminal += i.amount;
+        else if (i.mainCategory === 'Meals') rMeals += i.amount;
+        else if (i.mainCategory === 'Per Diem') rPerDiem += i.amount;
+        else if (i.mainCategory === 'Miscellaneous' || i.mainCategory === 'Others') rMisc += i.amount;
+      });
+
+      const reportTotalSpent = rTranspo + rMeals + rPerDiem + rTerminal + rMisc;
+      
+      // Check if Date Range filter is indicated
+      const hasDateRange = (startDate !== '' || endDate !== '');
+      const reportCA = hasDateRange ? (cashAdvance / 2) : cashAdvance;
+      const reportReturnRefund = reportCA - reportTotalSpent;
+
+      // Update Signature Images & Controls
+      const sigImgDetailed = document.getElementById('detailedSignatureImg');
+      const sigImgSummary = document.getElementById('summarySignatureImg');
+      const removeSigBtn = document.getElementById('removeSigBtn');
+
+      if (signatureDataUrl) {
+        if (sigImgDetailed) { sigImgDetailed.src = signatureDataUrl; sigImgDetailed.classList.remove('hidden'); }
+        if (sigImgSummary) { sigImgSummary.src = signatureDataUrl; sigImgSummary.classList.remove('hidden'); }
+        if (removeSigBtn) removeSigBtn.classList.remove('hidden');
+      } else {
+        if (sigImgDetailed) { sigImgDetailed.src = ''; sigImgDetailed.classList.add('hidden'); }
+        if (sigImgSummary) { sigImgSummary.src = ''; sigImgSummary.classList.add('hidden'); }
+        if (removeSigBtn) removeSigBtn.classList.add('hidden');
+      }
+
+      // Update Detailed Preview Box Labels & Values
+      document.getElementById('detailedCALabel').textContent = 'TOTAL Cash Advance';
+      document.getElementById('detailedTotalTranspo').textContent = formatNum(rTranspo);
+      document.getElementById('detailedTotalMeals').textContent = formatNum(rMeals);
+      document.getElementById('detailedTotalPerDiem').textContent = formatNum(rPerDiem);
+      document.getElementById('detailedTotalTerminalFee').textContent = formatNum(rTerminal);
+      document.getElementById('detailedTotalMisc').textContent = formatNum(rMisc);
+
+      document.getElementById('detailedTotalExpenses').textContent = formatNum(reportTotalSpent);
+      document.getElementById('detailedTotalCA').textContent = formatNum(reportCA);
+      document.getElementById('detailedReturnRefund').textContent = formatNum(reportReturnRefund);
+      document.getElementById('detailedAccountName1').textContent = accountName || 'Name of Account';
+
+      // Update Print Summary Region & Dates
+      document.getElementById('printRegionName').textContent = regionName || 'N/A';
+      let dateRangeText = 'N/A';
+      if (startDate || endDate) {
+        dateRangeText = `${formatDateShort(startDate) || 'Start'} - ${formatDateShort(endDate) || 'End'}`;
+      } else if (filteredReportExpenses.length > 0) {
+        const sorted = filteredReportExpenses.map(e => e.date).sort();
+        dateRangeText = `${formatDateShort(sorted[0])} - ${formatDateShort(sorted[sorted.length - 1])}`;
+      }
+      document.getElementById('printDateRange').textContent = dateRangeText;
+
+      // Update Print Summary Breakdown Table
+      document.getElementById('summaryCALabel1').textContent = 'Cash Advance';
+      document.getElementById('summaryCALabel2').textContent = 'TOTAL Cash Advance';
+
+      document.getElementById('printAccountNameMainSummary').textContent = accountName || 'Name of Account';
+      document.getElementById('printTotalTranspoSummary').textContent = formatNum(rTranspo);
+      document.getElementById('printTotalTerminalFeeSummary').textContent = formatNum(rTerminal);
+      document.getElementById('printTotalMealsSummary').textContent = formatNum(rMeals);
+      document.getElementById('printTotalPerDiemSummary').textContent = formatNum(rPerDiem);
+      document.getElementById('printTotalMiscSummary').textContent = formatNum(rMisc);
+
+      document.getElementById('printTotalExpensesSummary1').textContent = formatNum(reportTotalSpent);
+      document.getElementById('printTotalCASummary1').textContent = formatNum(reportCA);
+      document.getElementById('printReturnRefundSummary1').textContent = formatNum(reportReturnRefund);
+
+      // Update Print Summary Bottom Box
+      document.getElementById('printSummaryTotalExpenses').textContent = formatNum(reportTotalSpent);
+      document.getElementById('printSummaryTotalCA').textContent = formatNum(reportCA);
+      document.getElementById('printSummaryReturnRefund').textContent = formatNum(reportReturnRefund);
+      
+      document.getElementById('printAccountNameSubSummary').textContent = accountName || 'Name of Account';
+
+      // Update Top Cards
+      const totalSpent = totalTranspo + totalMeals + totalPerDiem + totalTerminalFee + totalMisc;
+      const returnRefund = cashAdvance - totalSpent;
+      document.getElementById('totalTranspoDisplay').textContent = formatCurrency(totalSpent ? totalTranspo : 0);
+      document.getElementById('totalMealsDisplay').textContent = formatCurrency(totalMeals);
+      document.getElementById('totalPerDiemDisplay').textContent = formatCurrency(totalPerDiem);
+      document.getElementById('totalTerminalFeeDisplay').textContent = formatCurrency(totalTerminalFee);
+      document.getElementById('totalMiscDisplay').textContent = formatCurrency(totalMisc);
+      document.getElementById('totalSpentDisplay').textContent = formatCurrency(totalSpent);
+      
+      const remElem = document.getElementById('remainingDisplay');
+      remElem.textContent = formatCurrency(returnRefund);
+      remElem.className = returnRefund < 0 ? 'text-base font-bold text-red-600' : 'text-base font-bold text-green-600';
+    }
+
+    function openPreviewModal(type) {
+      const modal = document.getElementById('previewModal');
+      const modalContent = document.getElementById('modalContent');
+      const titleElem = document.getElementById('modalTitle');
+      
+      document.getElementById('printAreaDetailed').classList.remove('print-active');
+      document.getElementById('printAreaSummary').classList.remove('print-active');
+
+      let targetId = '';
+      if (type === 'summary') {
+        targetId = 'printAreaSummary';
+        titleElem.textContent = 'Print Summary Preview';
+      } else {
+        targetId = 'printAreaDetailed';
+        titleElem.textContent = 'CA Liquidation Preview';
+      }
+      
+      document.getElementById(targetId).classList.add('print-active');
+
+      const containerClone = document.getElementById(targetId).cloneNode(true);
+      containerClone.classList.remove('hidden');
+      containerClone.classList.add('block');
+      
+      modalContent.innerHTML = '';
+      modalContent.appendChild(containerClone);
+      modal.classList.remove('hidden');
+    }
+
+    function closePreviewModal() {
+      document.getElementById('previewModal').classList.add('hidden');
+    }
+
+    function downloadBackup() {
+      const dataStr = "data:text/json;charset=utf-8," + encodeURIComponent(JSON.stringify({
+        cashAdvance: cashAdvance,
+        accountName: accountName,
+        regionName: regionName,
+        signatureDataUrl: signatureDataUrl,
+        expenses: expenses
+      }, null, 2));
+      const dlAnchorElem = document.createElement('a');
+      dlAnchorElem.setAttribute("href", dataStr);
+      dlAnchorElem.setAttribute("download", `travel_tracker_${currentUsername || 'backup'}_${new Date().toISOString().slice(0,10)}.json`);
+      dlAnchorElem.click();
+    }
+
+    function restoreBackup(event) {
+      const reader = new FileReader();
+      reader.onload = function(e) {
+        try {
+          const data = JSON.parse(e.target.result);
+          if (data.expenses) {
+            expenses = data.expenses;
+            cashAdvance = parseFloat(data.cashAdvance) || 0;
+            regionName = data.regionName || '';
+            signatureDataUrl = data.signatureDataUrl || '';
+            
+            saveDataToStorage();
+
+            const caInputElem = document.getElementById('cashAdvanceInput');
+            if (caInputElem) caInputElem.value = cashAdvance > 0 ? cashAdvance.toLocaleString('en-US', {minimumFractionDigits: 2, maximumFractionDigits: 2}) : '';
+
+            const regInputElem = document.getElementById('regionNameInput');
+            if (regInputElem) regInputElem.value = regionName;
+
+            setCurrentDateInput();
+            updateTracker();
+            alert("Backup data restored successfully!");
+          }
+        } catch (err) {
+          alert("Invalid backup file uploaded.");
+        }
+      };
+      reader.readAsText(event.target.files[0]);
+    }
+
+    // Check Login Status on Load
+    checkAuthStatus();
+    handleCategoryChange();
+  </script>
+</body>
+</html>
