@@ -14,6 +14,7 @@
   <!-- Firebase Compatibility SDKs -->
   <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-app-compat.js"></script>
   <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-database-compat.js"></script>
+  <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-auth-compat.js"></script>
   
   <style>
     .overflow-x-auto { -webkit-overflow-scrolling: touch; }
@@ -103,7 +104,7 @@
         </div>
 
         <div>
-          <label id="loginInputLabel" class="block text-[10px] font-bold uppercase tracking-wider text-slate-600 mb-1">Username</label>
+          <label id="loginInputLabel" class="block text-[10px] font-bold uppercase tracking-wider text-slate-600 mb-1">Username or Email</label>
           <input type="text" id="usernameInput" required placeholder="e.g. r.duero" class="w-full p-2.5 border rounded-xl text-xs border-slate-300 focus:ring-2 focus:ring-indigo-500 focus:outline-none transition">
         </div>
 
@@ -117,10 +118,11 @@
             Sign In
           </button>
 
-          <!-- LOGIN WITH EMAIL TEXT LINK UNDER BUTTON -->
-          <div class="text-center mt-2.5">
-            <button type="button" id="loginToggleLink" onclick="toggleLoginMode()" class="text-[11px] font-semibold text-indigo-600 hover:text-indigo-800 hover:underline transition focus:outline-none">
-              Login with Email
+          <!-- GOOGLE / CHROME EMAIL LOGIN BUTTON -->
+          <div class="text-center mt-3 pt-3 border-t border-slate-100">
+            <button type="button" onclick="handleGoogleLogin()" class="w-full bg-white text-slate-700 border border-slate-300 font-semibold py-2 rounded-xl hover:bg-slate-50 transition text-xs flex items-center justify-center gap-2 shadow-xs">
+              <svg class="w-4 h-4" viewBox="0 0 24 24"><path fill="#4285F4" d="M22.56 12.25c0-.78-.07-1.53-.2-2.25H12v4.26h5.92c-.18 1-.78 1.85-1.63 2.45v2.03h2.64c1.55-1.42 2.43-3.52 2.43-6.49z"/><path fill="#34A853" d="M12 23c2.97 0 5.46-.98 7.28-2.66l-2.64-2.03c-.98.66-2.23 1.06-3.64 1.06-2.86 0-5.29-1.93-6.16-4.53H4.16v2.09C5.97 20.24 8.78 23 12 23z"/><path fill="#FBBC05" d="M5.84 14.84c-.22-.66-.35-1.36-.35-2.09s.13-1.43.35-2.09V8.57H4.16C3.47 10 3 11.64 3 12s.47 2 1.16 3.43l1.68-1.59z"/><path fill="#EA4335" d="M12 5.38c1.62 0 3.06.56 4.21 1.64l3.15-3.15C17.45 2.09 14.97 1 12 1 8.78 1 5.97 3.76 4.16 6.57l1.68 1.59c.87-2.6 3.3-4.53 6.16-4.53z"/></svg>
+              Login with Chrome / Gmail Email
             </button>
           </div>
         </div>
@@ -860,6 +862,84 @@
         link.textContent = 'Login with Email';
       }
       input.value = '';
+    }
+
+    // HANDLE GOOGLE AUTH POPUP / ONE-TAP CHROME LOGIN
+    async function handleGoogleLogin() {
+      if (typeof firebase === 'undefined' || !firebase.auth) {
+        alert("Firebase Auth is preparing. Please try again in a moment.");
+        return;
+      }
+
+      const provider = new firebase.auth.GoogleAuthProvider();
+
+      try {
+        await showLoading("Connecting to Google Account...", 300);
+        const result = await firebase.auth().signInWithPopup(provider);
+        const googleEmail = result.user.email ? result.user.email.toLowerCase() : '';
+
+        if (!googleEmail) {
+          alert("Could not retrieve email from Google Account.");
+          return;
+        }
+
+        // Search in USERS_DB
+        let foundUser = USERS_DB.find(u =>
+          (u.email && u.email.toLowerCase() === googleEmail)
+        );
+
+        // Also check if Admin updated their Email in Realtime Database
+        if (!foundUser && db) {
+          const snap = await db.ref('credentials').once('value');
+          const creds = snap.val() || {};
+          for (let uKey in creds) {
+            if (creds[uKey].email && creds[uKey].email.toLowerCase() === googleEmail) {
+              const match = USERS_DB.find(u => u.username.replace(/[^a-zA-Z0-9]/g, '_') === uKey);
+              if (match) foundUser = match;
+              break;
+            }
+          }
+        }
+
+        if (foundUser) {
+          await showLoading('Google Account Verified! Logging in...', 500);
+
+          let userKey = foundUser.username.replace(/[^a-zA-Z0-9]/g, '_');
+          let dynamicName = foundUser.name;
+          let dynamicDesig = foundUser.designation || 'Audit Specialist';
+          let dynamicEmail = googleEmail;
+
+          if (db) {
+            const snap = await db.ref('credentials/' + userKey).once('value');
+            if (snap.exists()) {
+              const val = snap.val();
+              if (val.name) dynamicName = val.name;
+              if (val.designation) dynamicDesig = val.designation;
+              if (val.email) dynamicEmail = val.email;
+            }
+          }
+
+          sessionStorage.setItem('travel_is_logged_in', 'true');
+          sessionStorage.setItem('travel_logged_username', foundUser.username);
+          sessionStorage.setItem('travel_logged_user_name', dynamicName);
+          sessionStorage.setItem('travel_logged_designation', dynamicDesig);
+          sessionStorage.setItem('travel_logged_email', dynamicEmail);
+
+          currentUsername = foundUser.username;
+          accountName = dynamicName;
+          accountDesignation = dynamicDesig;
+          accountEmail = dynamicEmail;
+
+          checkAuthStatus();
+        } else {
+          alert(`The Google email (${googleEmail}) is not enrolled in the Travel Expense Tracker system! Please contact the Admin.`);
+        }
+      } catch (error) {
+        console.error("Google Auth Error:", error);
+        if (error.code !== 'auth/popup-closed-by-user') {
+          alert("Google Sign-In notice: " + error.message);
+        }
+      }
     }
 
     function toggleUserDropdown(suffix) {
