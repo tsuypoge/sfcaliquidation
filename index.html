@@ -3,7 +3,7 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-  <title>Auditors Expenses</title>
+  <title></title>
 
   <!-- Custom Favicon -->
   <link rel="icon" type="image/png" href="logo.png">
@@ -409,10 +409,11 @@
           <button onclick="openPreviewModal('detailed')" class="bg-indigo-600 text-white text-[11px] font-semibold px-2.5 py-1.5 rounded-lg hover:bg-indigo-700 shadow-xs transition flex-1 sm:flex-none text-center">Preview</button>
           <button onclick="openPreviewModal('combined')" class="bg-slate-900 text-white text-[11px] font-semibold px-2.5 py-1.5 rounded-lg hover:bg-slate-800 shadow-xs transition flex-1 sm:flex-none text-center">Print Summary</button>
 
-          <!-- MANUAL DTR MODAL BUTTON -->
-          <button type="button" onclick="openDtrModal()" id="dtrBtnLabel" class="bg-white text-slate-700 border border-slate-300 text-[11px] font-semibold px-2.5 py-1.5 rounded-lg hover:bg-slate-50 flex-1 sm:flex-none text-center transition flex items-center justify-center gap-1">
+          <!-- MANUAL DTR UPLOAD BUTTON -->
+          <label id="dtrBtnLabel" class="bg-white text-slate-700 border border-slate-300 text-[11px] font-semibold px-2.5 py-1.5 rounded-lg hover:bg-slate-50 cursor-pointer flex-1 sm:flex-none text-center transition flex items-center justify-center gap-1">
             <span id="dtrBtnText">📅 Manual DTR</span>
-          </button>
+            <input type="file" id="dtrFileInput" accept="application/pdf, image/png, image/jpeg" class="hidden" onchange="handleDtrUpload(event)">
+          </label>
 
           <button onclick="toggleArchive()" id="archiveBtn" class="bg-white text-slate-700 border border-slate-300 text-[11px] font-semibold px-2.5 py-1.5 rounded-lg hover:bg-slate-50 transition flex-1 sm:flex-none text-center">Archive</button>
           <button onclick="resetAllData()" title="Reset All Tracker Data" class="bg-rose-50 text-rose-700 border border-rose-200 text-[11px] font-semibold px-2.5 py-1.5 rounded-lg hover:bg-rose-100 transition flex-1 sm:flex-none text-center">Reset</button>
@@ -502,7 +503,7 @@
           <input type="number" step="any" inputmode="decimal" id="amount" placeholder="0.00" required class="p-2 border border-slate-300 rounded-lg w-full text-xs bg-white focus:ring-2 focus:ring-indigo-500 focus:outline-none">
         </div>
 
-        <!-- ATTACH RECEIPT BUTTON IN FORM -->
+        <!-- NEW ATTACH RECEIPT BUTTON IN FORM -->
         <div>
           <label class="block text-[10px] font-bold text-slate-600 uppercase tracking-wider mb-1">Receipt Attachment</label>
           <label id="expenseReceiptBtnLabel" class="w-full bg-white text-slate-700 border border-slate-300 font-semibold p-2 rounded-lg hover:bg-slate-50 cursor-pointer transition flex items-center justify-center gap-1.5 text-xs shadow-xs">
@@ -803,37 +804,6 @@
     </div>
   </div>
 
-  <!-- MANUAL DTR MANAGEMENT MODAL -->
-  <div id="dtrModal" class="hidden fixed inset-0 bg-slate-900/60 backdrop-blur-sm flex justify-center items-center p-4 z-[60] no-print">
-    <div class="bg-white rounded-2xl shadow-2xl max-w-md w-full p-5 sm:p-6 border border-slate-200">
-      <div class="flex justify-between items-center mb-4 border-b border-slate-100 pb-2">
-        <h3 class="text-base font-bold text-slate-900">📅 Manage Manual DTRs</h3>
-        <button onclick="closeDtrModal()" class="text-slate-400 hover:text-slate-600 font-bold text-lg">✕</button>
-      </div>
-
-      <div class="space-y-4 text-xs">
-        <div>
-          <label class="block text-[10px] font-bold uppercase tracking-wider text-slate-600 mb-1">Upload New DTR File(s)</label>
-          <input type="file" id="dtrModalFileInput" accept="application/pdf, image/*" multiple class="hidden" onchange="handleDtrModalUpload(event)">
-          <button type="button" onclick="document.getElementById('dtrModalFileInput').click()" class="w-full bg-indigo-50 border border-indigo-200 text-indigo-700 font-semibold py-2.5 rounded-xl hover:bg-indigo-100 transition flex items-center justify-center gap-2">
-            📤 Upload DTR File(s)
-          </button>
-        </div>
-
-        <div>
-          <p class="text-[10px] font-bold uppercase tracking-wider text-slate-600 mb-1.5">Uploaded DTR Files (Alphabetical Order):</p>
-          <div id="dtrModalFileList" class="space-y-1.5 max-h-48 overflow-y-auto pr-1">
-            <!-- Dynamically populated -->
-          </div>
-        </div>
-
-        <div class="flex justify-end gap-2 pt-2 border-t border-slate-100">
-          <button type="button" onclick="closeDtrModal()" class="bg-slate-900 text-white font-bold px-4 py-1.5 rounded-xl hover:bg-slate-800 transition">Done</button>
-        </div>
-      </div>
-    </div>
-  </div>
-
   <script>
     // Initialize pdf.js worker
     if (typeof pdfjsLib !== 'undefined') {
@@ -887,7 +857,7 @@
     let cashAdvance = 0;
     let regionName = '';
     let signatureDataUrl = '';
-    let dtrFiles = []; // Array of DTR objects: { id, name, data }
+    let dtrPdfDataUrl = '';
     let tempExpenseReceiptDataUrl = '';
     let isArchived = false;
     let editingId = null;
@@ -1151,17 +1121,7 @@
               cashAdvance = found.cashAdvance || 0;
               isArchived = found.isArchived === true;
               expenses = found.expenses || [];
-              
-              // Load dtrFiles array with backward compatibility
-              if (Array.isArray(found.dtrFiles)) {
-                dtrFiles = found.dtrFiles;
-              } else if (found.dtrPdf) {
-                dtrFiles = [{ id: 'legacy_dtr', name: 'Manual DTR.pdf', data: found.dtrPdf }];
-              } else {
-                dtrFiles = [];
-              }
-              sortDtrFiles();
-
+              dtrPdfDataUrl = found.dtrPdf || '';
               updateUIFields();
               showScreen('mainDashboard');
             } else {
@@ -1625,7 +1585,7 @@
         cashAdvance: caVal,
         isArchived: false,
         expenses: [],
-        dtrFiles: []
+        dtrPdf: ''
       };
 
       travels.unshift(newTrv);
@@ -1647,15 +1607,7 @@
       cashAdvance = found.cashAdvance || 0;
       isArchived = found.isArchived === true;
       expenses = found.expenses || [];
-      
-      if (Array.isArray(found.dtrFiles)) {
-        dtrFiles = found.dtrFiles;
-      } else if (found.dtrPdf) {
-        dtrFiles = [{ id: 'legacy_dtr', name: 'Manual DTR.pdf', data: found.dtrPdf }];
-      } else {
-        dtrFiles = [];
-      }
-      sortDtrFiles();
+      dtrPdfDataUrl = found.dtrPdf || '';
 
       showScreen('mainDashboard');
 
@@ -1686,7 +1638,7 @@
         travels[idx].cashAdvance = cashAdvance;
         travels[idx].isArchived = isArchived;
         travels[idx].expenses = expenses;
-        travels[idx].dtrFiles = dtrFiles;
+        travels[idx].dtrPdf = dtrPdfDataUrl;
       }
       saveDataToStorage();
     }
@@ -1748,80 +1700,19 @@
       }
     }
 
-    // MULTIPLE DTR LOGIC & ALPHABETICAL SORTING
-    function sortDtrFiles() {
-      dtrFiles.sort((a, b) => a.name.localeCompare(b.name, undefined, { numeric: true, sensitivity: 'base' }));
-    }
-
-    function openDtrModal() {
-      renderDtrModalFileList();
-      document.getElementById('dtrModal').classList.remove('hidden');
-    }
-
-    function closeDtrModal() {
-      document.getElementById('dtrModal').classList.add('hidden');
-    }
-
-    async function handleDtrModalUpload(event) {
+    // HANDLER FOR MANUAL DTR ATTACHMENT
+    function handleDtrUpload(event) {
       if (isArchived) return;
-      const files = Array.from(event.target.files);
-      if (files.length === 0) return;
+      const file = event.target.files[0];
+      if (!file) return;
 
-      await showLoading("Processing DTR Upload(s)...", 300);
-
-      for (let file of files) {
-        const base64Data = await new Promise((resolve) => {
-          const reader = new FileReader();
-          reader.onload = (e) => resolve(e.target.result);
-          reader.readAsDataURL(file);
-        });
-
-        dtrFiles.push({
-          id: 'dtr_' + Date.now() + '_' + Math.random().toString(36).substr(2, 4),
-          name: file.name,
-          data: base64Data
-        });
-      }
-
-      sortDtrFiles();
-      saveActiveTravelData();
-      updateTracker();
-      renderDtrModalFileList();
-      document.getElementById('dtrModalFileInput').value = '';
-    }
-
-    function removeDtrFile(id) {
-      if (isArchived) return;
-      if (confirm("Remove this DTR file attachment?")) {
-        dtrFiles = dtrFiles.filter(f => f.id !== id);
+      const reader = new FileReader();
+      reader.onload = function(e) {
+        dtrPdfDataUrl = e.target.result;
         saveActiveTravelData();
         updateTracker();
-        renderDtrModalFileList();
-      }
-    }
-
-    function renderDtrModalFileList() {
-      const container = document.getElementById('dtrModalFileList');
-      if (!container) return;
-      container.innerHTML = '';
-
-      if (dtrFiles.length === 0) {
-        container.innerHTML = `<p class="text-slate-400 italic text-[11px] py-2 text-center">No DTR files uploaded yet.</p>`;
-        return;
-      }
-
-      dtrFiles.forEach((fileObj) => {
-        const item = document.createElement('div');
-        item.className = 'flex items-center justify-between p-2 bg-slate-50 border border-slate-200 rounded-lg text-xs';
-        item.innerHTML = `
-          <div class="flex items-center gap-2 overflow-hidden mr-2">
-            <span class="text-indigo-600 font-bold">📄</span>
-            <span class="font-semibold text-slate-800 truncate" title="${fileObj.name}">${fileObj.name}</span>
-          </div>
-          ${!isArchived ? `<button type="button" onclick="removeDtrFile('${fileObj.id}')" class="text-rose-600 hover:text-rose-800 font-bold px-1.5 py-0.5 rounded hover:bg-rose-50 transition" title="Remove DTR">🗑️</button>` : ''}
-        `;
-        container.appendChild(item);
-      });
+      };
+      reader.readAsDataURL(file);
     }
 
     function toggleArchive() {
@@ -1939,7 +1830,7 @@
         expenses = [];
         cashAdvance = 0;
         regionName = '';
-        dtrFiles = [];
+        dtrPdfDataUrl = '';
         tempExpenseReceiptDataUrl = '';
         isArchived = false;
 
@@ -2217,9 +2108,9 @@
       // UPDATE MANUAL DTR ATTACHMENT BUTTON LABEL/BADGE
       const dtrBtnLabel = document.getElementById('dtrBtnLabel');
       const dtrBtnText = document.getElementById('dtrBtnText');
-      if (dtrFiles.length > 0) {
+      if (dtrPdfDataUrl) {
         dtrBtnLabel.className = "bg-emerald-50 text-emerald-700 border border-emerald-300 text-[11px] font-semibold px-2.5 py-1.5 rounded-lg hover:bg-emerald-100 cursor-pointer flex-1 sm:flex-none text-center transition flex items-center justify-center gap-1";
-        dtrBtnText.textContent = `📅 Manual DTR (${dtrFiles.length}) ✓`;
+        dtrBtnText.textContent = "📅 Manual DTR ✓";
       } else {
         dtrBtnLabel.className = "bg-white text-slate-700 border border-slate-300 text-[11px] font-semibold px-2.5 py-1.5 rounded-lg hover:bg-slate-50 cursor-pointer flex-1 sm:flex-none text-center transition flex items-center justify-center gap-1";
         dtrBtnText.textContent = "📅 Manual DTR";
@@ -2504,6 +2395,7 @@
       const itemsWithReceipts = expensesList.filter(e => e.receiptImg);
       if (itemsWithReceipts.length === 0) return;
 
+      // Group into chunks of 4 receipts per page
       for (let i = 0; i < itemsWithReceipts.length; i += 4) {
         const chunk = itemsWithReceipts.slice(i, i + 4);
 
@@ -2542,74 +2434,52 @@
       }
     }
 
-    // HELPER FUNCTION TO RENDER PDF OR IMAGE ATTACHMENTS FOR MANUAL DTR (SORTED ALPHABETICALLY)
-    async function renderDtrAttachmentPages(targetContainer) {
+    // HELPER FUNCTION TO RENDER PDF OR IMAGE ATTACHMENTS FOR MANUAL DTR
+    async function renderAttachmentPages(base64Data, title, targetContainer) {
       if (!targetContainer) return;
       targetContainer.innerHTML = '';
-      if (!dtrFiles || dtrFiles.length === 0) return;
+      if (!base64Data) return;
 
-      sortDtrFiles();
+      if (base64Data.startsWith('data:image/')) {
+        const pageDiv = document.createElement('div');
+        pageDiv.className = 'w-full flex justify-center items-center py-2 page-break';
+        const img = document.createElement('img');
+        img.src = base64Data;
+        img.className = 'attachment-img border border-gray-300 shadow-xs';
+        pageDiv.appendChild(img);
+        targetContainer.appendChild(pageDiv);
+      } else if (base64Data.startsWith('data:application/pdf')) {
+        try {
+          const pdfBase64 = base64Data.split(',')[1];
+          const pdfData = atob(pdfBase64);
+          const loadingTask = pdfjsLib.getDocument({ data: pdfData });
+          const pdf = await loadingTask.promise;
 
-      for (let fileObj of dtrFiles) {
-        const base64Data = fileObj.data;
-        if (!base64Data) continue;
+          for (let pageNum = 1; pageNum <= pdf.numPages; pageNum++) {
+            const page = await pdf.getPage(pageNum);
+            const viewport = page.getViewport({ scale: 1.5 });
 
-        if (base64Data.startsWith('data:image/')) {
-          const pageDiv = document.createElement('div');
-          pageDiv.className = 'w-full flex flex-col justify-center items-center py-2 page-break';
-          
-          const label = document.createElement('p');
-          label.className = 'text-[9pt] font-bold text-gray-700 mb-2 no-print';
-          label.textContent = fileObj.name;
-          pageDiv.appendChild(label);
+            const canvas = document.createElement('canvas');
+            const context = canvas.getContext('2d');
+            canvas.height = viewport.height;
+            canvas.width = viewport.width;
 
-          const img = document.createElement('img');
-          img.src = base64Data;
-          img.className = 'attachment-img border border-gray-300 shadow-xs';
-          pageDiv.appendChild(img);
-          targetContainer.appendChild(pageDiv);
+            await page.render({ canvasContext: context, viewport: viewport }).promise;
 
-        } else if (base64Data.startsWith('data:application/pdf')) {
-          try {
-            const pdfBase64 = base64Data.split(',')[1];
-            const pdfData = atob(pdfBase64);
-            const loadingTask = pdfjsLib.getDocument({ data: pdfData });
-            const pdf = await loadingTask.promise;
-
-            for (let pageNum = 1; pageNum <= pdf.numPages; pageNum++) {
-              const page = await pdf.getPage(pageNum);
-              const viewport = page.getViewport({ scale: 1.5 });
-
-              const canvas = document.createElement('canvas');
-              const context = canvas.getContext('2d');
-              canvas.height = viewport.height;
-              canvas.width = viewport.width;
-
-              await page.render({ canvasContext: context, viewport: viewport }).promise;
-
-              const pageDiv = document.createElement('div');
-              pageDiv.className = 'page-break w-full flex flex-col justify-center items-center py-2';
-              
-              if (pageNum === 1) {
-                const label = document.createElement('p');
-                label.className = 'text-[9pt] font-bold text-gray-700 mb-2 no-print';
-                label.textContent = fileObj.name;
-                pageDiv.appendChild(label);
-              }
-
-              const pageImg = document.createElement('img');
-              pageImg.src = canvas.toDataURL('image/png');
-              pageImg.className = 'attachment-img border border-gray-300 shadow-xs';
-              pageDiv.appendChild(pageImg);
-              targetContainer.appendChild(pageDiv);
-            }
-          } catch (err) {
-            console.error(`Error rendering DTR PDF (${fileObj.name}):`, err);
-            const errDiv = document.createElement('div');
-            errDiv.className = 'text-center text-red-600 text-xs font-bold py-4 page-break';
-            errDiv.textContent = `[Failed to load ${fileObj.name}]`;
-            targetContainer.appendChild(errDiv);
+            const pageDiv = document.createElement('div');
+            pageDiv.className = 'page-break w-full flex justify-center items-center py-2';
+            const pageImg = document.createElement('img');
+            pageImg.src = canvas.toDataURL('image/png');
+            pageImg.className = 'attachment-img border border-gray-300 shadow-xs';
+            pageDiv.appendChild(pageImg);
+            targetContainer.appendChild(pageDiv);
           }
+        } catch (err) {
+          console.error(`Error rendering ${title} PDF:`, err);
+          const errDiv = document.createElement('div');
+          errDiv.className = 'text-center text-red-600 text-xs font-bold py-4 page-break';
+          errDiv.textContent = `[Failed to load ${title} PDF]`;
+          targetContainer.appendChild(errDiv);
         }
       }
     }
@@ -2629,9 +2499,9 @@
       // Render Expense Receipts Grid
       renderExpenseReceiptsGrid(expenses, document.getElementById('printAreaReceiptsContent'));
 
-      // Pre-render Manual DTR Attachments (Alphabetical)
-      if (dtrFiles.length > 0) {
-        await renderDtrAttachmentPages(document.getElementById('printAreaDtrContent'));
+      // Pre-render Manual DTR Attachment
+      if (dtrPdfDataUrl) {
+        await renderAttachmentPages(dtrPdfDataUrl, 'ATTACHED MANUAL DTR', document.getElementById('printAreaDtrContent'));
       } else {
         document.getElementById('printAreaDtrContent').innerHTML = '';
       }
@@ -2683,12 +2553,12 @@
         }
 
         // APPEND ATTACHED MANUAL DTR ON ANOTHER STRICTLY SEPARATE NEW PAGE
-        if (dtrFiles.length > 0) {
+        if (dtrPdfDataUrl) {
           document.getElementById('printAreaDtr').classList.add('print-active', 'page-break');
 
           const separator3 = document.createElement('div');
           separator3.className = 'my-6 border-t-2 border-dashed border-slate-300 text-center py-2 text-slate-400 text-xs font-bold uppercase tracking-wider no-print';
-          separator3.textContent = '--- Page Break (Attached Manual DTR(s) Below) ---';
+          separator3.textContent = '--- Page Break (Attached Manual DTR Below) ---';
           modalContent.appendChild(separator3);
 
           const dtrClone = document.getElementById('printAreaDtr').cloneNode(true);
