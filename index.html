@@ -3,7 +3,7 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-  <title>IAD Liquidation</title>
+  <title></title>
 
   <!-- Custom Favicon -->
   <link rel="icon" type="image/png" href="logo.png">
@@ -840,6 +840,42 @@
       pdfjsLib.GlobalWorkerOptions.workerSrc = 'https://cdnjs.cloudflare.com/ajax/libs/pdf.js/2.16.105/pdf.worker.min.js';
     }
 
+    // AUTOMATIC CANVAS IMAGE COMPRESSOR FUNCTION
+    function compressImageFile(file, maxWidth = 1000, quality = 0.65) {
+      return new Promise((resolve) => {
+        if (!file.type.startsWith('image/')) {
+          resolve(null);
+          return;
+        }
+        const reader = new FileReader();
+        reader.onload = (e) => {
+          const img = new Image();
+          img.onload = () => {
+            const canvas = document.createElement('canvas');
+            let width = img.width;
+            let height = img.height;
+
+            if (width > maxWidth) {
+              height = Math.round((height * maxWidth) / width);
+              width = maxWidth;
+            }
+
+            canvas.width = width;
+            canvas.height = height;
+
+            const ctx = canvas.getContext('2d');
+            ctx.drawImage(img, 0, 0, width, height);
+
+            // Compress to standard JPEG format at quality ~65% (typically 80KB-200KB)
+            const compressedBase64 = canvas.toDataURL('image/jpeg', quality);
+            resolve(compressedBase64);
+          };
+          img.src = e.target.result;
+        };
+        reader.readAsDataURL(file);
+      });
+    }
+
     // FIREBASE REALTIME DATABASE CONFIGURATION
     const firebaseConfig = {
       apiKey: "AIzaSyCBnHO2KzpwLlZ-HpETU2prL-ZBu_p_rD4",
@@ -1136,7 +1172,7 @@
       if (!currentUsername || !db) return;
       const userKey = getSanitizedUsername();
 
-      // Attempt LocalStorage Recovery First
+      // LocalStorage Recovery Backup
       const localBackup = localStorage.getItem('backup_travels_' + userKey);
       if (localBackup) {
         try {
@@ -1152,7 +1188,6 @@
           const val = snapshot.val();
           if (val && val.travels && Array.isArray(val.travels)) {
             travels = val.travels;
-            // Update local backup
             localStorage.setItem('backup_travels_' + userKey, JSON.stringify(travels));
           }
           signatureDataUrl = (val && val.signatureDataUrl) ? val.signatureDataUrl : '';
@@ -1200,14 +1235,14 @@
       if (!currentUsername) return;
       const userKey = getSanitizedUsername();
 
-      // Save to LocalStorage immediately as a hard backup
+      // LocalStorage Hard Backup
       try {
         localStorage.setItem('backup_travels_' + userKey, JSON.stringify(travels));
       } catch(e) {
         console.warn("LocalStorage Backup Warning:", e);
       }
 
-      // Save to Firebase Database
+      // Firebase Sync
       if (db) {
         try {
           db.ref('users/' + userKey).set({
@@ -1725,7 +1760,7 @@
       updateTracker();
     }
 
-    // HANDLER FOR EXPENSE RECEIPT FILE SELECT IN FORM
+    // HANDLER FOR EXPENSE RECEIPT FILE SELECT IN FORM WITH AUTO-COMPRESSION
     async function handleExpenseReceiptSelect(event) {
       if (isArchived) return;
       const file = event.target.files[0];
@@ -1739,22 +1774,18 @@
         return;
       }
 
-      if (statusText) statusText.textContent = 'Receipt Attached ✓';
-      if (btnLabel) btnLabel.className = "w-full bg-emerald-50 text-emerald-700 border border-emerald-300 font-bold p-2 rounded-lg hover:bg-emerald-100 cursor-pointer transition flex items-center justify-center gap-1.5 text-xs shadow-xs";
+      await showLoading("Compressing Image...", 200);
 
       if (file.type.startsWith('image/')) {
-        const reader = new FileReader();
-        reader.onload = function(e) {
-          tempExpenseReceiptDataUrl = e.target.result;
-        };
-        reader.readAsDataURL(file);
+        const compressedBase64 = await compressImageFile(file, 1000, 0.65);
+        tempExpenseReceiptDataUrl = compressedBase64;
       } else if (file.type === 'application/pdf') {
         try {
           const arrayBuffer = await file.arrayBuffer();
           const loadingTask = pdfjsLib.getDocument({ data: arrayBuffer });
           const pdf = await loadingTask.promise;
           const page = await pdf.getPage(1);
-          const viewport = page.getViewport({ scale: 1.5 });
+          const viewport = page.getViewport({ scale: 1.2 });
 
           const canvas = document.createElement('canvas');
           const context = canvas.getContext('2d');
@@ -1762,7 +1793,7 @@
           canvas.width = viewport.width;
 
           await page.render({ canvasContext: context, viewport: viewport }).promise;
-          tempExpenseReceiptDataUrl = canvas.toDataURL('image/png');
+          tempExpenseReceiptDataUrl = canvas.toDataURL('image/jpeg', 0.65);
         } catch(err) {
           console.error("PDF receipt convert error:", err);
           const reader = new FileReader();
@@ -1770,9 +1801,12 @@
           reader.readAsDataURL(file);
         }
       }
+
+      if (statusText) statusText.textContent = 'Receipt Attached ✓';
+      if (btnLabel) btnLabel.className = "w-full bg-emerald-50 text-emerald-700 border border-emerald-300 font-bold p-2 rounded-lg hover:bg-emerald-100 cursor-pointer transition flex items-center justify-center gap-1.5 text-xs shadow-xs";
     }
 
-    // MULTIPLE DTR LOGIC & ALPHABETICAL SORTING
+    // MULTIPLE DTR LOGIC & ALPHABETICAL SORTING WITH COMPRESSION
     function sortDtrFiles() {
       dtrFiles.sort((a, b) => a.name.localeCompare(b.name, undefined, { numeric: true, sensitivity: 'base' }));
     }
@@ -1791,14 +1825,19 @@
       const files = Array.from(event.target.files);
       if (files.length === 0) return;
 
-      await showLoading("Processing DTR Upload(s)...", 300);
+      await showLoading("Compressing & Processing DTR Upload(s)...", 300);
 
       for (let file of files) {
-        const base64Data = await new Promise((resolve) => {
-          const reader = new FileReader();
-          reader.onload = (e) => resolve(e.target.result);
-          reader.readAsDataURL(file);
-        });
+        let base64Data = '';
+        if (file.type.startsWith('image/')) {
+          base64Data = await compressImageFile(file, 1200, 0.7);
+        } else {
+          base64Data = await new Promise((resolve) => {
+            const reader = new FileReader();
+            reader.onload = (e) => resolve(e.target.result);
+            reader.readAsDataURL(file);
+          });
+        }
 
         dtrFiles.push({
           id: 'dtr_' + Date.now() + '_' + Math.random().toString(36).substr(2, 4),
@@ -2353,6 +2392,540 @@
       if (startElem) startElem.value = '';
       if (endElem) endElem.value = '';
       applyModalDateFilter();
+    }
+
+    function updateTracker() {
+      const archiveBtn = document.getElementById('archiveBtn');
+      const statusBadge = document.getElementById('archiveStatusBadge');
+      const formElem = document.getElementById('expenseForm');
+      const caInput = document.getElementById('cashAdvanceInput');
+      const regInput = document.getElementById('regionNameInput');
+      const headerReg = document.getElementById('headerRegionDisplay');
+
+      if (headerReg) headerReg.textContent = regionName || 'Travel';
+
+      if (isArchived) {
+        if (archiveBtn) archiveBtn.textContent = 'Unarchive';
+        if (statusBadge) statusBadge.classList.remove('hidden');
+        if (formElem) {
+          formElem.querySelectorAll('input, select, button').forEach(el => el.disabled = true);
+          formElem.classList.add('opacity-60', 'pointer-events-none');
+        }
+        if (caInput) caInput.disabled = true;
+        if (regInput) regInput.disabled = true;
+      } else {
+        if (archiveBtn) archiveBtn.textContent = 'Archive';
+        if (statusBadge) statusBadge.classList.add('hidden');
+        if (formElem) {
+          formElem.querySelectorAll('input, select, button').forEach(el => el.disabled = false);
+          formElem.classList.remove('opacity-60', 'pointer-events-none');
+        }
+        if (caInput) caInput.disabled = false;
+        if (regInput) regInput.disabled = false;
+        handleCategoryChange();
+      }
+
+      const sigImgDetailed = document.getElementById('detailedSignatureImg');
+      const sigImgSummary = document.getElementById('summarySignatureImg');
+      const sigUploadContainer = document.getElementById('signatureUploadContainer');
+
+      if (signatureDataUrl) {
+        if (sigImgDetailed) { sigImgDetailed.src = signatureDataUrl; sigImgDetailed.classList.remove('hidden'); }
+        if (sigImgSummary) { sigImgSummary.src = signatureDataUrl; sigImgSummary.classList.remove('hidden'); }
+        if (sigUploadContainer) sigUploadContainer.classList.add('hidden');
+      } else {
+        if (sigImgDetailed) { sigImgDetailed.src = ''; sigImgDetailed.classList.add('hidden'); }
+        if (sigImgSummary) { sigImgSummary.src = ''; sigImgSummary.classList.add('hidden'); }
+        if (sigUploadContainer) sigUploadContainer.classList.remove('hidden');
+      }
+
+      // UPDATE MANUAL DTR ATTACHMENT BUTTON LABEL/BADGE
+      const dtrBtnLabel = document.getElementById('dtrBtnLabel');
+      const dtrBtnText = document.getElementById('dtrBtnText');
+      if (dtrFiles.length > 0) {
+        dtrBtnLabel.className = "bg-emerald-50 text-emerald-700 border border-emerald-300 text-[11px] font-semibold px-2.5 py-1.5 rounded-lg hover:bg-emerald-100 cursor-pointer flex-1 sm:flex-none text-center transition flex items-center justify-center gap-1";
+        dtrBtnText.textContent = `📅 Manual DTR (${dtrFiles.length}) ✓`;
+      } else {
+        dtrBtnLabel.className = "bg-white text-slate-700 border border-slate-300 text-[11px] font-semibold px-2.5 py-1.5 rounded-lg hover:bg-slate-50 cursor-pointer flex-1 sm:flex-none text-center transition flex items-center justify-center gap-1";
+        dtrBtnText.textContent = "📅 Manual DTR";
+      }
+
+      const tbodyUI = document.getElementById('uiTableBody');
+      const tbodyPrintMainDetailed = document.getElementById('printMainTableBodyDetailed');
+      const tbodyPrintMiscDetailed = document.getElementById('printMiscTableBodyDetailed');
+      
+      tbodyUI.innerHTML = '';
+      tbodyPrintMainDetailed.innerHTML = '';
+      tbodyPrintMiscDetailed.innerHTML = '';
+
+      let totalTranspo = 0, totalMeals = 0, totalPerDiem = 0, totalTerminalFee = 0, totalMisc = 0;
+
+      const modalStartElem = document.getElementById('modalFilterStartDate');
+      const modalEndElem = document.getElementById('modalFilterEndDate');
+      const startDate = modalStartElem ? modalStartElem.value : '';
+      const endDate = modalEndElem ? modalEndElem.value : '';
+
+      expenses.forEach(item => {
+        if (item.mainCategory === 'Transportation') totalTranspo += item.amount;
+        else if (item.mainCategory === 'Terminal Fee') totalTerminalFee += item.amount;
+        else if (item.mainCategory === 'Miscellaneous' || item.mainCategory === 'Others') totalMisc += item.amount;
+        else if (item.mainCategory === 'Meals') totalMeals += item.amount;
+        else if (item.mainCategory === 'Per Diem') totalPerDiem += item.amount;
+      });
+
+      function renderMainTable(tbody, itemsList, isPrint) {
+        const grouped = {};
+        itemsList.forEach(item => {
+          if (!grouped[item.date]) grouped[item.date] = [];
+          grouped[item.date].push(item);
+        });
+
+        const sortedDates = Object.keys(grouped).sort((a, b) => new Date(a) - new Date(b));
+
+        sortedDates.forEach(date => {
+          const items = grouped[date];
+
+          items.sort((a, b) => {
+            const getRank = (cat) => {
+              if (cat === 'Meals') return 2;
+              if (cat === 'Per Diem') return 3;
+              return 1;
+            };
+            return getRank(a.mainCategory) - getRank(b.mainCategory);
+          });
+
+          let dayTranspoFee = 0;
+          let dayMealsPerDiem = 0;
+
+          items.forEach((item, index) => {
+            let typeDisplay = '';
+            let descDisplay = item.desc || '';
+            let isTranspoFee = false;
+            let isMealsPerDiem = false;
+
+            if (item.mainCategory === 'Transportation') {
+              isTranspoFee = true;
+              typeDisplay = item.subType === 'Others' ? (item.customSubtype || 'Others') : item.subType;
+            } else if (item.mainCategory === 'Terminal Fee') {
+              isTranspoFee = true;
+              typeDisplay = 'Terminal Fee';
+              if (!descDisplay) descDisplay = 'Terminal Fee';
+            } else if (item.mainCategory === 'Miscellaneous') {
+              isTranspoFee = true;
+              typeDisplay = 'Misc';
+            } else if (item.mainCategory === 'Others') {
+              isTranspoFee = true;
+              typeDisplay = item.customSubtype || 'Others';
+            } else if (item.mainCategory === 'Meals') {
+              isMealsPerDiem = true;
+              typeDisplay = 'Meals';
+              if (!descDisplay) descDisplay = 'Meals Allowance';
+            } else if (item.mainCategory === 'Per Diem') {
+              isMealsPerDiem = true;
+              typeDisplay = 'Per Diem';
+              if (!descDisplay) descDisplay = 'Per Diem Allowance';
+            }
+
+            const transpoAmt = isTranspoFee ? item.amount : 0;
+            const mealsAmt = isMealsPerDiem ? item.amount : 0;
+            dayTranspoFee += transpoAmt;
+            dayMealsPerDiem += mealsAmt;
+
+            const row = document.createElement('tr');
+            row.className = isPrint ? '' : 'hover:bg-slate-50/80';
+
+            let dateTd = index === 0 
+              ? `<td class="font-bold text-center" rowspan="${items.length + 1}">${formatDateShort(date)}</td>`
+              : '';
+
+            let receiptTd = isPrint ? '' : `
+              <td class="text-center whitespace-nowrap no-print">
+                ${item.receiptImg ? `<span class="bg-emerald-50 text-emerald-700 border border-emerald-200 px-1.5 py-0.5 rounded font-bold text-[10px]" title="Receipt attached">Attached ✓</span>` : `<span class="text-slate-400 text-[10px]">None</span>`}
+              </td>`;
+
+            let actionCol = isPrint ? '' : `
+              <td class="text-center whitespace-nowrap no-print">
+                ${isArchived 
+                  ? `<span class="text-slate-400 text-xs italic font-medium">Locked</span>` 
+                  : `<button onclick="editExpense(${item.id})" class="text-indigo-600 hover:text-indigo-900 font-semibold mr-2.5">Edit</button>
+                     <button onclick="deleteExpense(${item.id})" class="text-rose-600 hover:text-rose-800 font-semibold">✕</button>`
+                }
+              </td>`;
+
+            row.innerHTML = `
+              ${dateTd}
+              <td class="text-slate-800 w-auto whitespace-nowrap">${descDisplay}</td>
+              <td class="text-center text-slate-700">${typeDisplay}</td>
+              <td class="text-center text-slate-600">${item.ticketNo || ''}</td>
+              <td class="text-right text-slate-800">${formatNum(transpoAmt)}</td>
+              <td class="text-right text-slate-800">${formatNum(mealsAmt)}</td>
+              <td class="text-right font-bold text-slate-800"></td>
+              ${receiptTd}
+              ${actionCol}
+            `;
+            tbody.appendChild(row);
+          });
+
+          const subtotalRow = document.createElement('tr');
+          const dayTotal = dayTranspoFee + dayMealsPerDiem;
+          
+          let actionColEmpty = isPrint ? '' : `<td class="text-center no-print"></td><td class="text-center no-print"></td>`;
+
+          subtotalRow.innerHTML = `
+            <td></td>
+            <td></td>
+            <td class="text-center font-bold text-rose-600">subtotal</td>
+            <td class="text-right font-bold text-rose-600">${formatNum(dayTranspoFee)}</td>
+            <td class="text-right font-bold text-slate-800">${formatNum(dayMealsPerDiem)}</td>
+            <td class="text-right font-bold text-indigo-600">${formatNum(dayTotal)}</td>
+            ${actionColEmpty}
+          `;
+          tbody.appendChild(subtotalRow);
+        });
+      }
+
+      const filteredReportExpenses = expenses.filter(item => {
+        if (startDate && item.date < startDate) return false;
+        if (endDate && item.date > endDate) return false;
+        return true;
+      });
+
+      renderMainTable(tbodyUI, expenses, false);
+      renderMainTable(tbodyPrintMainDetailed, filteredReportExpenses.filter(e => e.mainCategory !== 'Miscellaneous'), true);
+
+      const miscItemsDetailed = filteredReportExpenses.filter(e => e.mainCategory === 'Miscellaneous');
+      miscItemsDetailed.sort((a, b) => new Date(a.date) - new Date(b.date));
+      
+      miscItemsDetailed.forEach(item => {
+        const row = document.createElement('tr');
+        row.innerHTML = `
+          <td class="text-center font-bold text-gray-800">${formatDateFullYear(item.date)}</td>
+          <td class="text-center text-gray-800 w-auto whitespace-nowrap">${item.desc || ''}</td>
+          <td class="text-center text-gray-700">${item.ticketNo || ''}</td>
+          <td class="text-right text-gray-800 font-medium">${formatNum(item.amount)}</td>
+        `;
+        tbodyPrintMiscDetailed.appendChild(row);
+      });
+
+      const miscWrapperDetailed = document.getElementById('miscTableWrapperDetailed');
+      if (miscItemsDetailed.length > 0) {
+        const miscTotalRow = document.createElement('tr');
+        miscTotalRow.innerHTML = `
+          <td></td>
+          <td class="text-center font-bold text-gray-800">Total</td>
+          <td></td>
+          <td class="text-right font-bold text-gray-900">${formatNum(miscItemsDetailed.reduce((acc, i) => acc + i.amount, 0))}</td>
+        `;
+        tbodyPrintMiscDetailed.appendChild(miscTotalRow);
+        miscWrapperDetailed.classList.remove('hidden');
+      } else {
+        miscWrapperDetailed.classList.add('hidden');
+      }
+
+      let rTranspo = 0, rMeals = 0, rPerDiem = 0, rTerminal = 0, rMisc = 0;
+      filteredReportExpenses.forEach(i => {
+        if (i.mainCategory === 'Transportation') rTranspo += i.amount;
+        else if (i.mainCategory === 'Terminal Fee') rTerminal += i.amount;
+        else if (i.mainCategory === 'Meals') rMeals += i.amount;
+        else if (i.mainCategory === 'Per Diem') rPerDiem += i.amount;
+        else if (i.mainCategory === 'Miscellaneous' || i.mainCategory === 'Others') rMisc += i.amount;
+      });
+
+      const reportTotalSpent = rTranspo + rMeals + rPerDiem + rTerminal + rMisc;
+      
+      const hasDateRange = (startDate !== '' || endDate !== '');
+      const reportCA = hasDateRange ? (cashAdvance / 2) : cashAdvance;
+      const reportReturnRefund = reportCA - reportTotalSpent;
+
+      const currentDept = accountDepartment || 'StrikeForce/Fraud Audit-IAD';
+
+      const printDeptElem = document.getElementById('printDepartmentName');
+      const detailedDeptElem = document.getElementById('detailedDepartmentName');
+      if (printDeptElem) printDeptElem.textContent = currentDept;
+      if (detailedDeptElem) detailedDeptElem.textContent = currentDept;
+
+      document.getElementById('detailedCALabel').textContent = 'TOTAL Cash Advance';
+      document.getElementById('detailedTotalTranspo').textContent = formatNum(rTranspo);
+      document.getElementById('detailedTotalMeals').textContent = formatNum(rMeals);
+      document.getElementById('detailedTotalPerDiem').textContent = formatNum(rPerDiem);
+      document.getElementById('detailedTotalTerminalFee').textContent = formatNum(rTerminal);
+      document.getElementById('detailedTotalMisc').textContent = formatNum(rMisc);
+
+      document.getElementById('detailedTotalExpenses').textContent = formatNum(reportTotalSpent);
+      document.getElementById('detailedTotalCA').textContent = formatNum(reportCA);
+      document.getElementById('detailedReturnRefund').textContent = formatNum(reportReturnRefund);
+      
+      document.getElementById('detailedAccountName1').textContent = accountName || 'Name of Account';
+      document.getElementById('detailedAccountDesignation1').textContent = accountDesignation || 'Audit Specialist';
+      
+      const detailedAccountDept1 = document.getElementById('detailedAccountDepartment1');
+      if (detailedAccountDept1) detailedAccountDept1.textContent = accountDepartment || '';
+
+      const currentRegionText = regionName || 'N/A';
+      let dateRangeText = 'N/A';
+      if (startDate || endDate) {
+        dateRangeText = formatDateRangeLong(startDate, endDate);
+      } else if (filteredReportExpenses.length > 0) {
+        const sorted = filteredReportExpenses.map(e => e.date).sort();
+        dateRangeText = formatDateRangeLong(sorted[0], sorted[sorted.length - 1]);
+      }
+
+      document.getElementById('printRegionName').textContent = currentRegionText;
+      document.getElementById('printDateRange').textContent = dateRangeText;
+
+      const detailedRegElem = document.getElementById('detailedRegionName');
+      const detailedDateElem = document.getElementById('detailedDateRange');
+      if (detailedRegElem) detailedRegElem.textContent = currentRegionText;
+      if (detailedDateElem) detailedDateElem.textContent = dateRangeText;
+
+      const summaryCALabel2 = document.getElementById('summaryCALabel2');
+      if (summaryCALabel2) summaryCALabel2.textContent = 'TOTAL Cash Advance';
+
+      document.getElementById('printAccountNameMainSummary').textContent = accountName || 'Name of Account';
+      document.getElementById('printTotalTranspoSummary').textContent = formatNum(rTranspo);
+      document.getElementById('printTotalMealsSummary').textContent = formatNum(rMeals);
+      document.getElementById('printTotalPerDiemSummary').textContent = formatNum(rPerDiem);
+      document.getElementById('printTotalTerminalFeeSummary').textContent = formatNum(rTerminal);
+      document.getElementById('printTotalMiscSummary').textContent = formatNum(rMisc);
+
+      document.getElementById('printTotalExpensesSummary1').textContent = formatNum(reportTotalSpent);
+
+      document.getElementById('printSummaryTotalExpenses').textContent = formatNum(reportTotalSpent);
+      document.getElementById('printSummaryTotalCA').textContent = formatNum(reportCA);
+      document.getElementById('printSummaryReturnRefund').textContent = formatNum(reportReturnRefund);
+      
+      document.getElementById('printAccountNameSubSummary').textContent = accountName || 'Name of Account';
+      document.getElementById('printAccountDesignationSubSummary').textContent = accountDesignation || 'Audit Specialist';
+
+      const printAccountDeptSubSummary = document.getElementById('printAccountDepartmentSubSummary');
+      if (printAccountDeptSubSummary) printAccountDeptSubSummary.textContent = accountDepartment || '';
+
+      const totalSpent = totalTranspo + totalMeals + totalPerDiem + totalTerminalFee + totalMisc;
+      const returnRefund = cashAdvance - totalSpent;
+      document.getElementById('totalTranspoDisplay').textContent = formatCurrency(totalSpent ? totalTranspo : 0);
+      document.getElementById('totalMealsDisplay').textContent = formatCurrency(totalMeals);
+      document.getElementById('totalPerDiemDisplay').textContent = formatCurrency(totalPerDiem);
+      document.getElementById('totalTerminalFeeDisplay').textContent = formatCurrency(totalTerminalFee);
+      document.getElementById('totalMiscDisplay').textContent = formatCurrency(totalMisc);
+      document.getElementById('totalSpentDisplay').textContent = formatCurrency(totalSpent);
+      
+      const remElem = document.getElementById('remainingDisplay');
+      remElem.textContent = formatCurrency(returnRefund);
+      remElem.className = returnRefund < 0 ? 'text-xs sm:text-sm font-bold text-rose-600 mt-0.5' : 'text-xs sm:text-sm font-bold text-indigo-900 mt-0.5';
+    }
+
+    async function openPreviewModal(type) {
+      currentPreviewType = type;
+      updateTracker();
+      await renderModalContent(type);
+      document.getElementById('previewModal').classList.remove('hidden');
+    }
+
+    // HELPER FUNCTION TO RENDER ATTACHED EXPENSE RECEIPTS IN A 2x2 GRID (4 PER PAGE)
+    function renderExpenseReceiptsGrid(expensesList, targetContainer) {
+      if (!targetContainer) return;
+      targetContainer.innerHTML = '';
+
+      const itemsWithReceipts = expensesList.filter(e => e.receiptImg);
+      if (itemsWithReceipts.length === 0) return;
+
+      for (let i = 0; i < itemsWithReceipts.length; i += 4) {
+        const chunk = itemsWithReceipts.slice(i, i + 4);
+
+        const pageDiv = document.createElement('div');
+        pageDiv.className = 'page-break w-full py-4 font-sans';
+
+        const grid = document.createElement('div');
+        grid.className = 'grid grid-cols-2 gap-6 w-full items-start';
+
+        chunk.forEach(item => {
+          const card = document.createElement('div');
+          card.className = 'flex flex-col justify-between items-center p-3 border border-gray-300 rounded bg-white text-center shadow-xs min-h-[4.2in]';
+
+          const imgBox = document.createElement('div');
+          imgBox.className = 'w-full flex-1 flex justify-center items-center overflow-hidden mb-2';
+
+          const img = document.createElement('img');
+          img.src = item.receiptImg;
+          img.className = 'grid-receipt-img';
+          imgBox.appendChild(img);
+
+          const descBox = document.createElement('div');
+          descBox.className = 'w-full border-t border-gray-200 pt-2 text-[8pt] text-gray-800 font-sans';
+          descBox.innerHTML = `
+            <p class="font-bold text-gray-900">Date: ${formatDateLong(item.date)}</p>
+            <p class="text-gray-700 font-semibold truncate max-w-full">${item.desc || item.mainCategory} (${formatCurrency(item.amount)})</p>
+          `;
+
+          card.appendChild(imgBox);
+          card.appendChild(descBox);
+          grid.appendChild(card);
+        });
+
+        pageDiv.appendChild(grid);
+        targetContainer.appendChild(pageDiv);
+      }
+    }
+
+    // HELPER FUNCTION TO RENDER PDF OR IMAGE ATTACHMENTS FOR MANUAL DTR (SORTED ALPHABETICALLY)
+    async function renderDtrAttachmentPages(targetContainer) {
+      if (!targetContainer) return;
+      targetContainer.innerHTML = '';
+      if (!dtrFiles || dtrFiles.length === 0) return;
+
+      sortDtrFiles();
+
+      for (let fileObj of dtrFiles) {
+        const base64Data = fileObj.data;
+        if (!base64Data) continue;
+
+        if (base64Data.startsWith('data:image/')) {
+          const pageDiv = document.createElement('div');
+          pageDiv.className = 'w-full flex flex-col justify-center items-center py-2 page-break';
+          
+          const label = document.createElement('p');
+          label.className = 'text-[9pt] font-bold text-gray-700 mb-2 no-print';
+          label.textContent = fileObj.name;
+          pageDiv.appendChild(label);
+
+          const img = document.createElement('img');
+          img.src = base64Data;
+          img.className = 'attachment-img border border-gray-300 shadow-xs';
+          pageDiv.appendChild(img);
+          targetContainer.appendChild(pageDiv);
+
+        } else if (base64Data.startsWith('data:application/pdf')) {
+          try {
+            const pdfBase64 = base64Data.split(',')[1];
+            const pdfData = atob(pdfBase64);
+            const loadingTask = pdfjsLib.getDocument({ data: pdfData });
+            const pdf = await loadingTask.promise;
+
+            for (let pageNum = 1; pageNum <= pdf.numPages; pageNum++) {
+              const page = await pdf.getPage(pageNum);
+              const viewport = page.getViewport({ scale: 1.5 });
+
+              const canvas = document.createElement('canvas');
+              const context = canvas.getContext('2d');
+              canvas.height = viewport.height;
+              canvas.width = viewport.width;
+
+              await page.render({ canvasContext: context, viewport: viewport }).promise;
+
+              const pageDiv = document.createElement('div');
+              pageDiv.className = 'page-break w-full flex flex-col justify-center items-center py-2';
+              
+              if (pageNum === 1) {
+                const label = document.createElement('p');
+                label.className = 'text-[9pt] font-bold text-gray-700 mb-2 no-print';
+                label.textContent = fileObj.name;
+                pageDiv.appendChild(label);
+              }
+
+              const pageImg = document.createElement('img');
+              pageImg.src = canvas.toDataURL('image/png');
+              pageImg.className = 'attachment-img border border-gray-300 shadow-xs';
+              pageDiv.appendChild(pageImg);
+              targetContainer.appendChild(pageDiv);
+            }
+          } catch (err) {
+            console.error(`Error rendering DTR PDF (${fileObj.name}):`, err);
+            const errDiv = document.createElement('div');
+            errDiv.className = 'text-center text-red-600 text-xs font-bold py-4 page-break';
+            errDiv.textContent = `[Failed to load ${fileObj.name}]`;
+            targetContainer.appendChild(errDiv);
+          }
+        }
+      }
+    }
+
+    async function renderModalContent(type) {
+      const modalContent = document.getElementById('modalContent');
+      const titleElem = document.getElementById('modalTitle');
+      
+      document.getElementById('printAreaDetailed').classList.remove('print-active', 'page-break');
+      document.getElementById('printAreaSummary').classList.remove('print-active', 'page-break');
+      document.getElementById('printAreaReceipts').classList.remove('print-active', 'page-break');
+      document.getElementById('printAreaDtr').classList.remove('print-active', 'page-break');
+
+      modalContent.innerHTML = '';
+      titleElem.textContent = ''; 
+
+      // Render Expense Receipts Grid
+      renderExpenseReceiptsGrid(expenses, document.getElementById('printAreaReceiptsContent'));
+
+      // Pre-render Manual DTR Attachments (Alphabetical)
+      if (dtrFiles.length > 0) {
+        await renderDtrAttachmentPages(document.getElementById('printAreaDtrContent'));
+      } else {
+        document.getElementById('printAreaDtrContent').innerHTML = '';
+      }
+
+      if (type === 'summary') {
+        document.getElementById('printAreaSummary').classList.add('print-active');
+        const clone = document.getElementById('printAreaSummary').cloneNode(true);
+        clone.classList.remove('hidden');
+        modalContent.appendChild(clone);
+
+      } else if (type === 'detailed') {
+        document.getElementById('printAreaDetailed').classList.add('print-active');
+        const clone = document.getElementById('printAreaDetailed').cloneNode(true);
+        clone.classList.remove('hidden');
+        modalContent.appendChild(clone);
+
+      } else if (type === 'combined') {
+        document.getElementById('printAreaSummary').classList.add('print-active');
+        document.getElementById('printAreaDetailed').classList.add('print-active', 'page-break');
+
+        const summaryClone = document.getElementById('printAreaSummary').cloneNode(true);
+        summaryClone.classList.remove('hidden');
+        modalContent.appendChild(summaryClone);
+
+        const separator1 = document.createElement('div');
+        separator1.className = 'my-6 border-t-2 border-dashed border-slate-300 text-center py-2 text-slate-400 text-xs font-bold uppercase tracking-wider no-print';
+        separator1.textContent = '--- Page Break (Detailed Liquidation Report Below) ---';
+        modalContent.appendChild(separator1);
+
+        const detailedClone = document.getElementById('printAreaDetailed').cloneNode(true);
+        detailedClone.classList.remove('hidden');
+        detailedClone.classList.add('page-break');
+        modalContent.appendChild(detailedClone);
+
+        // APPEND ATTACHED EXPENSE RECEIPT(S) ON A STRICTLY SEPARATE NEW PAGE (2x2 GRID)
+        const hasExpenseReceipts = expenses.some(e => e.receiptImg);
+        if (hasExpenseReceipts) {
+          document.getElementById('printAreaReceipts').classList.add('print-active', 'page-break');
+
+          const separator2 = document.createElement('div');
+          separator2.className = 'my-6 border-t-2 border-dashed border-slate-300 text-center py-2 text-slate-400 text-xs font-bold uppercase tracking-wider no-print';
+          separator2.textContent = '--- Page Break (Attached Receipt(s) Below) ---';
+          modalContent.appendChild(separator2);
+
+          const receiptsClone = document.getElementById('printAreaReceipts').cloneNode(true);
+          receiptsClone.classList.remove('hidden');
+          receiptsClone.classList.add('page-break');
+          modalContent.appendChild(receiptsClone);
+        }
+
+        // APPEND ATTACHED MANUAL DTR ON ANOTHER STRICTLY SEPARATE NEW PAGE
+        if (dtrFiles.length > 0) {
+          document.getElementById('printAreaDtr').classList.add('print-active', 'page-break');
+
+          const separator3 = document.createElement('div');
+          separator3.className = 'my-6 border-t-2 border-dashed border-slate-300 text-center py-2 text-slate-400 text-xs font-bold uppercase tracking-wider no-print';
+          separator3.textContent = '--- Page Break (Attached Manual DTR(s) Below) ---';
+          modalContent.appendChild(separator3);
+
+          const dtrClone = document.getElementById('printAreaDtr').cloneNode(true);
+          dtrClone.classList.remove('hidden');
+          dtrClone.classList.add('page-break');
+          modalContent.appendChild(dtrClone);
+        }
+      }
+    }
+
+    function closePreviewModal() {
+      document.getElementById('previewModal').classList.add('hidden');
     }
 
     // SAFE DOM CONTENT LOADED INITIALIZATION
