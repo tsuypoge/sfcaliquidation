@@ -3,7 +3,7 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-  <title>Travel Expense Tracker - Admin Console</title>
+  <title></title>
 
   <!-- Custom Favicon -->
   <link rel="icon" type="image/png" href="logo.png">
@@ -2473,14 +2473,9 @@
       targetContainer.innerHTML = '';
       if (!base64Data) return;
 
-      const headerDiv = document.createElement('div');
-      headerDiv.className = 'text-center mb-3 report-header no-print';
-      headerDiv.innerHTML = `<p class="text-xs font-bold text-slate-600 uppercase tracking-wider">--- ${title} ---</p>`;
-      targetContainer.appendChild(headerDiv);
-
       if (base64Data.startsWith('data:image/')) {
         const pageDiv = document.createElement('div');
-        pageDiv.className = 'w-full flex justify-center items-center py-2';
+        pageDiv.className = 'w-full flex justify-center items-center py-2 page-break';
         const img = document.createElement('img');
         img.src = base64Data;
         img.className = 'attachment-img border border-gray-300 shadow-xs';
@@ -2505,7 +2500,7 @@
             await page.render({ canvasContext: context, viewport: viewport }).promise;
 
             const pageDiv = document.createElement('div');
-            pageDiv.className = pageNum > 1 ? 'page-break w-full flex justify-center items-center py-2' : 'w-full flex justify-center items-center py-2';
+            pageDiv.className = 'page-break w-full flex justify-center items-center py-2';
             const pageImg = document.createElement('img');
             pageImg.src = canvas.toDataURL('image/png');
             pageImg.className = 'attachment-img border border-gray-300 shadow-xs';
@@ -2515,7 +2510,7 @@
         } catch (err) {
           console.error(`Error rendering ${title} PDF:`, err);
           const errDiv = document.createElement('div');
-          errDiv.className = 'text-center text-red-600 text-xs font-bold py-4';
+          errDiv.className = 'text-center text-red-600 text-xs font-bold py-4 page-break';
           errDiv.textContent = `[Failed to load ${title} PDF]`;
           targetContainer.appendChild(errDiv);
         }
@@ -2532,6 +2527,7 @@
       document.getElementById('printAreaDtr').classList.remove('print-active', 'page-break');
 
       modalContent.innerHTML = '';
+      titleElem.textContent = ''; // Removed Preview Header Text
 
       // Pre-render Attachments into Background Print DOM Containers
       if (receiptsPdfDataUrl) {
@@ -2547,22 +2543,18 @@
       }
 
       if (type === 'summary') {
-        titleElem.textContent = 'Print Summary Preview';
         document.getElementById('printAreaSummary').classList.add('print-active');
         const clone = document.getElementById('printAreaSummary').cloneNode(true);
         clone.classList.remove('hidden');
         modalContent.appendChild(clone);
 
       } else if (type === 'detailed') {
-        titleElem.textContent = 'CA Liquidation Preview';
         document.getElementById('printAreaDetailed').classList.add('print-active');
         const clone = document.getElementById('printAreaDetailed').cloneNode(true);
         clone.classList.remove('hidden');
         modalContent.appendChild(clone);
 
       } else if (type === 'combined') {
-        titleElem.textContent = 'Print Liquidation Package (Summary + Detailed + Receipts + DTR)';
-
         document.getElementById('printAreaSummary').classList.add('print-active');
         document.getElementById('printAreaDetailed').classList.add('print-active', 'page-break');
 
@@ -2580,7 +2572,7 @@
         detailedClone.classList.add('page-break');
         modalContent.appendChild(detailedClone);
 
-        // APPEND ATTACHED RECEIPT(S) ON A STRICTLY NEW PAGE
+        // APPEND ATTACHED RECEIPT(S) ON A STRICTLY SEPARATE NEW PAGE
         if (receiptsPdfDataUrl) {
           document.getElementById('printAreaReceipts').classList.add('print-active', 'page-break');
 
@@ -2595,7 +2587,7 @@
           modalContent.appendChild(receiptsClone);
         }
 
-        // APPEND ATTACHED MANUAL DTR ON ANOTHER STRICTLY NEW PAGE
+        // APPEND ATTACHED MANUAL DTR ON ANOTHER STRICTLY SEPARATE NEW PAGE
         if (dtrPdfDataUrl) {
           document.getElementById('printAreaDtr').classList.add('print-active', 'page-break');
 
