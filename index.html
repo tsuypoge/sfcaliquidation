@@ -8,14 +8,16 @@
   <!-- Custom Favicon -->
   <link rel="icon" type="image/png" href="logo.png">
 
+  <!-- Tailwind CSS -->
   <script src="https://cdn.tailwindcss.com"></script>
+  
   <style>
-    /* Mobile Touch Scrolling Optimization */
+    /* Custom Scrollbar for Smooth Touch Experience */
     .overflow-x-auto {
       -webkit-overflow-scrolling: touch;
     }
 
-    /* Standardized Report Header - Strictly 9pt */
+    /* Standardized Report Header - Strictly 9pt for Liquidation Reports */
     .report-header, .report-header p {
       font-size: 9pt !important;
       font-weight: bold !important;
@@ -49,11 +51,11 @@
     .excel-style-table th, .excel-style-table td {
       font-size: 9pt !important;
       padding: 4px 6px !important;
-      border: 1px solid #9ca3af !important;
+      border: 1px solid #d1d5db !important;
     }
 
     #printAreaDetailed th, #printAreaSummary th, #modalContent th {
-      background-color: #f3f4f6 !important;
+      background-color: #f8fafc !important;
     }
 
     .no-border-table, .no-border-table th, .no-border-table td, .no-border-table tr {
@@ -93,50 +95,52 @@
     }
   </style>
 </head>
-<body class="bg-gray-100 font-sans min-h-screen">
+<body class="bg-slate-100/70 font-sans min-h-screen text-slate-800">
 
   <!-- ========================================== -->
   <!-- 0. LOGIN PAGE SCREEN                      -->
   <!-- ========================================== -->
-  <div id="loginScreen" class="min-h-screen flex items-center justify-center p-4 bg-slate-100">
-    <div class="max-w-md w-full bg-white rounded-2xl shadow-xl border border-gray-200 p-6 sm:p-8">
+  <div id="loginScreen" class="min-h-screen flex items-center justify-center p-4 bg-slate-900">
+    <div class="max-w-md w-full bg-white rounded-2xl shadow-2xl border border-slate-200 p-8 sm:p-10">
       
-      <div class="text-center mb-6">
-        <h1 class="text-3xl font-black text-blue-600 tracking-wider mb-1">SF</h1>
-        <h2 class="text-2xl font-bold text-gray-800">Travel Expense Tracker</h2>
-        <p class="text-xs text-gray-500 mt-1">Please log in to manage your expenses</p>
+      <div class="text-center mb-8">
+        <div class="inline-flex items-center justify-center w-14 h-14 bg-indigo-600 text-white rounded-xl font-black text-2xl mb-3 shadow-lg shadow-indigo-500/30">
+          SF
+        </div>
+        <h2 class="text-2xl font-bold text-slate-900 tracking-tight">Travel Expense Tracker</h2>
+        <p class="text-xs text-slate-500 mt-1.5 font-medium">Please sign in with your corporate account</p>
       </div>
 
-      <form id="loginForm" onsubmit="handleLogin(event)" class="space-y-4">
+      <form id="loginForm" onsubmit="handleLogin(event)" class="space-y-5">
         <div id="loginError" class="hidden p-3 bg-red-50 border border-red-200 text-red-600 text-xs rounded-lg text-center font-semibold">
           Invalid Username or Password!
         </div>
 
         <div>
-          <label class="block text-xs font-bold text-gray-700 mb-1">Username</label>
+          <label class="block text-xs font-bold uppercase tracking-wider text-slate-600 mb-1.5">Username</label>
           <input 
             type="text" 
             id="usernameInput" 
             required 
             placeholder="e.g. j.cagang" 
-            class="w-full p-2.5 border rounded-lg text-sm border-gray-300 focus:ring-2 focus:ring-blue-500 focus:outline-none"
+            class="w-full p-3 border rounded-xl text-sm border-slate-300 focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500 focus:outline-none transition"
           >
         </div>
 
         <div>
-          <label class="block text-xs font-bold text-gray-700 mb-1">Password</label>
+          <label class="block text-xs font-bold uppercase tracking-wider text-slate-600 mb-1.5">Password</label>
           <input 
             type="password" 
             id="passwordInput" 
             required 
             placeholder="Enter password" 
-            class="w-full p-2.5 border rounded-lg text-sm border-gray-300 focus:ring-2 focus:ring-blue-500 focus:outline-none"
+            class="w-full p-3 border rounded-xl text-sm border-slate-300 focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500 focus:outline-none transition"
           >
         </div>
 
         <button 
           type="submit" 
-          class="w-full bg-blue-600 text-white font-bold py-2.5 rounded-lg hover:bg-blue-700 transition duration-200 text-sm shadow-md"
+          class="w-full bg-indigo-600 text-white font-bold py-3 rounded-xl hover:bg-indigo-700 active:scale-[0.99] transition duration-200 text-sm shadow-lg shadow-indigo-600/25"
         >
           Sign In
         </button>
@@ -149,35 +153,39 @@
   <!-- 1. TRAVEL LIQUIDATION LIST SCREEN          -->
   <!-- ========================================== -->
   <div id="travelListScreen" class="hidden p-3 sm:p-6 md:p-8">
-    <div class="max-w-7xl mx-auto bg-white rounded-xl shadow-md p-4 sm:p-6">
+    <div class="max-w-7xl mx-auto bg-white rounded-2xl shadow-sm border border-slate-200 p-4 sm:p-6">
       
       <!-- User Info Bar -->
-      <div class="mb-4 p-2.5 bg-blue-50/80 rounded-lg border border-blue-100 flex flex-col sm:flex-row items-center justify-between gap-3 text-xs sm:text-sm">
+      <div class="mb-6 p-3 bg-slate-50 rounded-xl border border-slate-200 flex flex-col sm:flex-row items-center justify-between gap-3 text-xs sm:text-sm">
         <div class="flex items-center gap-2">
-          <span id="listUserDisplay" class="font-bold text-blue-900">Welcome Account Name</span>
+          <span class="w-2.5 h-2.5 rounded-full bg-emerald-500 inline-block"></span>
+          <span id="listUserDisplay" class="font-semibold text-slate-800">Welcome Account Name</span>
         </div>
-        <div class="flex items-center gap-3">
-          <button onclick="createNewTravel()" class="bg-blue-600 text-white font-bold text-xs px-3 py-1.5 rounded hover:bg-blue-700 transition">+ New Liquidation</button>
-          <button onclick="handleLogout()" class="bg-red-600 text-white font-bold text-xs px-3 py-1.5 rounded hover:bg-red-700 transition">Logout</button>
+        <div class="flex items-center gap-2">
+          <button onclick="createNewTravel()" class="bg-indigo-600 text-white font-semibold text-xs px-3.5 py-2 rounded-lg hover:bg-indigo-700 shadow-sm transition">+ New Liquidation</button>
+          <button onclick="handleLogout()" class="bg-slate-100 text-slate-700 border border-slate-300 font-semibold text-xs px-3.5 py-2 rounded-lg hover:bg-slate-200 transition">Logout</button>
         </div>
       </div>
 
-      <!-- Red Styled Title -->
-      <h2 class="text-xl sm:text-2xl font-bold text-red-600 text-center mb-6">Travel Liquidation Template / Dashboard</h2>
+      <!-- Section Title -->
+      <div class="mb-6 text-center sm:text-left">
+        <h2 class="text-xl sm:text-2xl font-bold text-slate-900 tracking-tight">Travel Liquidation Dashboard</h2>
+        <p class="text-xs text-slate-500 mt-1">Select an active travel profile or create a new entry below</p>
+      </div>
 
       <!-- Liquidations Table -->
-      <div class="overflow-x-auto rounded-lg border border-gray-200">
+      <div class="overflow-x-auto rounded-xl border border-slate-200">
         <table class="w-full text-left border-collapse text-xs sm:text-sm">
           <thead>
-            <tr class="bg-gray-100 text-gray-800 font-bold border-b border-gray-300">
-              <th class="p-3">Region / Travel Area</th>
-              <th class="p-3 text-center">Travel Dates</th>
-              <th class="p-3 text-right">Cash Advance</th>
-              <th class="p-3 text-right">Total Spent</th>
-              <th class="p-3 text-center">Status</th>
-              <th class="p-3 text-center">Liquidation Entry</th>
-              <th class="p-3 text-center">Print Summary</th>
-              <th class="p-3 text-center">Action</th>
+            <tr class="bg-slate-50 text-slate-700 font-semibold border-b border-slate-200">
+              <th class="p-3.5">Region / Travel Area</th>
+              <th class="p-3.5 text-center">Travel Dates</th>
+              <th class="p-3.5 text-right">Cash Advance</th>
+              <th class="p-3.5 text-right">Total Spent</th>
+              <th class="p-3.5 text-center">Status</th>
+              <th class="p-3.5 text-center">Liquidation Entry</th>
+              <th class="p-3.5 text-center">Print Summary</th>
+              <th class="p-3.5 text-center">Action</th>
             </tr>
           </thead>
           <tbody id="travelListTableBody">
@@ -195,84 +203,89 @@
   <!-- ========================================== -->
   <div id="mainDashboard" class="hidden p-2 sm:p-4 md:p-8">
     
-    <div class="max-w-7xl mx-auto bg-white rounded-xl shadow-md p-3 sm:p-6 no-print mb-10">
+    <div class="max-w-7xl mx-auto bg-white rounded-2xl shadow-sm border border-slate-200 p-4 sm:p-6 no-print mb-10">
       
-      <div id="toast" class="hidden fixed top-5 right-5 bg-green-600 text-white px-4 py-2 rounded shadow-lg transition-opacity duration-300 z-50 font-bold text-sm sm:text-base">
+      <div id="toast" class="hidden fixed top-5 right-5 bg-slate-900 text-white px-4 py-2.5 rounded-xl shadow-xl transition-opacity duration-300 z-50 font-semibold text-xs sm:text-sm">
         Syncing to Cloud...
       </div>
 
-      <!-- Top Utility Bar: Exit Button (Red Bold), Live Clock, User, Signature, & Logout -->
-      <div class="mb-4 p-2 bg-blue-50/80 rounded-lg border border-blue-100 flex flex-col md:flex-row items-stretch md:items-center justify-between gap-3 text-xs sm:text-sm">
+      <!-- Top Utility Bar: Exit Button, Live Clock, User, Signature, & Logout -->
+      <div class="mb-5 p-3 bg-slate-50/90 rounded-xl border border-slate-200/80 flex flex-col md:flex-row items-stretch md:items-center justify-between gap-3 text-xs sm:text-sm">
         
         <!-- Red Bold Exit Button -->
-        <button onclick="backToTravelList()" class="bg-red-600 text-white font-bold px-4 py-1.5 rounded hover:bg-red-700 transition text-xs whitespace-nowrap shadow-sm">
-          Exit
+        <button onclick="backToTravelList()" class="bg-rose-50 text-rose-700 border border-rose-200 font-bold px-4 py-2 rounded-lg hover:bg-rose-100 transition text-xs whitespace-nowrap">
+          Exit Dashboard
         </button>
 
         <!-- Live Date & Time -->
-        <div class="flex items-center gap-1.5 font-bold text-blue-800 whitespace-nowrap">
+        <div class="flex items-center gap-2 font-semibold text-slate-600 whitespace-nowrap bg-white px-3 py-1.5 rounded-lg border border-slate-200">
+          <span class="w-2 h-2 rounded-full bg-indigo-500"></span>
           <span id="liveClockDisplay">Loading Date & Time...</span>
         </div>
 
         <!-- Logged-in User Display, Signature PNG, & Logout -->
-        <div class="flex flex-wrap items-center justify-between sm:justify-end gap-3 w-full md:w-auto">
+        <div class="flex flex-wrap items-center justify-between sm:justify-end gap-2.5 w-full md:w-auto">
           
-          <div class="flex items-center gap-1.5 bg-blue-100/80 px-2.5 py-1 rounded-md border border-blue-200">
-            <span id="loggedInUserDisplay" class="font-bold text-blue-900">Welcome Account Name</span>
+          <div class="flex items-center gap-1.5 bg-white px-3 py-1.5 rounded-lg border border-slate-200">
+            <span id="loggedInUserDisplay" class="font-semibold text-slate-800">Welcome Account Name</span>
           </div>
 
           <!-- Signature PNG Upload Button -->
           <div class="flex items-center gap-1.5">
-            <label class="font-semibold text-gray-700 whitespace-nowrap">Signature PNG:</label>
+            <label class="font-medium text-slate-600 whitespace-nowrap">Signature:</label>
             <div class="flex items-center gap-1">
-              <label class="bg-blue-100 text-blue-800 border border-blue-300 text-xs font-bold px-2 py-1.5 rounded cursor-pointer hover:bg-blue-200 transition whitespace-nowrap">
+              <label class="bg-white text-slate-700 border border-slate-300 text-xs font-semibold px-2.5 py-1.5 rounded-lg cursor-pointer hover:bg-slate-50 transition whitespace-nowrap">
                 Upload PNG
                 <input type="file" id="signatureInput" accept="image/png, image/jpeg" class="hidden" onchange="handleSignatureUpload(event)">
               </label>
-              <button type="button" id="removeSigBtn" onclick="removeSignature()" class="hidden bg-red-100 text-red-700 border border-red-300 text-xs font-bold px-1.5 py-1.5 rounded hover:bg-red-200 transition" title="Remove Signature">✕</button>
+              <button type="button" id="removeSigBtn" onclick="removeSignature()" class="hidden bg-rose-50 text-rose-600 border border-rose-200 text-xs font-bold px-2 py-1.5 rounded-lg hover:bg-rose-100 transition" title="Remove Signature">✕</button>
             </div>
           </div>
 
-          <button onclick="handleLogout()" title="Log out" class="bg-red-600 text-white text-xs font-bold px-3 py-1.5 rounded hover:bg-red-700 transition whitespace-nowrap">Logout</button>
+          <button onclick="handleLogout()" title="Log out" class="bg-slate-200 text-slate-700 font-semibold text-xs px-3 py-1.5 rounded-lg hover:bg-slate-300 transition whitespace-nowrap">Logout</button>
         </div>
 
       </div>
 
-      <!-- Header Section: Region Name Liquidation Title -->
-      <div class="flex flex-col md:flex-row justify-between items-center mb-4 gap-3">
-        <h1 class="text-xl sm:text-2xl font-bold text-gray-800 text-center md:text-left flex items-center justify-center md:justify-start">
-          <span id="headerRegionDisplay" class="text-blue-600 font-black mr-1 tracking-wide">Region Name</span> <span class="ml-1">Liquidation</span>
-          <span id="archiveStatusBadge" class="hidden ml-3 bg-red-100 text-red-700 border border-red-300 text-xs px-2.5 py-0.5 rounded-full font-bold">LOCKED / ARCHIVED</span>
-        </h1>
+      <!-- Header Section: Region Name Liquidation Title & Modern Action Buttons -->
+      <div class="flex flex-col md:flex-row justify-between items-start md:items-center mb-6 gap-4 border-b border-slate-100 pb-5">
+        <div>
+          <h1 class="text-xl sm:text-2xl font-bold text-slate-900 tracking-tight flex items-center flex-wrap gap-2">
+            <span id="headerRegionDisplay" class="text-indigo-600 font-extrabold">Region Name</span> 
+            <span>Liquidation</span>
+            <span id="archiveStatusBadge" class="hidden bg-amber-50 text-amber-700 border border-amber-200 text-xs px-2.5 py-1 rounded-full font-bold uppercase tracking-wider">LOCKED / ARCHIVED</span>
+          </h1>
+          <p class="text-xs text-slate-500 mt-1">Manage and track travel expenses, liquidation forms, and report summaries</p>
+        </div>
         
-        <!-- Action Buttons -->
-        <div class="flex flex-wrap justify-center items-center gap-1.5 sm:gap-2 w-full md:w-auto">
-          <button onclick="openPreviewModal('detailed')" class="bg-purple-600 text-white text-xs sm:text-sm font-bold px-3 py-2 rounded hover:bg-purple-700 flex-1 sm:flex-none text-center">Preview</button>
-          <button onclick="openPreviewModal('summary')" class="bg-green-600 text-white text-xs sm:text-sm font-bold px-3 py-2 rounded hover:bg-green-700 flex-1 sm:flex-none text-center">Print Summary</button>
-          <button onclick="toggleArchive()" id="archiveBtn" class="bg-indigo-600 text-white text-xs sm:text-sm font-bold px-3 py-2 rounded hover:bg-indigo-700 flex-1 sm:flex-none text-center">Archive</button>
-          <button onclick="exportBackup()" class="bg-blue-600 text-white text-xs sm:text-sm font-bold px-3 py-2 rounded hover:bg-blue-700 flex-1 sm:flex-none text-center">Backup</button>
-          <label class="bg-amber-600 text-white text-xs sm:text-sm font-bold px-3 py-2 rounded hover:bg-amber-700 cursor-pointer flex-1 sm:flex-none text-center">
+        <!-- Action Buttons Group -->
+        <div class="flex flex-wrap justify-center items-center gap-2 w-full md:w-auto">
+          <button onclick="openPreviewModal('detailed')" class="bg-indigo-600 text-white text-xs sm:text-sm font-semibold px-3.5 py-2 rounded-xl hover:bg-indigo-700 shadow-sm transition flex-1 sm:flex-none text-center">Preview</button>
+          <button onclick="openPreviewModal('summary')" class="bg-slate-900 text-white text-xs sm:text-sm font-semibold px-3.5 py-2 rounded-xl hover:bg-slate-800 shadow-sm transition flex-1 sm:flex-none text-center">Print Summary</button>
+          <button onclick="toggleArchive()" id="archiveBtn" class="bg-white text-slate-700 border border-slate-300 text-xs sm:text-sm font-semibold px-3.5 py-2 rounded-xl hover:bg-slate-50 transition flex-1 sm:flex-none text-center">Archive</button>
+          <button onclick="exportBackup()" class="bg-white text-slate-700 border border-slate-300 text-xs sm:text-sm font-semibold px-3.5 py-2 rounded-xl hover:bg-slate-50 transition flex-1 sm:flex-none text-center">Backup</button>
+          <label class="bg-white text-slate-700 border border-slate-300 text-xs sm:text-sm font-semibold px-3.5 py-2 rounded-xl hover:bg-slate-50 cursor-pointer flex-1 sm:flex-none text-center transition">
             Restore
             <input type="file" id="importFile" accept=".json" class="hidden" onchange="restoreBackup(event)">
           </label>
-          <button onclick="resetAllData()" title="Reset All Tracker Data" class="bg-slate-600 text-white text-xs sm:text-sm font-bold px-3 py-2 rounded hover:bg-slate-700 flex-1 sm:flex-none text-center">Reset</button>
+          <button onclick="resetAllData()" title="Reset All Tracker Data" class="bg-rose-50 text-rose-700 border border-rose-200 text-xs sm:text-sm font-semibold px-3.5 py-2 rounded-xl hover:bg-rose-100 transition flex-1 sm:flex-none text-center">Reset</button>
         </div>
       </div>
 
       <!-- Setup Box: Cash Advance & Region(s) -->
-      <div class="mb-4 p-3 bg-blue-50 rounded-lg border border-blue-100 flex flex-col sm:flex-row items-stretch sm:items-center justify-between gap-3">
+      <div class="mb-5 p-4 bg-slate-50/80 rounded-xl border border-slate-200/80 flex flex-col sm:flex-row items-stretch sm:items-center justify-between gap-4">
         
         <!-- Cash Advance -->
-        <div class="flex items-center justify-between sm:justify-start gap-2">
-          <label class="text-xs sm:text-sm font-semibold text-gray-700 whitespace-nowrap">Cash Advance:</label>
+        <div class="flex items-center justify-between sm:justify-start gap-3">
+          <label class="text-xs sm:text-sm font-bold uppercase tracking-wider text-slate-600 whitespace-nowrap">Cash Advance:</label>
           <div class="relative flex items-center">
-            <span class="text-blue-900 font-bold mr-1">₱</span>
+            <span class="text-slate-500 font-bold mr-1.5 text-sm">₱</span>
             <input 
               type="text" 
               inputmode="decimal"
               id="cashAdvanceInput" 
               placeholder="0.00" 
-              class="p-2 border rounded w-36 sm:w-44 font-bold text-blue-900 border-blue-300 text-right focus:outline-none focus:ring-2 focus:ring-blue-500 text-sm bg-white" 
+              class="p-2.5 border rounded-xl w-36 sm:w-44 font-bold text-slate-900 border-slate-300 text-right focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500 text-sm bg-white shadow-sm" 
               oninput="handleCashAdvanceInput(this)" 
               onfocus="focusCashAdvanceInput(this)" 
               onblur="blurCashAdvanceInput(this)"
@@ -281,13 +294,13 @@
         </div>
 
         <!-- Region(s) -->
-        <div class="flex items-center justify-between sm:justify-start gap-2">
-          <label class="text-xs sm:text-sm font-semibold text-gray-700 whitespace-nowrap">Region(s):</label>
+        <div class="flex items-center justify-between sm:justify-start gap-3">
+          <label class="text-xs sm:text-sm font-bold uppercase tracking-wider text-slate-600 whitespace-nowrap">Region(s):</label>
           <input 
             type="text" 
             id="regionNameInput" 
             placeholder="e.g. Palawan Region" 
-            class="p-2 border rounded w-full sm:w-56 text-sm font-semibold text-gray-800 border-gray-300 focus:outline-none focus:ring-2 focus:ring-blue-500 bg-white"
+            class="p-2.5 border rounded-xl w-full sm:w-64 text-sm font-semibold text-slate-800 border-slate-300 focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500 bg-white shadow-sm"
             oninput="handleRegionNameInput(this)"
           >
         </div>
@@ -295,60 +308,60 @@
       </div>
 
       <!-- Date Range Filter Bar for Reports -->
-      <div class="mb-5 p-3 bg-purple-50 rounded-lg border border-purple-200 flex flex-col sm:flex-row items-stretch sm:items-center justify-between gap-3">
-        <div class="flex items-center gap-2 flex-wrap">
-          <span class="text-xs sm:text-sm font-bold text-purple-900 whitespace-nowrap">Report Date Range:</span>
-          <input type="date" id="filterStartDate" class="p-1.5 border rounded text-xs sm:text-sm border-purple-300 bg-white" onchange="updateTracker()">
-          <span class="text-xs font-bold text-gray-600">to</span>
-          <input type="date" id="filterEndDate" class="p-1.5 border rounded text-xs sm:text-sm border-purple-300 bg-white" onchange="updateTracker()">
-          <button type="button" onclick="clearDateFilter()" class="bg-gray-200 text-gray-700 text-xs px-2.5 py-1.5 rounded font-bold hover:bg-gray-300">Clear Filter</button>
+      <div class="mb-6 p-3.5 bg-indigo-50/50 rounded-xl border border-indigo-100 flex flex-col sm:flex-row items-stretch sm:items-center justify-between gap-3">
+        <div class="flex items-center gap-2.5 flex-wrap">
+          <span class="text-xs sm:text-sm font-bold text-indigo-950 whitespace-nowrap">Report Date Range:</span>
+          <input type="date" id="filterStartDate" class="p-1.5 border rounded-lg text-xs sm:text-sm border-indigo-200 bg-white text-slate-800 shadow-sm" onchange="updateTracker()">
+          <span class="text-xs font-semibold text-slate-500">to</span>
+          <input type="date" id="filterEndDate" class="p-1.5 border rounded-lg text-xs sm:text-sm border-indigo-200 bg-white text-slate-800 shadow-sm" onchange="updateTracker()">
+          <button type="button" onclick="clearDateFilter()" class="bg-white text-slate-700 border border-slate-300 text-xs px-3 py-1.5 rounded-lg font-medium hover:bg-slate-50 transition">Clear Filter</button>
         </div>
-        <div class="text-[11px] sm:text-xs text-purple-800 italic">
+        <div class="text-[11px] sm:text-xs text-indigo-900/80 italic font-medium">
           * Applies <b>Cash Advance ÷ 2</b> ONLY IF a Date Range is specified.
         </div>
       </div>
 
-      <!-- Top Summary Cards Section -->
-      <div class="grid grid-cols-2 sm:grid-cols-4 lg:grid-cols-7 gap-2 mb-5 text-center">
-        <div class="p-2 sm:p-3 bg-purple-50 rounded border border-purple-200">
-          <p class="text-[10px] sm:text-xs text-purple-600 font-semibold">TRANSPO</p>
-          <p id="totalTranspoDisplay" class="text-sm sm:text-base font-bold text-purple-800">₱0.00</p>
+      <!-- Modern KPI Cards Section -->
+      <div class="grid grid-cols-2 sm:grid-cols-4 lg:grid-cols-7 gap-3 mb-6 text-center">
+        <div class="p-3 bg-white rounded-xl border border-slate-200 shadow-sm">
+          <p class="text-[10px] sm:text-xs font-bold uppercase tracking-wider text-slate-500">TRANSPO</p>
+          <p id="totalTranspoDisplay" class="text-sm sm:text-base font-bold text-slate-800 mt-1">₱0.00</p>
         </div>
-        <div class="p-2 sm:p-3 bg-amber-50 rounded border border-amber-200">
-          <p class="text-[10px] sm:text-xs text-amber-600 font-semibold">MEALS</p>
-          <p id="totalMealsDisplay" class="text-sm sm:text-base font-bold text-amber-800">₱0.00</p>
+        <div class="p-3 bg-white rounded-xl border border-slate-200 shadow-sm">
+          <p class="text-[10px] sm:text-xs font-bold uppercase tracking-wider text-slate-500">MEALS</p>
+          <p id="totalMealsDisplay" class="text-sm sm:text-base font-bold text-slate-800 mt-1">₱0.00</p>
         </div>
-        <div class="p-2 sm:p-3 bg-teal-50 rounded border border-teal-200">
-          <p class="text-[10px] sm:text-xs text-teal-600 font-semibold">PER DIEM</p>
-          <p id="totalPerDiemDisplay" class="text-sm sm:text-base font-bold text-teal-800">₱0.00</p>
+        <div class="p-3 bg-white rounded-xl border border-slate-200 shadow-sm">
+          <p class="text-[10px] sm:text-xs font-bold uppercase tracking-wider text-slate-500">PER DIEM</p>
+          <p id="totalPerDiemDisplay" class="text-sm sm:text-base font-bold text-slate-800 mt-1">₱0.00</p>
         </div>
-        <div class="p-2 sm:p-3 bg-orange-50 rounded border border-orange-200">
-          <p class="text-[10px] sm:text-xs text-orange-600 font-semibold">TERMINAL FEE</p>
-          <p id="totalTerminalFeeDisplay" class="text-sm sm:text-base font-bold text-orange-800">₱0.00</p>
+        <div class="p-3 bg-white rounded-xl border border-slate-200 shadow-sm">
+          <p class="text-[10px] sm:text-xs font-bold uppercase tracking-wider text-slate-500">TERMINAL FEE</p>
+          <p id="totalTerminalFeeDisplay" class="text-sm sm:text-base font-bold text-slate-800 mt-1">₱0.00</p>
         </div>
-        <div class="p-2 sm:p-3 bg-indigo-50 rounded border border-indigo-200">
-          <p class="text-[10px] sm:text-xs text-indigo-600 font-semibold">MISC / OTHERS</p>
-          <p id="totalMiscDisplay" class="text-sm sm:text-base font-bold text-indigo-800">₱0.00</p>
+        <div class="p-3 bg-white rounded-xl border border-slate-200 shadow-sm">
+          <p class="text-[10px] sm:text-xs font-bold uppercase tracking-wider text-slate-500">MISC / OTHERS</p>
+          <p id="totalMiscDisplay" class="text-sm sm:text-base font-bold text-slate-800 mt-1">₱0.00</p>
         </div>
-        <div class="p-2 sm:p-3 bg-red-50 rounded border border-red-200">
-          <p class="text-[10px] sm:text-xs text-red-600 font-semibold">TOTAL SPENT</p>
-          <p id="totalSpentDisplay" class="text-sm sm:text-base font-bold text-red-700">₱0.00</p>
+        <div class="p-3 bg-slate-900 text-white rounded-xl border border-slate-900 shadow-sm">
+          <p class="text-[10px] sm:text-xs font-bold uppercase tracking-wider text-slate-300">TOTAL SPENT</p>
+          <p id="totalSpentDisplay" class="text-sm sm:text-base font-bold text-white mt-1">₱0.00</p>
         </div>
-        <div class="p-2 sm:p-3 bg-green-50 rounded border border-green-200 col-span-2 sm:col-span-2 lg:col-span-1">
-          <p class="text-[10px] sm:text-xs text-green-600 font-semibold">REMAINING</p>
-          <p id="remainingDisplay" class="text-sm sm:text-base font-bold text-green-700">₱0.00</p>
+        <div class="p-3 bg-indigo-50/70 rounded-xl border border-indigo-100 shadow-sm col-span-2 sm:col-span-2 lg:col-span-1">
+          <p class="text-[10px] sm:text-xs font-bold uppercase tracking-wider text-indigo-700">REMAINING</p>
+          <p id="remainingDisplay" class="text-sm sm:text-base font-bold text-indigo-900 mt-1">₱0.00</p>
         </div>
       </div>
 
       <!-- Add Expense Form -->
-      <form id="expenseForm" class="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-4 gap-3 mb-6 bg-gray-50 p-3 sm:p-4 rounded-lg border">
+      <form id="expenseForm" class="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-4 gap-3.5 mb-6 bg-slate-50/80 p-4 rounded-xl border border-slate-200">
         <div>
-          <label class="block text-xs font-semibold text-gray-600 mb-1">Date</label>
-          <input type="date" id="dateInput" required class="p-2.5 sm:p-2 border rounded w-full text-sm">
+          <label class="block text-xs font-bold text-slate-600 uppercase tracking-wider mb-1">Date</label>
+          <input type="date" id="dateInput" required class="p-2.5 border border-slate-300 rounded-xl w-full text-sm bg-white focus:ring-2 focus:ring-indigo-500 focus:outline-none">
         </div>
         <div>
-          <label class="block text-xs font-semibold text-gray-600 mb-1">Category</label>
-          <select id="category" class="p-2.5 sm:p-2 border rounded w-full text-sm" onchange="handleCategoryChange()">
+          <label class="block text-xs font-bold text-slate-600 uppercase tracking-wider mb-1">Category</label>
+          <select id="category" class="p-2.5 border border-slate-300 rounded-xl w-full text-sm bg-white focus:ring-2 focus:ring-indigo-500 focus:outline-none" onchange="handleCategoryChange()">
             <option value="Transportation">Transportation</option>
             <option value="Meals">Meals</option>
             <option value="Per Diem">Per Diem</option>
@@ -358,36 +371,36 @@
           </select>
         </div>
         <div>
-          <label id="subOptionLabel" class="block text-xs font-semibold text-gray-600 mb-1">Transportation Type</label>
-          <select id="subOptionSelect" class="p-2.5 sm:p-2 border rounded w-full text-sm" onchange="handleSubOptionChange()"></select>
+          <label id="subOptionLabel" class="block text-xs font-bold text-slate-600 uppercase tracking-wider mb-1">Transportation Type</label>
+          <select id="subOptionSelect" class="p-2.5 border border-slate-300 rounded-xl w-full text-sm bg-white focus:ring-2 focus:ring-indigo-500 focus:outline-none" onchange="handleSubOptionChange()"></select>
         </div>
         <div>
-          <label class="block text-xs font-semibold text-gray-600 mb-1">Description / Particulars</label>
-          <input type="text" id="desc" placeholder="e.g. Hotel to Port" class="p-2.5 sm:p-2 border rounded w-full text-sm">
+          <label class="block text-xs font-bold text-slate-600 uppercase tracking-wider mb-1">Description / Particulars</label>
+          <input type="text" id="desc" placeholder="e.g. Hotel to Port" class="p-2.5 border border-slate-300 rounded-xl w-full text-sm bg-white focus:ring-2 focus:ring-indigo-500 focus:outline-none">
         </div>
         <div>
-          <label id="ticketLabel" class="block text-xs font-semibold text-gray-600 mb-1">Ticket # / Remarks</label>
-          <input type="text" id="ticketNo" placeholder="e.g. w/ luggage, 123, vv" class="p-2.5 sm:p-2 border rounded w-full text-sm">
+          <label id="ticketLabel" class="block text-xs font-bold text-slate-600 uppercase tracking-wider mb-1">Ticket # / Remarks</label>
+          <input type="text" id="ticketNo" placeholder="e.g. w/ luggage, 123, vv" class="p-2.5 border border-slate-300 rounded-xl w-full text-sm bg-white focus:ring-2 focus:ring-indigo-500 focus:outline-none">
         </div>
         <div>
-          <label id="customInputLabel" class="block text-xs font-semibold text-gray-600 mb-1">Specify Transpo / Category</label>
-          <input type="text" id="customSubtype" placeholder="e.g. Grab, Hotel, Supplies" disabled class="p-2.5 sm:p-2 border rounded w-full bg-gray-200 cursor-not-allowed opacity-50 text-sm">
+          <label id="customInputLabel" class="block text-xs font-bold text-slate-600 uppercase tracking-wider mb-1">Specify Transpo / Category</label>
+          <input type="text" id="customSubtype" placeholder="e.g. Grab, Hotel, Supplies" disabled class="p-2.5 border border-slate-300 rounded-xl w-full bg-slate-100 cursor-not-allowed opacity-50 text-sm">
         </div>
         <div>
-          <label class="block text-xs font-semibold text-gray-600 mb-1">Amount (₱)</label>
-          <input type="number" step="any" inputmode="decimal" id="amount" placeholder="0.00" required class="p-2.5 sm:p-2 border rounded w-full text-sm">
+          <label class="block text-xs font-bold text-slate-600 uppercase tracking-wider mb-1">Amount (₱)</label>
+          <input type="number" step="any" inputmode="decimal" id="amount" placeholder="0.00" required class="p-2.5 border border-slate-300 rounded-xl w-full text-sm bg-white focus:ring-2 focus:ring-indigo-500 focus:outline-none">
         </div>
         <div class="flex items-end gap-2">
-          <button type="submit" id="submitBtn" class="bg-blue-600 text-white font-bold p-2.5 sm:p-2 rounded hover:bg-blue-700 w-full text-sm">+ Add Expense</button>
-          <button type="button" id="cancelEditBtn" onclick="cancelEdit()" class="hidden bg-gray-500 text-white font-bold p-2.5 sm:p-2 rounded hover:bg-gray-600 text-sm">Cancel</button>
+          <button type="submit" id="submitBtn" class="bg-indigo-600 text-white font-bold p-2.5 rounded-xl hover:bg-indigo-700 w-full text-sm shadow-sm transition">+ Add Expense</button>
+          <button type="button" id="cancelEditBtn" onclick="cancelEdit()" class="hidden bg-slate-500 text-white font-bold p-2.5 rounded-xl hover:bg-slate-600 text-sm transition">Cancel</button>
         </div>
       </form>
 
       <!-- UI Expense List Table -->
-      <div class="overflow-x-auto rounded-lg border border-gray-300">
+      <div class="overflow-x-auto rounded-xl border border-slate-200">
         <table class="w-full text-left border-collapse min-w-[600px] excel-style-table">
           <thead>
-            <tr class="text-gray-800 font-bold bg-gray-100">
+            <tr class="text-slate-800 font-bold bg-slate-50 border-b border-slate-200">
               <th class="w-20 text-center">Date</th>
               <th class="w-auto whitespace-nowrap">Description</th>
               <th class="w-24 text-center">Type</th>
@@ -581,18 +594,18 @@
 
 
   <!-- Dynamic Modal -->
-  <div id="previewModal" class="hidden fixed inset-0 bg-black bg-opacity-50 flex justify-center items-center p-2 sm:p-4 z-50 no-print">
-    <div class="bg-white rounded-md shadow-xl max-w-5xl w-full p-4 sm:p-8 max-h-[95vh] overflow-y-auto">
-      <div class="flex justify-between items-center mb-4">
-        <h2 id="modalTitle" class="text-lg sm:text-2xl font-bold text-gray-800">Preview</h2>
-        <button onclick="closePreviewModal()" class="text-gray-500 hover:text-gray-700 font-bold text-xl sm:text-2xl">✕</button>
+  <div id="previewModal" class="hidden fixed inset-0 bg-slate-900/60 backdrop-blur-sm flex justify-center items-center p-2 sm:p-4 z-50 no-print">
+    <div class="bg-white rounded-2xl shadow-2xl max-w-5xl w-full p-4 sm:p-8 max-h-[95vh] overflow-y-auto border border-slate-200">
+      <div class="flex justify-between items-center mb-4 border-b border-slate-100 pb-3">
+        <h2 id="modalTitle" class="text-lg sm:text-xl font-bold text-slate-900">Preview</h2>
+        <button onclick="closePreviewModal()" class="text-slate-400 hover:text-slate-600 font-bold text-xl">✕</button>
       </div>
       
-      <div id="modalContent" class="mb-6 border border-gray-200 p-2 sm:p-6 rounded bg-white overflow-x-auto"></div>
+      <div id="modalContent" class="mb-6 border border-slate-200 p-2 sm:p-6 rounded-xl bg-white overflow-x-auto"></div>
       
-      <div class="flex flex-wrap justify-end gap-2 sm:gap-3">
-        <button onclick="closePreviewModal()" class="bg-gray-500 text-white font-bold px-3 py-2 rounded hover:bg-gray-600 text-xs sm:text-sm flex-1 sm:flex-none">Close</button>
-        <button onclick="window.print()" class="bg-red-600 text-white font-bold px-3 py-2 rounded hover:bg-red-700 text-xs sm:text-sm flex-1 sm:flex-none">Print / Export PDF</button>
+      <div class="flex flex-wrap justify-end gap-2.5">
+        <button onclick="closePreviewModal()" class="bg-white text-slate-700 border border-slate-300 font-semibold px-4 py-2 rounded-xl hover:bg-slate-50 text-xs sm:text-sm">Close</button>
+        <button onclick="window.print()" class="bg-indigo-600 text-white font-semibold px-4 py-2 rounded-xl hover:bg-indigo-700 text-xs sm:text-sm shadow-sm">Print / Export PDF</button>
       </div>
     </div>
   </div>
@@ -745,7 +758,7 @@
       tbody.innerHTML = '';
 
       if (travels.length === 0) {
-        tbody.innerHTML = `<tr><td colspan="8" class="text-center p-6 text-gray-500 font-semibold">No liquidation records found. Click "+ New Liquidation" above to create one.</td></tr>`;
+        tbody.innerHTML = `<tr><td colspan="8" class="text-center p-6 text-slate-500 font-medium">No liquidation records found. Click "+ New Liquidation" above to create one.</td></tr>`;
         return;
       }
 
@@ -760,26 +773,26 @@
         }
 
         const row = document.createElement('tr');
-        row.className = idx % 2 === 0 ? 'bg-white hover:bg-gray-50' : 'bg-gray-50/70 hover:bg-gray-100';
+        row.className = idx % 2 === 0 ? 'bg-white hover:bg-slate-50' : 'bg-slate-50/50 hover:bg-slate-100';
 
         row.innerHTML = `
-          <td class="p-3 font-bold text-gray-800">${trv.regionName || 'Unspecified Region'}</td>
-          <td class="p-3 text-center text-gray-700 font-medium">${dateRange}</td>
-          <td class="p-3 text-right font-bold text-blue-900">${formatNum(trv.cashAdvance)}</td>
-          <td class="p-3 text-right font-bold text-red-700">${formatNum(totalSpent)}</td>
-          <td class="p-3 text-center">
+          <td class="p-3.5 font-bold text-slate-800">${trv.regionName || 'Unspecified Region'}</td>
+          <td class="p-3.5 text-center text-slate-600 font-medium">${dateRange}</td>
+          <td class="p-3.5 text-right font-bold text-slate-900">${formatNum(trv.cashAdvance)}</td>
+          <td class="p-3.5 text-right font-bold text-indigo-600">${formatNum(totalSpent)}</td>
+          <td class="p-3.5 text-center">
             ${trv.isArchived 
-              ? `<span class="bg-red-100 text-red-700 px-2 py-0.5 rounded font-bold text-xs">Archived</span>` 
-              : `<span class="bg-green-100 text-green-700 px-2 py-0.5 rounded font-bold text-xs">Active</span>`}
+              ? `<span class="bg-slate-100 text-slate-600 border border-slate-200 px-2.5 py-0.5 rounded-full font-bold text-xs">Archived</span>` 
+              : `<span class="bg-emerald-50 text-emerald-700 border border-emerald-200 px-2.5 py-0.5 rounded-full font-bold text-xs">Active</span>`}
           </td>
-          <td class="p-3 text-center">
-            <button onclick="openTravel('${trv.id}')" class="bg-emerald-600 text-white font-bold px-3 py-1.5 rounded hover:bg-emerald-700 transition text-xs">Open</button>
+          <td class="p-3.5 text-center">
+            <button onclick="openTravel('${trv.id}')" class="bg-indigo-600 text-white font-semibold px-3 py-1.5 rounded-lg hover:bg-indigo-700 transition text-xs shadow-sm">Open</button>
           </td>
-          <td class="p-3 text-center">
-            <button onclick="openTravelSummaryPreview('${trv.id}')" class="bg-emerald-600 text-white font-bold px-3 py-1.5 rounded hover:bg-emerald-700 transition text-xs">Print</button>
+          <td class="p-3.5 text-center">
+            <button onclick="openTravelSummaryPreview('${trv.id}')" class="bg-slate-800 text-white font-semibold px-3 py-1.5 rounded-lg hover:bg-slate-900 transition text-xs shadow-sm">Print</button>
           </td>
-          <td class="p-3 text-center whitespace-nowrap">
-            <button onclick="deleteTravel('${trv.id}')" class="bg-red-100 text-red-600 hover:text-red-800 font-bold px-2 py-1 rounded text-xs">Delete</button>
+          <td class="p-3.5 text-center whitespace-nowrap">
+            <button onclick="deleteTravel('${trv.id}')" class="bg-rose-50 text-rose-600 border border-rose-200 hover:bg-rose-100 font-semibold px-2.5 py-1 rounded-lg text-xs transition">Delete</button>
           </td>
         `;
         tbody.appendChild(row);
@@ -1094,16 +1107,16 @@
 
       subOptionSelect.innerHTML = '';
       subOptionSelect.disabled = false;
-      subOptionSelect.classList.remove('bg-gray-200', 'cursor-not-allowed', 'opacity-50');
+      subOptionSelect.classList.remove('bg-slate-100', 'cursor-not-allowed', 'opacity-50');
 
       descInput.disabled = false;
-      descInput.classList.remove('bg-gray-200', 'cursor-not-allowed', 'opacity-50');
+      descInput.classList.remove('bg-slate-100', 'cursor-not-allowed', 'opacity-50');
 
       ticketInput.disabled = false;
-      ticketInput.classList.remove('bg-gray-200', 'cursor-not-allowed', 'opacity-50');
+      ticketInput.classList.remove('bg-slate-100', 'cursor-not-allowed', 'opacity-50');
 
       customSubtypeInput.disabled = true;
-      customSubtypeInput.classList.add('bg-gray-200', 'cursor-not-allowed', 'opacity-50');
+      customSubtypeInput.classList.add('bg-slate-100', 'cursor-not-allowed', 'opacity-50');
       customSubtypeInput.value = '';
       customInputLabel.textContent = 'Specify Transpo / Category';
       ticketLabel.textContent = 'Ticket # / Remarks';
@@ -1122,8 +1135,8 @@
         [{v: '150', t: '₱150'}, {v: '300', t: '₱300'}, {v: '450', t: '₱450'}, {v: '600', t: '₱600'}].forEach(opt => {
           const o = document.createElement('option'); o.value = opt.v; o.textContent = opt.t; subOptionSelect.appendChild(o);
         });
-        descInput.disabled = true; descInput.classList.add('bg-gray-200', 'cursor-not-allowed', 'opacity-50'); descInput.value = ''; descInput.required = false;
-        ticketInput.disabled = true; ticketInput.classList.add('bg-gray-200', 'cursor-not-allowed', 'opacity-50'); ticketInput.value = '';
+        descInput.disabled = true; descInput.classList.add('bg-slate-100', 'cursor-not-allowed', 'opacity-50'); descInput.value = ''; descInput.required = false;
+        ticketInput.disabled = true; ticketInput.classList.add('bg-slate-100', 'cursor-not-allowed', 'opacity-50'); ticketInput.value = '';
         if (editingId === null) amountInput.value = subOptionSelect.value;
 
       } else if (category === 'Per Diem') {
@@ -1131,22 +1144,22 @@
         [{v: '1500', t: '₱1,500'}, {v: '1300', t: '₱1,300'}, {v: '2000', t: '₱2,000'}].forEach(opt => {
           const o = document.createElement('option'); o.value = opt.v; o.textContent = opt.t; subOptionSelect.appendChild(o);
         });
-        descInput.disabled = true; descInput.classList.add('bg-gray-200', 'cursor-not-allowed', 'opacity-50'); descInput.value = ''; descInput.required = false;
-        ticketInput.disabled = true; ticketInput.classList.add('bg-gray-200', 'cursor-not-allowed', 'opacity-50'); ticketInput.value = '';
+        descInput.disabled = true; descInput.classList.add('bg-slate-100', 'cursor-not-allowed', 'opacity-50'); descInput.value = ''; descInput.required = false;
+        ticketInput.disabled = true; ticketInput.classList.add('bg-slate-100', 'cursor-not-allowed', 'opacity-50'); ticketInput.value = '';
         if (editingId === null) amountInput.value = subOptionSelect.value;
 
       } else if (category === 'Terminal Fee') {
         subOptionLabel.textContent = 'Option (N/A)';
         const o = document.createElement('option'); o.value = 'N/A'; o.textContent = 'N/A'; subOptionSelect.appendChild(o);
-        subOptionSelect.disabled = true; subOptionSelect.classList.add('bg-gray-200', 'cursor-not-allowed', 'opacity-50');
-        descInput.disabled = true; descInput.classList.add('bg-gray-200', 'cursor-not-allowed', 'opacity-50'); descInput.value = ''; descInput.required = false;
+        subOptionSelect.disabled = true; subOptionSelect.classList.add('bg-slate-100', 'cursor-not-allowed', 'opacity-50');
+        descInput.disabled = true; descInput.classList.add('bg-slate-100', 'cursor-not-allowed', 'opacity-50'); descInput.value = ''; descInput.required = false;
         ticketInput.placeholder = 'Optional Ticket / Receipt #';
         if (editingId === null) amountInput.value = '';
 
       } else if (category === 'Miscellaneous') {
         subOptionLabel.textContent = 'Option (N/A)';
         const o = document.createElement('option'); o.value = 'N/A'; o.textContent = 'N/A'; subOptionSelect.appendChild(o);
-        subOptionSelect.disabled = true; subOptionSelect.classList.add('bg-gray-200', 'cursor-not-allowed', 'opacity-50');
+        subOptionSelect.disabled = true; subOptionSelect.classList.add('bg-slate-100', 'cursor-not-allowed', 'opacity-50');
         descInput.placeholder = 'e.g. Laundry, Supplies'; descInput.required = true;
         ticketLabel.textContent = 'OR No. / Receipt #'; ticketInput.placeholder = 'Optional OR No.';
         if (editingId === null) amountInput.value = '';
@@ -1154,9 +1167,9 @@
       } else if (category === 'Others') {
         subOptionLabel.textContent = 'Option (N/A)';
         const o = document.createElement('option'); o.value = 'N/A'; o.textContent = 'N/A'; subOptionSelect.appendChild(o);
-        subOptionSelect.disabled = true; subOptionSelect.classList.add('bg-gray-200', 'cursor-not-allowed', 'opacity-50');
+        subOptionSelect.disabled = true; subOptionSelect.classList.add('bg-slate-100', 'cursor-not-allowed', 'opacity-50');
         customInputLabel.textContent = 'Specify Category Name';
-        customSubtypeInput.disabled = false; customSubtypeInput.classList.remove('bg-gray-200', 'cursor-not-allowed', 'opacity-50');
+        customSubtypeInput.disabled = false; customSubtypeInput.classList.remove('bg-slate-100', 'cursor-not-allowed', 'opacity-50');
         customSubtypeInput.placeholder = 'e.g. Hotel, Flight'; customSubtypeInput.required = true;
         descInput.placeholder = 'Particulars / Details'; descInput.required = true;
         ticketInput.placeholder = 'Optional Receipt # / Remarks';
@@ -1174,10 +1187,10 @@
       if (category === 'Transportation') {
         if (subOptionSelect.value === 'Others') {
           customInputLabel.textContent = 'Specify Transpo Type';
-          customSubtypeInput.disabled = false; customSubtypeInput.classList.remove('bg-gray-200', 'cursor-not-allowed', 'opacity-50');
+          customSubtypeInput.disabled = false; customSubtypeInput.classList.remove('bg-slate-100', 'cursor-not-allowed', 'opacity-50');
           customSubtypeInput.placeholder = 'e.g. Grab, Habal-habal'; customSubtypeInput.focus();
         } else {
-          customSubtypeInput.disabled = true; customSubtypeInput.classList.add('bg-gray-200', 'cursor-not-allowed', 'opacity-50'); customSubtypeInput.value = '';
+          customSubtypeInput.disabled = true; customSubtypeInput.classList.add('bg-slate-100', 'cursor-not-allowed', 'opacity-50'); customSubtypeInput.value = '';
         }
       } else if (category === 'Meals' || category === 'Per Diem') {
         amountInput.value = subOptionSelect.value;
@@ -1275,7 +1288,7 @@
 
       const submitBtn = document.getElementById('submitBtn');
       submitBtn.textContent = 'Save';
-      submitBtn.className = 'bg-green-600 text-white font-bold p-2.5 sm:p-2 rounded hover:bg-green-700 w-full text-sm';
+      submitBtn.className = 'bg-emerald-600 text-white font-bold p-2.5 rounded-xl hover:bg-emerald-700 w-full text-sm shadow-sm transition';
       document.getElementById('cancelEditBtn').classList.remove('hidden');
     }
 
@@ -1283,7 +1296,7 @@
       editingId = null;
       const submitBtn = document.getElementById('submitBtn');
       submitBtn.textContent = '+ Add Expense';
-      submitBtn.className = 'bg-blue-600 text-white font-bold p-2.5 sm:p-2 rounded hover:bg-blue-700 w-full text-sm';
+      submitBtn.className = 'bg-indigo-600 text-white font-bold p-2.5 rounded-xl hover:bg-indigo-700 w-full text-sm shadow-sm transition';
       document.getElementById('cancelEditBtn').classList.add('hidden');
       resetForm();
     }
@@ -1427,7 +1440,7 @@
             dayMealsPerDiem += mealsAmt;
 
             const row = document.createElement('tr');
-            row.className = isPrint ? '' : 'hover:bg-gray-50';
+            row.className = isPrint ? '' : 'hover:bg-slate-50/80';
 
             let dateTd = index === 0 
               ? `<td class="font-bold text-center" rowspan="${items.length + 1}">${formatDateShort(date)}</td>`
@@ -1436,20 +1449,20 @@
             let actionCol = isPrint ? '' : `
               <td class="text-center whitespace-nowrap no-print">
                 ${isArchived 
-                  ? `<span class="text-gray-400 text-xs italic">Locked</span>` 
-                  : `<button onclick="editExpense(${item.id})" class="text-blue-600 hover:text-blue-800 font-bold mr-2">Edit</button>
-                     <button onclick="deleteExpense(${item.id})" class="text-red-500 hover:text-red-700 font-bold">✕</button>`
+                  ? `<span class="text-slate-400 text-xs italic font-medium">Locked</span>` 
+                  : `<button onclick="editExpense(${item.id})" class="text-indigo-600 hover:text-indigo-900 font-semibold mr-2.5">Edit</button>
+                     <button onclick="deleteExpense(${item.id})" class="text-rose-600 hover:text-rose-800 font-semibold">✕</button>`
                 }
               </td>`;
 
             row.innerHTML = `
               ${dateTd}
-              <td class="text-gray-800 w-auto whitespace-nowrap">${descDisplay}</td>
-              <td class="text-center text-gray-700">${typeDisplay}</td>
-              <td class="text-center text-gray-600">${item.ticketNo || ''}</td>
-              <td class="text-right text-gray-800">${formatNum(transpoAmt)}</td>
-              <td class="text-right text-gray-800">${formatNum(mealsAmt)}</td>
-              <td class="text-right font-bold text-gray-800"></td>
+              <td class="text-slate-800 w-auto whitespace-nowrap">${descDisplay}</td>
+              <td class="text-center text-slate-700">${typeDisplay}</td>
+              <td class="text-center text-slate-600">${item.ticketNo || ''}</td>
+              <td class="text-right text-slate-800">${formatNum(transpoAmt)}</td>
+              <td class="text-right text-slate-800">${formatNum(mealsAmt)}</td>
+              <td class="text-right font-bold text-slate-800"></td>
               ${actionCol}
             `;
             tbody.appendChild(row);
@@ -1464,10 +1477,10 @@
             <td></td>
             <td></td>
             <td></td>
-            <td class="text-center font-bold text-red-600">subtotal</td>
-            <td class="text-right font-bold text-red-600">${formatNum(dayTranspoFee)}</td>
-            <td class="text-right font-bold text-gray-800">${formatNum(dayMealsPerDiem)}</td>
-            <td class="text-right font-bold text-blue-700">${formatNum(dayTotal)}</td>
+            <td class="text-center font-bold text-rose-600">subtotal</td>
+            <td class="text-right font-bold text-rose-600">${formatNum(dayTranspoFee)}</td>
+            <td class="text-right font-bold text-slate-800">${formatNum(dayMealsPerDiem)}</td>
+            <td class="text-right font-bold text-indigo-600">${formatNum(dayTotal)}</td>
             ${actionColEmpty}
           `;
           tbody.appendChild(subtotalRow);
@@ -1599,7 +1612,7 @@
       
       const remElem = document.getElementById('remainingDisplay');
       remElem.textContent = formatCurrency(returnRefund);
-      remElem.className = returnRefund < 0 ? 'text-base font-bold text-red-600' : 'text-base font-bold text-green-600';
+      remElem.className = returnRefund < 0 ? 'text-sm sm:text-base font-bold text-rose-600 mt-1' : 'text-sm sm:text-base font-bold text-indigo-900 mt-1';
     }
 
     function openPreviewModal(type) {
