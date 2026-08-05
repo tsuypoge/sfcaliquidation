@@ -566,7 +566,7 @@
       // 2. Sync from Google Drive / Sheets Cloud Database if URL is configured
       if (GOOGLE_SCRIPT_URL && GOOGLE_SCRIPT_URL !== "IBUTANG_ANG_IMONG_WEB_APP_URL_DIRI") {
         try {
-          const res = await fetch(`${GOOGLE_SCRIPT_URL}?action=read&username=${encodeURIComponent(currentUsername)}`);
+          const res = await fetch(`${GOOGLE_SCRIPT_URL}?action=read&username=${encodeURIComponent(currentUsername)}&_t=${Date.now()}`);
           if (res.ok) {
             const cloudData = await res.json();
             if (cloudData) {
