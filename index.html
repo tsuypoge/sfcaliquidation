@@ -125,7 +125,7 @@
   <!-- ========================================== -->
   <div id="loadingOverlay" class="hidden fixed inset-0 bg-slate-900/60 backdrop-blur-sm flex flex-col justify-center items-center z-[100] text-white no-print">
     <div class="w-10 h-10 border-4 border-indigo-400 border-t-transparent rounded-full animate-spin mb-3"></div>
-    <p id="loadingText" class="text-xs font-semibold tracking-wide">Processing...</p>
+    <p id="loadingText" class="text-xs font-semibold tracking-wide">Syncing Data...</p>
   </div>
 
 
@@ -187,7 +187,7 @@
   <div id="travelListScreen" class="hidden p-2 sm:p-4">
     <div class="max-w-7xl mx-auto bg-white rounded-2xl shadow-sm border border-slate-200 p-3 sm:p-5">
       
-      <!-- Top Bar: User Display, Live Clock, New Liquidation & Logout -->
+      <!-- Top Bar: User Display, Live Clock, Sync, New Liquidation & Logout -->
       <div class="mb-4 p-2 bg-slate-50 rounded-xl border border-slate-200 flex flex-col md:flex-row items-center justify-between gap-2.5 text-xs">
         
         <div class="flex flex-wrap items-center gap-2.5">
@@ -207,6 +207,7 @@
         </div>
 
         <div class="flex items-center gap-2">
+          <button onclick="manualCloudSync()" title="Refresh/Sync from Cloud" class="bg-slate-100 text-slate-700 border border-slate-300 font-semibold text-[11px] px-2.5 py-1.5 rounded-lg hover:bg-slate-200 transition">🔄 Sync Cloud</button>
           <button onclick="createNewTravel()" class="bg-indigo-600 text-white font-semibold text-[11px] px-3 py-1.5 rounded-lg hover:bg-indigo-700 shadow-xs transition">+ New Liquidation</button>
           <button onclick="handleLogout()" class="bg-rose-50 text-rose-700 border border-rose-200 font-bold text-[11px] px-3 py-1.5 rounded-lg hover:bg-rose-100 transition">Logout</button>
         </div>
@@ -749,24 +750,9 @@
     }
 
     async function loadUserData() {
+      // 1. FAST Load from LocalStorage
       travels = JSON.parse(localStorage.getItem(getStorageKey('travel_list_v1'))) || [];
       signatureDataUrl = localStorage.getItem(getStorageKey('travel_signature_image')) || '';
-
-      // Migration for single travel data
-      if (travels.length === 0) {
-        const oldExpenses = JSON.parse(localStorage.getItem(getStorageKey('travel_expenses_v40')));
-        if (oldExpenses && oldExpenses.length > 0) {
-          const defaultTravel = {
-            id: 'trv_' + Date.now(),
-            regionName: localStorage.getItem(getStorageKey('travel_region_name')) || 'Default Region',
-            cashAdvance: parseFloat(localStorage.getItem(getStorageKey('travel_cash_advance'))) || 0,
-            isArchived: localStorage.getItem(getStorageKey('travel_is_archived')) === 'true',
-            expenses: oldExpenses
-          };
-          travels.push(defaultTravel);
-          localStorage.setItem(getStorageKey('travel_list_v1'), JSON.stringify(travels));
-        }
-      }
 
       renderTravelListTable();
 
@@ -779,19 +765,24 @@
         document.getElementById('mainDashboard').classList.add('hidden');
       }
 
+      // 2. AUTOMATIC CLOUD SYNC FROM GOOGLE SCRIPT (CROSS-BROWSER CONSISTENCY)
       if (GOOGLE_SCRIPT_URL && GOOGLE_SCRIPT_URL !== "IBUTANG_ANG_IMONG_WEB_APP_URL_DIRI") {
         try {
           const res = await fetch(`${GOOGLE_SCRIPT_URL}?action=read&username=${encodeURIComponent(currentUsername)}&_t=${Date.now()}`);
           if (res.ok) {
             const cloudData = await res.json();
-            if (cloudData && cloudData.travels) {
+            if (cloudData && cloudData.travels && cloudData.travels.length > 0) {
               travels = cloudData.travels || [];
-              signatureDataUrl = cloudData.signatureDataUrl || '';
-              saveDataToStorage(false);
+              signatureDataUrl = cloudData.signatureDataUrl || signatureDataUrl;
+              
+              // Cache to LocalStorage so next time it loads instantly
+              localStorage.setItem(getStorageKey('travel_list_v1'), JSON.stringify(travels));
+              if (signatureDataUrl) localStorage.setItem(getStorageKey('travel_signature_image'), signatureDataUrl);
+              
               renderTravelListTable();
 
               const currentActive = travels.find(t => !t.isArchived);
-              if (currentActive && document.getElementById('mainDashboard').classList.contains('hidden')) {
+              if (currentActive) {
                 openTravel(currentActive.id);
               }
             }
@@ -800,6 +791,12 @@
           console.warn("Could not sync from cloud, using local cached data.", e);
         }
       }
+    }
+
+    async function manualCloudSync() {
+      await showLoading('Syncing from Cloud...', 800);
+      await loadUserData();
+      alert('Cloud Sync Complete!');
     }
 
     function renderTravelListTable() {
@@ -958,7 +955,7 @@
       const foundUser = USERS_DB.find(u => u.username.toLowerCase() === user && u.password === pass);
 
       if (foundUser) {
-        await showLoading('Signing in...', 1000);
+        await showLoading('Signing in & Syncing...', 1000);
         sessionStorage.setItem('travel_is_logged_in', 'true');
         sessionStorage.setItem('travel_logged_username', foundUser.username);
         sessionStorage.setItem('travel_logged_user_name', foundUser.name);
@@ -1241,6 +1238,7 @@
       }
     }
 
+    // INSTANT LOCAL SAVE & UI UPDATE ON EXPENSE SUBMIT
     document.getElementById('expenseForm').addEventListener('submit', function(e) {
       e.preventDefault();
       if (isArchived) return;
@@ -1276,8 +1274,34 @@
         resetForm();
       }
 
-      saveActiveTravelData();
+      // Update active array local reference
+      if (activeTravelId) {
+        const idx = travels.findIndex(t => t.id === activeTravelId);
+        if (idx !== -1) {
+          travels[idx].expenses = expenses;
+        }
+      }
+
+      // 1. FAST Local Storage Save
+      localStorage.setItem(getStorageKey('travel_list_v1'), JSON.stringify(travels));
+
+      // 2. FAST Instant UI Render
       updateTracker();
+
+      // 3. ASYNCHRONOUS Background Cloud Sync (Non-blocking for Safari)
+      if (GOOGLE_SCRIPT_URL && GOOGLE_SCRIPT_URL !== "IBUTANG_ANG_IMONG_WEB_APP_URL_DIRI") {
+        setTimeout(() => {
+          fetch(GOOGLE_SCRIPT_URL, {
+            method: 'POST',
+            mode: 'no-cors',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({
+              username: currentUsername,
+              data: { travels, signatureDataUrl }
+            })
+          }).catch(err => console.warn("Cloud save failed:", err));
+        }, 50);
+      }
     });
 
     function saveDataToStorage(syncCloud = true) {
@@ -1291,15 +1315,17 @@
       }
 
       if (syncCloud && GOOGLE_SCRIPT_URL && GOOGLE_SCRIPT_URL !== "IBUTANG_ANG_IMONG_WEB_APP_URL_DIRI") {
-        fetch(GOOGLE_SCRIPT_URL, {
-          method: 'POST',
-          mode: 'no-cors',
-          headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify({
-            username: currentUsername,
-            data: { travels, signatureDataUrl }
-          })
-        }).catch(err => console.warn("Cloud save failed:", err));
+        setTimeout(() => {
+          fetch(GOOGLE_SCRIPT_URL, {
+            method: 'POST',
+            mode: 'no-cors',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({
+              username: currentUsername,
+              data: { travels, signatureDataUrl }
+            })
+          }).catch(err => console.warn("Cloud save failed:", err));
+        }, 50);
       }
     }
 
@@ -1386,8 +1412,6 @@
     }
 
     function updateTracker() {
-      saveActiveTravelData();
-
       const archiveBtn = document.getElementById('archiveBtn');
       const statusBadge = document.getElementById('archiveStatusBadge');
       const formElem = document.getElementById('expenseForm');
