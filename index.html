@@ -5,7 +5,7 @@
   <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
   <title>Travel Expense Tracker</title>
 
-  <!-- Custom Favicon (Gibalik ang Logo sa Tab sa Browser) -->
+  <!-- Custom Favicon -->
   <link rel="icon" type="image/png" href="logo.png">
 
   <script src="https://cdn.tailwindcss.com"></script>
@@ -194,12 +194,14 @@
       <div class="flex flex-col md:flex-row justify-between items-center mb-4 gap-3">
         <h1 class="text-xl sm:text-2xl font-bold text-gray-800 text-center md:text-left flex items-center justify-center md:justify-start">
           <span class="text-blue-600 font-black mr-2 tracking-wide">SF</span> Travel Expense Tracker
+          <span id="archiveStatusBadge" class="hidden ml-3 bg-red-100 text-red-700 border border-red-300 text-xs px-2.5 py-0.5 rounded-full font-bold">LOCKED / ARCHIVED</span>
         </h1>
         
-        <!-- Action Buttons (Without Emojis) -->
+        <!-- Action Buttons -->
         <div class="flex flex-wrap justify-center items-center gap-1.5 sm:gap-2 w-full md:w-auto">
           <button onclick="openPreviewModal('detailed')" class="bg-purple-600 text-white text-xs sm:text-sm font-bold px-3 py-2 rounded hover:bg-purple-700 flex-1 sm:flex-none text-center">Preview</button>
           <button onclick="openPreviewModal('summary')" class="bg-green-600 text-white text-xs sm:text-sm font-bold px-3 py-2 rounded hover:bg-green-700 flex-1 sm:flex-none text-center">Print Summary</button>
+          <button onclick="toggleArchive()" id="archiveBtn" class="bg-indigo-600 text-white text-xs sm:text-sm font-bold px-3 py-2 rounded hover:bg-indigo-700 flex-1 sm:flex-none text-center">Archive</button>
           <button onclick="exportBackup()" class="bg-blue-600 text-white text-xs sm:text-sm font-bold px-3 py-2 rounded hover:bg-blue-700 flex-1 sm:flex-none text-center">Backup</button>
           <label class="bg-amber-600 text-white text-xs sm:text-sm font-bold px-3 py-2 rounded hover:bg-amber-700 cursor-pointer flex-1 sm:flex-none text-center">
             Restore
@@ -565,6 +567,7 @@
     let cashAdvance = 0;
     let regionName = '';
     let signatureDataUrl = '';
+    let isArchived = false;
     let editingId = null;
 
     function getStorageKey(keyName) {
@@ -595,6 +598,7 @@
       cashAdvance = parseFloat(localStorage.getItem(getStorageKey('travel_cash_advance'))) || 0;
       regionName = localStorage.getItem(getStorageKey('travel_region_name')) || '';
       signatureDataUrl = localStorage.getItem(getStorageKey('travel_signature_image')) || '';
+      isArchived = localStorage.getItem(getStorageKey('travel_is_archived')) === 'true';
 
       updateUIFields();
 
@@ -608,6 +612,7 @@
               cashAdvance = parseFloat(cloudData.cashAdvance) || 0;
               regionName = cloudData.regionName || '';
               signatureDataUrl = cloudData.signatureDataUrl || '';
+              isArchived = cloudData.isArchived === true;
               
               saveDataToStorage(false);
               updateUIFields();
@@ -627,6 +632,23 @@
       if (regInputElem) regInputElem.value = regionName;
 
       updateTracker();
+    }
+
+    function toggleArchive() {
+      if (isArchived) {
+        if (confirm("Do you want to Unarchive / Re-open this liquidation? This will allow editing again.")) {
+          isArchived = false;
+          saveDataToStorage();
+          updateTracker();
+        }
+      } else {
+        if (confirm("Are you sure you want to Archive / Finalize this liquidation? This will lock inputs and prevent edits.")) {
+          isArchived = true;
+          if (editingId !== null) cancelEdit();
+          saveDataToStorage();
+          updateTracker();
+        }
+      }
     }
 
     function handleLogin(event) {
@@ -694,11 +716,13 @@
         cashAdvance = 0;
         regionName = '';
         signatureDataUrl = '';
+        isArchived = false;
 
         localStorage.removeItem(getStorageKey('travel_expenses_v40'));
         localStorage.removeItem(getStorageKey('travel_cash_advance'));
         localStorage.removeItem(getStorageKey('travel_region_name'));
         localStorage.removeItem(getStorageKey('travel_signature_image'));
+        localStorage.removeItem(getStorageKey('travel_is_archived'));
 
         document.getElementById('cashAdvanceInput').value = '';
         document.getElementById('regionNameInput').value = '';
@@ -739,6 +763,7 @@
     }
 
     function handleCashAdvanceInput(elem) {
+      if (isArchived) return;
       let rawVal = elem.value.replace(/[^0-9.]/g, '');
       let caVal = parseFloat(rawVal) || 0;
       cashAdvance = caVal;
@@ -747,12 +772,14 @@
     }
 
     function handleRegionNameInput(elem) {
+      if (isArchived) return;
       regionName = elem.value.trim();
       saveDataToStorage();
       updateTracker();
     }
 
     function focusCashAdvanceInput(elem) {
+      if (isArchived) return;
       if (cashAdvance > 0) {
         elem.value = cashAdvance;
       } else {
@@ -761,6 +788,7 @@
     }
 
     function blurCashAdvanceInput(elem) {
+      if (isArchived) return;
       if (cashAdvance > 0) {
         elem.value = cashAdvance.toLocaleString('en-US', {minimumFractionDigits: 2, maximumFractionDigits: 2});
       } else {
@@ -928,6 +956,8 @@
 
     document.getElementById('expenseForm').addEventListener('submit', function(e) {
       e.preventDefault();
+      if (isArchived) return;
+
       const date = document.getElementById('dateInput').value;
       const category = document.getElementById('category').value;
       const subOptionSelect = document.getElementById('subOptionSelect');
@@ -969,6 +999,7 @@
       localStorage.setItem(getStorageKey('travel_expenses_v40'), JSON.stringify(expenses));
       localStorage.setItem(getStorageKey('travel_cash_advance'), cashAdvance);
       localStorage.setItem(getStorageKey('travel_region_name'), regionName);
+      localStorage.setItem(getStorageKey('travel_is_archived'), isArchived);
       if (signatureDataUrl) {
         localStorage.setItem(getStorageKey('travel_signature_image'), signatureDataUrl);
       } else {
@@ -982,13 +1013,14 @@
           headers: { 'Content-Type': 'application/json' },
           body: JSON.stringify({
             username: currentUsername,
-            data: { cashAdvance, regionName, signatureDataUrl, expenses }
+            data: { cashAdvance, regionName, signatureDataUrl, isArchived, expenses }
           })
         }).catch(err => console.warn("Cloud save failed:", err));
       }
     }
 
     function editExpense(id) {
+      if (isArchived) return;
       const item = expenses.find(e => e.id === id);
       if (!item) return;
 
@@ -1039,6 +1071,7 @@
     }
 
     function deleteExpense(id) {
+      if (isArchived) return;
       expenses = expenses.filter(item => item.id !== id);
       saveDataToStorage();
       if (editingId === id) cancelEdit();
@@ -1056,6 +1089,33 @@
 
     function updateTracker() {
       saveDataToStorage();
+
+      const archiveBtn = document.getElementById('archiveBtn');
+      const statusBadge = document.getElementById('archiveStatusBadge');
+      const formElem = document.getElementById('expenseForm');
+      const caInput = document.getElementById('cashAdvanceInput');
+      const regInput = document.getElementById('regionNameInput');
+
+      if (isArchived) {
+        if (archiveBtn) archiveBtn.textContent = 'Unarchive';
+        if (statusBadge) statusBadge.classList.remove('hidden');
+        if (formElem) {
+          formElem.querySelectorAll('input, select, button').forEach(el => el.disabled = true);
+          formElem.classList.add('opacity-60', 'pointer-events-none');
+        }
+        if (caInput) caInput.disabled = true;
+        if (regInput) regInput.disabled = true;
+      } else {
+        if (archiveBtn) archiveBtn.textContent = 'Archive';
+        if (statusBadge) statusBadge.classList.add('hidden');
+        if (formElem) {
+          formElem.querySelectorAll('input, select, button').forEach(el => el.disabled = false);
+          formElem.classList.remove('opacity-60', 'pointer-events-none');
+        }
+        if (caInput) caInput.disabled = false;
+        if (regInput) regInput.disabled = false;
+        handleCategoryChange();
+      }
 
       const tbodyUI = document.getElementById('uiTableBody');
       const tbodyPrintMainDetailed = document.getElementById('printMainTableBodyDetailed');
@@ -1145,8 +1205,11 @@
 
             let actionCol = isPrint ? '' : `
               <td class="text-center whitespace-nowrap no-print">
-                <button onclick="editExpense(${item.id})" class="text-blue-600 hover:text-blue-800 font-bold mr-2">Edit</button>
-                <button onclick="deleteExpense(${item.id})" class="text-red-500 hover:text-red-700 font-bold">✕</button>
+                ${isArchived 
+                  ? `<span class="text-gray-400 text-xs italic">Locked</span>` 
+                  : `<button onclick="editExpense(${item.id})" class="text-blue-600 hover:text-blue-800 font-bold mr-2">Edit</button>
+                     <button onclick="deleteExpense(${item.id})" class="text-red-500 hover:text-red-700 font-bold">✕</button>`
+                }
               </td>`;
 
             row.innerHTML = `
@@ -1346,7 +1409,8 @@
         expenses: expenses,
         cashAdvance: cashAdvance,
         regionName: regionName,
-        signatureDataUrl: signatureDataUrl
+        signatureDataUrl: signatureDataUrl,
+        isArchived: isArchived
       };
       const dataStr = "data:text/json;charset=utf-8," + encodeURIComponent(JSON.stringify(backupData, null, 2));
       const downloadAnchor = document.createElement('a');
@@ -1368,6 +1432,7 @@
             cashAdvance = parseFloat(data.cashAdvance) || 0;
             regionName = data.regionName || '';
             signatureDataUrl = data.signatureDataUrl || '';
+            isArchived = data.isArchived === true;
             
             saveDataToStorage();
 
