@@ -17,15 +17,15 @@
       -webkit-overflow-scrolling: touch;
     }
 
-    /* Standardized Report Header - Strictly 9pt for Liquidation Reports */
+    /* Standardized Report Header - Reduced to 7pt */
     .report-header, .report-header p {
-      font-size: 9pt !important;
+      font-size: 7pt !important;
       font-weight: bold !important;
-      line-height: 1.3 !important;
+      line-height: 1.2 !important;
       color: #000000 !important;
     }
 
-    /* General Styling for Preview Window, Printable PDF, & UI Table - All 9pt */
+    /* General Styling for Preview Window, Printable PDF, & UI Table - Strictly 7pt */
     #printAreaDetailed,
     #printAreaSummary,
     #modalContent,
@@ -34,23 +34,23 @@
     #modalContent table,
     .excel-style-table {
       font-family: Calibri, 'Segoe UI', Arial, sans-serif !important;
-      font-size: 9pt !important;
+      font-size: 7pt !important;
     }
 
     #printAreaDetailed tr,
     #printAreaSummary tr,
     #modalContent tr,
     .excel-style-table tr {
-      height: 14pt !important;
-      line-height: 1.2 !important;
+      height: 12pt !important;
+      line-height: 1.1 !important;
     }
 
     #printAreaDetailed th, #printAreaDetailed td,
     #printAreaSummary th, #printAreaSummary td,
     #modalContent th, #modalContent td,
     .excel-style-table th, .excel-style-table td {
-      font-size: 9pt !important;
-      padding: 4px 6px !important;
+      font-size: 7pt !important;
+      padding: 3px 5px !important;
       border: 1px solid #d1d5db !important;
     }
 
@@ -69,7 +69,7 @@
         print-color-adjust: exact !important;
         background-color: white !important;
         margin: 0 !important;
-        padding: 10px !important;
+        padding: 8px !important;
         font-family: Calibri, 'Segoe UI', Arial, sans-serif !important;
       }
       .no-print {
@@ -101,46 +101,46 @@
   <!-- 0. LOGIN PAGE SCREEN                      -->
   <!-- ========================================== -->
   <div id="loginScreen" class="min-h-screen flex items-center justify-center p-4 bg-slate-900">
-    <div class="max-w-md w-full bg-white rounded-2xl shadow-2xl border border-slate-200 p-8 sm:p-10">
+    <div class="max-w-sm w-full bg-white rounded-2xl shadow-2xl border border-slate-200 p-6 sm:p-8">
       
-      <div class="text-center mb-8">
-        <div class="inline-flex items-center justify-center w-14 h-14 bg-indigo-600 text-white rounded-xl font-black text-2xl mb-3 shadow-lg shadow-indigo-500/30">
+      <div class="text-center mb-6">
+        <div class="inline-flex items-center justify-center w-12 h-12 bg-indigo-600 text-white rounded-xl font-black text-xl mb-2.5 shadow-lg shadow-indigo-500/30">
           SF
         </div>
-        <h2 class="text-2xl font-bold text-slate-900 tracking-tight">Travel Expense Tracker</h2>
-        <p class="text-xs text-slate-500 mt-1.5 font-medium">Please sign in with your corporate account</p>
+        <h2 class="text-xl font-bold text-slate-900 tracking-tight">Travel Expense Tracker</h2>
+        <p class="text-[11px] text-slate-500 mt-1 font-medium">Please sign in with your corporate account</p>
       </div>
 
-      <form id="loginForm" onsubmit="handleLogin(event)" class="space-y-5">
-        <div id="loginError" class="hidden p-3 bg-red-50 border border-red-200 text-red-600 text-xs rounded-lg text-center font-semibold">
+      <form id="loginForm" onsubmit="handleLogin(event)" class="space-y-4">
+        <div id="loginError" class="hidden p-2.5 bg-red-50 border border-red-200 text-red-600 text-[11px] rounded-lg text-center font-semibold">
           Invalid Username or Password!
         </div>
 
         <div>
-          <label class="block text-xs font-bold uppercase tracking-wider text-slate-600 mb-1.5">Username</label>
+          <label class="block text-[10px] font-bold uppercase tracking-wider text-slate-600 mb-1">Username</label>
           <input 
             type="text" 
             id="usernameInput" 
             required 
             placeholder="e.g. j.cagang" 
-            class="w-full p-3 border rounded-xl text-sm border-slate-300 focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500 focus:outline-none transition"
+            class="w-full p-2.5 border rounded-xl text-xs border-slate-300 focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500 focus:outline-none transition"
           >
         </div>
 
         <div>
-          <label class="block text-xs font-bold uppercase tracking-wider text-slate-600 mb-1.5">Password</label>
+          <label class="block text-[10px] font-bold uppercase tracking-wider text-slate-600 mb-1">Password</label>
           <input 
             type="password" 
             id="passwordInput" 
             required 
             placeholder="Enter password" 
-            class="w-full p-3 border rounded-xl text-sm border-slate-300 focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500 focus:outline-none transition"
+            class="w-full p-2.5 border rounded-xl text-xs border-slate-300 focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500 focus:outline-none transition"
           >
         </div>
 
         <button 
           type="submit" 
-          class="w-full bg-indigo-600 text-white font-bold py-3 rounded-xl hover:bg-indigo-700 active:scale-[0.99] transition duration-200 text-sm shadow-lg shadow-indigo-600/25"
+          class="w-full bg-indigo-600 text-white font-bold py-2.5 rounded-xl hover:bg-indigo-700 active:scale-[0.99] transition duration-200 text-xs shadow-md shadow-indigo-600/25"
         >
           Sign In
         </button>
@@ -152,53 +152,53 @@
   <!-- ========================================== -->
   <!-- 1. TRAVEL LIQUIDATION LIST SCREEN (LANDING)-->
   <!-- ========================================== -->
-  <div id="travelListScreen" class="hidden p-2 sm:p-4 md:p-6">
-    <div class="max-w-7xl mx-auto bg-white rounded-2xl shadow-sm border border-slate-200 p-4 sm:p-6">
+  <div id="travelListScreen" class="hidden p-2 sm:p-4">
+    <div class="max-w-7xl mx-auto bg-white rounded-2xl shadow-sm border border-slate-200 p-3 sm:p-5">
       
       <!-- Top Bar: User Display, Live Clock, New Liquidation & Logout -->
-      <div class="mb-5 p-3 bg-slate-50 rounded-xl border border-slate-200 flex flex-col md:flex-row items-center justify-between gap-3 text-xs sm:text-sm">
+      <div class="mb-4 p-2 bg-slate-50 rounded-xl border border-slate-200 flex flex-col md:flex-row items-center justify-between gap-2.5 text-xs">
         
-        <div class="flex flex-wrap items-center gap-3">
+        <div class="flex flex-wrap items-center gap-2.5">
           <!-- Welcome User -->
-          <div class="flex items-center gap-2">
-            <span class="w-2.5 h-2.5 rounded-full bg-emerald-500 inline-block"></span>
-            <span id="listUserDisplay" class="font-bold text-slate-800">Welcome Account Name</span>
+          <div class="flex items-center gap-1.5">
+            <span class="w-2 h-2 rounded-full bg-emerald-500 inline-block"></span>
+            <span id="listUserDisplay" class="font-bold text-slate-800 text-xs">Welcome Account Name</span>
           </div>
 
           <span class="hidden sm:inline text-slate-300">|</span>
 
           <!-- Live Date & Time on Landing Page -->
-          <div class="flex items-center gap-2 font-semibold text-slate-600 bg-white px-3 py-1 rounded-lg border border-slate-200/80 shadow-xs text-xs">
-            <span class="w-2 h-2 rounded-full bg-indigo-500"></span>
+          <div class="flex items-center gap-1.5 font-semibold text-slate-600 bg-white px-2.5 py-1 rounded-lg border border-slate-200/80 text-[11px]">
+            <span class="w-1.5 h-1.5 rounded-full bg-indigo-500"></span>
             <span id="liveClockDisplay">Loading Date & Time...</span>
           </div>
         </div>
 
         <div class="flex items-center gap-2">
-          <button onclick="createNewTravel()" class="bg-indigo-600 text-white font-semibold text-xs px-3.5 py-2 rounded-lg hover:bg-indigo-700 shadow-sm transition">+ New Liquidation</button>
-          <button onclick="handleLogout()" class="bg-rose-50 text-rose-700 border border-rose-200 font-bold text-xs px-3.5 py-2 rounded-lg hover:bg-rose-100 transition">Logout</button>
+          <button onclick="createNewTravel()" class="bg-indigo-600 text-white font-semibold text-[11px] px-3 py-1.5 rounded-lg hover:bg-indigo-700 shadow-xs transition">+ New Liquidation</button>
+          <button onclick="handleLogout()" class="bg-rose-50 text-rose-700 border border-rose-200 font-bold text-[11px] px-3 py-1.5 rounded-lg hover:bg-rose-100 transition">Logout</button>
         </div>
       </div>
 
       <!-- Section Title -->
-      <div class="mb-6 text-center sm:text-left">
-        <h2 class="text-xl sm:text-2xl font-bold text-slate-900 tracking-tight">Travel Liquidation Dashboard</h2>
-        <p class="text-xs text-slate-500 mt-1">Select an active travel profile or create a new entry below</p>
+      <div class="mb-4 text-center sm:text-left">
+        <h2 class="text-lg sm:text-xl font-bold text-slate-900 tracking-tight">Travel Liquidation Dashboard</h2>
+        <p class="text-[11px] text-slate-500 mt-0.5">Select an active travel profile or create a new entry below</p>
       </div>
 
       <!-- Liquidations Table -->
       <div class="overflow-x-auto rounded-xl border border-slate-200">
-        <table class="w-full text-left border-collapse text-xs sm:text-sm">
+        <table class="w-full text-left border-collapse text-xs">
           <thead>
-            <tr class="bg-slate-50 text-slate-700 font-semibold border-b border-slate-200">
-              <th class="p-3.5">Region / Travel Area</th>
-              <th class="p-3.5 text-center">Travel Dates</th>
-              <th class="p-3.5 text-right">Cash Advance</th>
-              <th class="p-3.5 text-right">Total Spent</th>
-              <th class="p-3.5 text-center">Status</th>
-              <th class="p-3.5 text-center">Liquidation Entry</th>
-              <th class="p-3.5 text-center">Print Summary</th>
-              <th class="p-3.5 text-center">Action</th>
+            <tr class="bg-slate-50 text-slate-700 font-semibold border-b border-slate-200 text-[11px]">
+              <th class="p-3">Region / Travel Area</th>
+              <th class="p-3 text-center">Travel Dates</th>
+              <th class="p-3 text-right">Cash Advance</th>
+              <th class="p-3 text-right">Total Spent</th>
+              <th class="p-3 text-center">Status</th>
+              <th class="p-3 text-center">Liquidation Entry</th>
+              <th class="p-3 text-center">Print Summary</th>
+              <th class="p-3 text-center">Action</th>
             </tr>
           </thead>
           <tbody id="travelListTableBody">
@@ -214,81 +214,78 @@
   <!-- ========================================== -->
   <!-- 2. MAIN APP DASHBOARD (TRACKER DETAILS)    -->
   <!-- ========================================== -->
-  <div id="mainDashboard" class="hidden p-2 sm:p-4 md:p-6">
+  <div id="mainDashboard" class="hidden p-2 sm:p-4">
     
-    <div class="max-w-7xl mx-auto bg-white rounded-2xl shadow-sm border border-slate-200 p-3 sm:p-5 no-print mb-10">
+    <div class="max-w-7xl mx-auto bg-white rounded-2xl shadow-sm border border-slate-200 p-3 sm:p-4 no-print mb-8">
       
-      <div id="toast" class="hidden fixed top-5 right-5 bg-slate-900 text-white px-4 py-2.5 rounded-xl shadow-xl transition-opacity duration-300 z-50 font-semibold text-xs sm:text-sm">
+      <div id="toast" class="hidden fixed top-4 right-4 bg-slate-900 text-white px-3.5 py-2 rounded-xl shadow-xl transition-opacity duration-300 z-50 font-semibold text-xs">
         Syncing to Cloud...
       </div>
 
-      <!-- Clean Header Bar: Exit Dashboard (Left) & Signature Upload (if not uploaded) / Logout (Right) -->
-      <div class="mb-5 p-2 sm:p-2.5 bg-slate-50/90 rounded-xl border border-slate-200/90 flex items-center justify-between gap-2.5 text-xs sm:text-sm">
+      <!-- Top Utility Header Bar -->
+      <div class="mb-4 p-2 bg-slate-50/90 rounded-xl border border-slate-200/90 flex items-center justify-between gap-2 text-xs">
         
         <!-- Left: Exit Dashboard Button -->
-        <button onclick="backToTravelList()" class="bg-rose-50 text-rose-700 border border-rose-200 font-bold px-3.5 py-1.5 rounded-lg hover:bg-rose-100 transition text-xs whitespace-nowrap">
+        <button onclick="backToTravelList()" class="bg-rose-50 text-rose-700 border border-rose-200 font-bold px-3 py-1 rounded-lg hover:bg-rose-100 transition text-[11px] whitespace-nowrap">
           Exit Dashboard
         </button>
 
-        <!-- Right: Signature Upload (hides once uploaded) & Logout Button -->
-        <div class="flex items-center gap-2.5">
+        <!-- Right: Signature Upload & Logout Button -->
+        <div class="flex items-center gap-2">
           
-          <!-- Signature PNG Upload Container (Automatically hides when signature is uploaded) -->
-          <div id="signatureUploadContainer" class="flex items-center gap-1.5">
-            <label class="font-medium text-slate-600 whitespace-nowrap">Signature:</label>
-            <div class="flex items-center gap-1">
-              <label class="bg-white text-slate-700 border border-slate-300 text-xs font-semibold px-2.5 py-1.5 rounded-lg cursor-pointer hover:bg-slate-50 transition whitespace-nowrap">
-                Upload PNG
-                <input type="file" id="signatureInput" accept="image/png, image/jpeg" class="hidden" onchange="handleSignatureUpload(event)">
-              </label>
-            </div>
+          <div id="signatureUploadContainer" class="flex items-center gap-1">
+            <label class="font-medium text-slate-600 text-[11px] whitespace-nowrap">Signature:</label>
+            <label class="bg-white text-slate-700 border border-slate-300 text-[11px] font-semibold px-2 py-1 rounded-lg cursor-pointer hover:bg-slate-50 transition whitespace-nowrap">
+              Upload PNG
+              <input type="file" id="signatureInput" accept="image/png, image/jpeg" class="hidden" onchange="handleSignatureUpload(event)">
+            </label>
           </div>
 
           <!-- Logout Button -->
-          <button onclick="handleLogout()" title="Log out" class="bg-rose-600 text-white font-bold text-xs px-3.5 py-1.5 rounded-lg hover:bg-rose-700 transition whitespace-nowrap shadow-xs">Logout</button>
+          <button onclick="handleLogout()" title="Log out" class="bg-rose-600 text-white font-bold text-[11px] px-3 py-1 rounded-lg hover:bg-rose-700 transition whitespace-nowrap">Logout</button>
         </div>
 
       </div>
 
-      <!-- Header Section: Region Name Liquidation Title & Modern Action Buttons -->
-      <div class="flex flex-col md:flex-row justify-between items-start md:items-center mb-5 border-b border-slate-100 pb-4 gap-3">
+      <!-- Header Section: Region Title (Reduced 2pt) & Action Buttons -->
+      <div class="flex flex-col md:flex-row justify-between items-start md:items-center mb-4 border-b border-slate-100 pb-3 gap-3">
         <div>
-          <h1 class="text-xl sm:text-2xl font-bold text-slate-900 tracking-tight flex items-center flex-wrap gap-2">
+          <h1 class="text-base sm:text-lg font-bold text-slate-900 tracking-tight flex items-center flex-wrap gap-1.5">
             <span id="headerRegionDisplay" class="text-indigo-600 font-extrabold">Region Name</span> 
             <span>Liquidation</span>
-            <span id="archiveStatusBadge" class="hidden bg-amber-50 text-amber-700 border border-amber-200 text-xs px-2.5 py-0.5 rounded-full font-bold uppercase tracking-wider">LOCKED / ARCHIVED</span>
+            <span id="archiveStatusBadge" class="hidden bg-amber-50 text-amber-700 border border-amber-200 text-[10px] px-2 py-0.5 rounded-full font-bold uppercase tracking-wider">LOCKED / ARCHIVED</span>
           </h1>
-          <p class="text-xs text-slate-500 mt-0.5">Manage and track travel expenses, liquidation forms, and report summaries</p>
+          <p class="text-[10px] text-slate-500 mt-0.5">Manage and track travel expenses, liquidation forms, and report summaries</p>
         </div>
         
-        <!-- Action Buttons Group -->
-        <div class="flex flex-wrap justify-center items-center gap-2 w-full md:w-auto">
-          <button onclick="openPreviewModal('detailed')" class="bg-indigo-600 text-white text-xs sm:text-sm font-semibold px-3.5 py-2 rounded-xl hover:bg-indigo-700 shadow-sm transition flex-1 sm:flex-none text-center">Preview</button>
-          <button onclick="openPreviewModal('summary')" class="bg-slate-900 text-white text-xs sm:text-sm font-semibold px-3.5 py-2 rounded-xl hover:bg-slate-800 shadow-sm transition flex-1 sm:flex-none text-center">Print Summary</button>
-          <button onclick="toggleArchive()" id="archiveBtn" class="bg-white text-slate-700 border border-slate-300 text-xs sm:text-sm font-semibold px-3.5 py-2 rounded-xl hover:bg-slate-50 transition flex-1 sm:flex-none text-center">Archive</button>
-          <button onclick="exportBackup()" class="bg-white text-slate-700 border border-slate-300 text-xs sm:text-sm font-semibold px-3.5 py-2 rounded-xl hover:bg-slate-50 transition flex-1 sm:flex-none text-center">Backup</button>
-          <label class="bg-white text-slate-700 border border-slate-300 text-xs sm:text-sm font-semibold px-3.5 py-2 rounded-xl hover:bg-slate-50 cursor-pointer flex-1 sm:flex-none text-center transition">
+        <!-- Action Buttons Group (Reduced 2pt) -->
+        <div class="flex flex-wrap justify-center items-center gap-1.5 w-full md:w-auto">
+          <button onclick="openPreviewModal('detailed')" class="bg-indigo-600 text-white text-[11px] font-semibold px-2.5 py-1.5 rounded-lg hover:bg-indigo-700 shadow-xs transition flex-1 sm:flex-none text-center">Preview</button>
+          <button onclick="openPreviewModal('summary')" class="bg-slate-900 text-white text-[11px] font-semibold px-2.5 py-1.5 rounded-lg hover:bg-slate-800 shadow-xs transition flex-1 sm:flex-none text-center">Print Summary</button>
+          <button onclick="toggleArchive()" id="archiveBtn" class="bg-white text-slate-700 border border-slate-300 text-[11px] font-semibold px-2.5 py-1.5 rounded-lg hover:bg-slate-50 transition flex-1 sm:flex-none text-center">Archive</button>
+          <button onclick="exportBackup()" class="bg-white text-slate-700 border border-slate-300 text-[11px] font-semibold px-2.5 py-1.5 rounded-lg hover:bg-slate-50 transition flex-1 sm:flex-none text-center">Backup</button>
+          <label class="bg-white text-slate-700 border border-slate-300 text-[11px] font-semibold px-2.5 py-1.5 rounded-lg hover:bg-slate-50 cursor-pointer flex-1 sm:flex-none text-center transition">
             Restore
             <input type="file" id="importFile" accept=".json" class="hidden" onchange="restoreBackup(event)">
           </label>
-          <button onclick="resetAllData()" title="Reset All Tracker Data" class="bg-rose-50 text-rose-700 border border-rose-200 text-xs sm:text-sm font-semibold px-3.5 py-2 rounded-xl hover:bg-rose-100 transition flex-1 sm:flex-none text-center">Reset</button>
+          <button onclick="resetAllData()" title="Reset All Tracker Data" class="bg-rose-50 text-rose-700 border border-rose-200 text-[11px] font-semibold px-2.5 py-1.5 rounded-lg hover:bg-rose-100 transition flex-1 sm:flex-none text-center">Reset</button>
         </div>
       </div>
 
-      <!-- Setup Box: Cash Advance & Region(s) -->
-      <div class="mb-5 p-3.5 bg-slate-50/80 rounded-xl border border-slate-200/80 flex flex-col sm:flex-row items-stretch sm:items-center justify-between gap-4">
+      <!-- Setup Box: Cash Advance & Region(s) (Reduced 2pt) -->
+      <div class="mb-4 p-2.5 bg-slate-50/80 rounded-xl border border-slate-200/80 flex flex-col sm:flex-row items-stretch sm:items-center justify-between gap-3">
         
         <!-- Cash Advance -->
-        <div class="flex items-center justify-between sm:justify-start gap-3">
-          <label class="text-xs sm:text-sm font-bold uppercase tracking-wider text-slate-600 whitespace-nowrap">Cash Advance:</label>
+        <div class="flex items-center justify-between sm:justify-start gap-2">
+          <label class="text-[10px] sm:text-[11px] font-bold uppercase tracking-wider text-slate-600 whitespace-nowrap">Cash Advance:</label>
           <div class="relative flex items-center">
-            <span class="text-slate-500 font-bold mr-1.5 text-sm">₱</span>
+            <span class="text-slate-500 font-bold mr-1 text-xs">₱</span>
             <input 
               type="text" 
               inputmode="decimal"
               id="cashAdvanceInput" 
               placeholder="0.00" 
-              class="p-2.5 border rounded-xl w-36 sm:w-44 font-bold text-slate-900 border-slate-300 text-right focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500 text-sm bg-white shadow-sm" 
+              class="p-2 border rounded-lg w-32 sm:w-40 font-bold text-slate-900 border-slate-300 text-right focus:outline-none focus:ring-2 focus:ring-indigo-500 text-xs bg-white shadow-xs" 
               oninput="handleCashAdvanceInput(this)" 
               onfocus="focusCashAdvanceInput(this)" 
               onblur="blurCashAdvanceInput(this)"
@@ -297,74 +294,74 @@
         </div>
 
         <!-- Region(s) -->
-        <div class="flex items-center justify-between sm:justify-start gap-3">
-          <label class="text-xs sm:text-sm font-bold uppercase tracking-wider text-slate-600 whitespace-nowrap">Region(s):</label>
+        <div class="flex items-center justify-between sm:justify-start gap-2">
+          <label class="text-[10px] sm:text-[11px] font-bold uppercase tracking-wider text-slate-600 whitespace-nowrap">Region(s):</label>
           <input 
             type="text" 
             id="regionNameInput" 
             placeholder="e.g. Palawan Region" 
-            class="p-2.5 border rounded-xl w-full sm:w-64 text-sm font-semibold text-slate-800 border-slate-300 focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500 bg-white shadow-sm"
+            class="p-2 border rounded-lg w-full sm:w-56 text-xs font-semibold text-slate-800 border-slate-300 focus:outline-none focus:ring-2 focus:ring-indigo-500 bg-white shadow-xs"
             oninput="handleRegionNameInput(this)"
           >
         </div>
 
       </div>
 
-      <!-- Date Range Filter Bar for Reports -->
-      <div class="mb-5 p-3.5 bg-indigo-50/50 rounded-xl border border-indigo-100 flex flex-col sm:flex-row items-stretch sm:items-center justify-between gap-3">
-        <div class="flex items-center gap-2.5 flex-wrap">
-          <span class="text-xs sm:text-sm font-bold text-indigo-950 whitespace-nowrap">Report Date Range:</span>
-          <input type="date" id="filterStartDate" class="p-1.5 border rounded-lg text-xs sm:text-sm border-indigo-200 bg-white text-slate-800 shadow-sm" onchange="updateTracker()">
-          <span class="text-xs font-semibold text-slate-500">to</span>
-          <input type="date" id="filterEndDate" class="p-1.5 border rounded-lg text-xs sm:text-sm border-indigo-200 bg-white text-slate-800 shadow-sm" onchange="updateTracker()">
-          <button type="button" onclick="clearDateFilter()" class="bg-white text-slate-700 border border-slate-300 text-xs px-3 py-1.5 rounded-lg font-medium hover:bg-slate-50 transition">Clear Filter</button>
+      <!-- Date Range Filter Bar (Reduced 2pt) -->
+      <div class="mb-4 p-2.5 bg-indigo-50/50 rounded-xl border border-indigo-100 flex flex-col sm:flex-row items-stretch sm:items-center justify-between gap-2.5">
+        <div class="flex items-center gap-2 flex-wrap">
+          <span class="text-[11px] font-bold text-indigo-950 whitespace-nowrap">Report Date Range:</span>
+          <input type="date" id="filterStartDate" class="p-1 border rounded-md text-[11px] border-indigo-200 bg-white text-slate-800 shadow-xs" onchange="updateTracker()">
+          <span class="text-[10px] font-semibold text-slate-500">to</span>
+          <input type="date" id="filterEndDate" class="p-1 border rounded-md text-[11px] border-indigo-200 bg-white text-slate-800 shadow-xs" onchange="updateTracker()">
+          <button type="button" onclick="clearDateFilter()" class="bg-white text-slate-700 border border-slate-300 text-[10px] px-2 py-1 rounded-md font-medium hover:bg-slate-50 transition">Clear Filter</button>
         </div>
-        <div class="text-[11px] sm:text-xs text-indigo-900/80 italic font-medium">
+        <div class="text-[10px] text-indigo-900/80 italic font-medium">
           * Applies <b>Cash Advance ÷ 2</b> ONLY IF a Date Range is specified.
         </div>
       </div>
 
-      <!-- Modern KPI Cards Section -->
-      <div class="grid grid-cols-2 sm:grid-cols-4 lg:grid-cols-7 gap-3 mb-6 text-center">
-        <div class="p-3 bg-white rounded-xl border border-slate-200 shadow-sm">
-          <p class="text-[10px] sm:text-xs font-bold uppercase tracking-wider text-slate-500">TRANSPO</p>
-          <p id="totalTranspoDisplay" class="text-sm sm:text-base font-bold text-slate-800 mt-1">₱0.00</p>
+      <!-- Modern KPI Cards Section (Reduced 2pt) -->
+      <div class="grid grid-cols-2 sm:grid-cols-4 lg:grid-cols-7 gap-2.5 mb-5 text-center">
+        <div class="p-2 bg-white rounded-lg border border-slate-200 shadow-xs">
+          <p class="text-[9px] font-bold uppercase tracking-wider text-slate-500">TRANSPO</p>
+          <p id="totalTranspoDisplay" class="text-xs sm:text-sm font-bold text-slate-800 mt-0.5">₱0.00</p>
         </div>
-        <div class="p-3 bg-white rounded-xl border border-slate-200 shadow-sm">
-          <p class="text-[10px] sm:text-xs font-bold uppercase tracking-wider text-slate-500">MEALS</p>
-          <p id="totalMealsDisplay" class="text-sm sm:text-base font-bold text-slate-800 mt-1">₱0.00</p>
+        <div class="p-2 bg-white rounded-lg border border-slate-200 shadow-xs">
+          <p class="text-[9px] font-bold uppercase tracking-wider text-slate-500">MEALS</p>
+          <p id="totalMealsDisplay" class="text-xs sm:text-sm font-bold text-slate-800 mt-0.5">₱0.00</p>
         </div>
-        <div class="p-3 bg-white rounded-xl border border-slate-200 shadow-sm">
-          <p class="text-[10px] sm:text-xs font-bold uppercase tracking-wider text-slate-500">PER DIEM</p>
-          <p id="totalPerDiemDisplay" class="text-sm sm:text-base font-bold text-slate-800 mt-1">₱0.00</p>
+        <div class="p-2 bg-white rounded-lg border border-slate-200 shadow-xs">
+          <p class="text-[9px] font-bold uppercase tracking-wider text-slate-500">PER DIEM</p>
+          <p id="totalPerDiemDisplay" class="text-xs sm:text-sm font-bold text-slate-800 mt-0.5">₱0.00</p>
         </div>
-        <div class="p-3 bg-white rounded-xl border border-slate-200 shadow-sm">
-          <p class="text-[10px] sm:text-xs font-bold uppercase tracking-wider text-slate-500">TERMINAL FEE</p>
-          <p id="totalTerminalFeeDisplay" class="text-sm sm:text-base font-bold text-slate-800 mt-1">₱0.00</p>
+        <div class="p-2 bg-white rounded-lg border border-slate-200 shadow-xs">
+          <p class="text-[9px] font-bold uppercase tracking-wider text-slate-500">TERMINAL FEE</p>
+          <p id="totalTerminalFeeDisplay" class="text-xs sm:text-sm font-bold text-slate-800 mt-0.5">₱0.00</p>
         </div>
-        <div class="p-3 bg-white rounded-xl border border-slate-200 shadow-sm">
-          <p class="text-[10px] sm:text-xs font-bold uppercase tracking-wider text-slate-500">MISC / OTHERS</p>
-          <p id="totalMiscDisplay" class="text-sm sm:text-base font-bold text-slate-800 mt-1">₱0.00</p>
+        <div class="p-2 bg-white rounded-lg border border-slate-200 shadow-xs">
+          <p class="text-[9px] font-bold uppercase tracking-wider text-slate-500">MISC / OTHERS</p>
+          <p id="totalMiscDisplay" class="text-xs sm:text-sm font-bold text-slate-800 mt-0.5">₱0.00</p>
         </div>
-        <div class="p-3 bg-slate-900 text-white rounded-xl border border-slate-900 shadow-sm">
-          <p class="text-[10px] sm:text-xs font-bold uppercase tracking-wider text-slate-300">TOTAL SPENT</p>
-          <p id="totalSpentDisplay" class="text-sm sm:text-base font-bold text-white mt-1">₱0.00</p>
+        <div class="p-2 bg-slate-900 text-white rounded-lg border border-slate-900 shadow-xs">
+          <p class="text-[9px] font-bold uppercase tracking-wider text-slate-300">TOTAL SPENT</p>
+          <p id="totalSpentDisplay" class="text-xs sm:text-sm font-bold text-white mt-0.5">₱0.00</p>
         </div>
-        <div class="p-3 bg-indigo-50/70 rounded-xl border border-indigo-100 shadow-sm col-span-2 sm:col-span-2 lg:col-span-1">
-          <p class="text-[10px] sm:text-xs font-bold uppercase tracking-wider text-indigo-700">REMAINING</p>
-          <p id="remainingDisplay" class="text-sm sm:text-base font-bold text-indigo-900 mt-1">₱0.00</p>
+        <div class="p-2 bg-indigo-50/70 rounded-lg border border-indigo-100 shadow-xs col-span-2 sm:col-span-2 lg:col-span-1">
+          <p class="text-[9px] font-bold uppercase tracking-wider text-indigo-700">REMAINING</p>
+          <p id="remainingDisplay" class="text-xs sm:text-sm font-bold text-indigo-900 mt-0.5">₱0.00</p>
         </div>
       </div>
 
-      <!-- Add Expense Form -->
-      <form id="expenseForm" class="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-4 gap-3.5 mb-6 bg-slate-50/80 p-4 rounded-xl border border-slate-200">
+      <!-- Add Expense Form (Reduced 2pt) -->
+      <form id="expenseForm" class="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-4 gap-3 mb-5 bg-slate-50/80 p-3 rounded-xl border border-slate-200 text-xs">
         <div>
-          <label class="block text-xs font-bold text-slate-600 uppercase tracking-wider mb-1">Date</label>
-          <input type="date" id="dateInput" required class="p-2.5 border border-slate-300 rounded-xl w-full text-sm bg-white focus:ring-2 focus:ring-indigo-500 focus:outline-none">
+          <label class="block text-[10px] font-bold text-slate-600 uppercase tracking-wider mb-1">Date</label>
+          <input type="date" id="dateInput" required class="p-2 border border-slate-300 rounded-lg w-full text-xs bg-white focus:ring-2 focus:ring-indigo-500 focus:outline-none">
         </div>
         <div>
-          <label class="block text-xs font-bold text-slate-600 uppercase tracking-wider mb-1">Category</label>
-          <select id="category" class="p-2.5 border border-slate-300 rounded-xl w-full text-sm bg-white focus:ring-2 focus:ring-indigo-500 focus:outline-none" onchange="handleCategoryChange()">
+          <label class="block text-[10px] font-bold text-slate-600 uppercase tracking-wider mb-1">Category</label>
+          <select id="category" class="p-2 border border-slate-300 rounded-lg w-full text-xs bg-white focus:ring-2 focus:ring-indigo-500 focus:outline-none" onchange="handleCategoryChange()">
             <option value="Transportation">Transportation</option>
             <option value="Meals">Meals</option>
             <option value="Per Diem">Per Diem</option>
@@ -374,28 +371,28 @@
           </select>
         </div>
         <div>
-          <label id="subOptionLabel" class="block text-xs font-bold text-slate-600 uppercase tracking-wider mb-1">Transportation Type</label>
-          <select id="subOptionSelect" class="p-2.5 border border-slate-300 rounded-xl w-full text-sm bg-white focus:ring-2 focus:ring-indigo-500 focus:outline-none" onchange="handleSubOptionChange()"></select>
+          <label id="subOptionLabel" class="block text-[10px] font-bold text-slate-600 uppercase tracking-wider mb-1">Transportation Type</label>
+          <select id="subOptionSelect" class="p-2 border border-slate-300 rounded-lg w-full text-xs bg-white focus:ring-2 focus:ring-indigo-500 focus:outline-none" onchange="handleSubOptionChange()"></select>
         </div>
         <div>
-          <label class="block text-xs font-bold text-slate-600 uppercase tracking-wider mb-1">Description / Particulars</label>
-          <input type="text" id="desc" placeholder="e.g. Hotel to Port" class="p-2.5 border border-slate-300 rounded-xl w-full text-sm bg-white focus:ring-2 focus:ring-indigo-500 focus:outline-none">
+          <label class="block text-[10px] font-bold text-slate-600 uppercase tracking-wider mb-1">Description / Particulars</label>
+          <input type="text" id="desc" placeholder="e.g. Hotel to Port" class="p-2 border border-slate-300 rounded-lg w-full text-xs bg-white focus:ring-2 focus:ring-indigo-500 focus:outline-none">
         </div>
         <div>
-          <label id="ticketLabel" class="block text-xs font-bold text-slate-600 uppercase tracking-wider mb-1">Ticket # / Remarks</label>
-          <input type="text" id="ticketNo" placeholder="e.g. w/ luggage, 123, vv" class="p-2.5 border border-slate-300 rounded-xl w-full text-sm bg-white focus:ring-2 focus:ring-indigo-500 focus:outline-none">
+          <label id="ticketLabel" class="block text-[10px] font-bold text-slate-600 uppercase tracking-wider mb-1">Ticket # / Remarks</label>
+          <input type="text" id="ticketNo" placeholder="e.g. w/ luggage, 123, vv" class="p-2 border border-slate-300 rounded-lg w-full text-xs bg-white focus:ring-2 focus:ring-indigo-500 focus:outline-none">
         </div>
         <div>
-          <label id="customInputLabel" class="block text-xs font-bold text-slate-600 uppercase tracking-wider mb-1">Specify Transpo / Category</label>
-          <input type="text" id="customSubtype" placeholder="e.g. Grab, Hotel, Supplies" disabled class="p-2.5 border border-slate-300 rounded-xl w-full bg-slate-100 cursor-not-allowed opacity-50 text-sm">
+          <label id="customInputLabel" class="block text-[10px] font-bold text-slate-600 uppercase tracking-wider mb-1">Specify Transpo / Category</label>
+          <input type="text" id="customSubtype" placeholder="e.g. Grab, Hotel, Supplies" disabled class="p-2 border border-slate-300 rounded-lg w-full bg-slate-100 cursor-not-allowed opacity-50 text-xs">
         </div>
         <div>
-          <label class="block text-xs font-bold text-slate-600 uppercase tracking-wider mb-1">Amount (₱)</label>
-          <input type="number" step="any" inputmode="decimal" id="amount" placeholder="0.00" required class="p-2.5 border border-slate-300 rounded-xl w-full text-sm bg-white focus:ring-2 focus:ring-indigo-500 focus:outline-none">
+          <label class="block text-[10px] font-bold text-slate-600 uppercase tracking-wider mb-1">Amount (₱)</label>
+          <input type="number" step="any" inputmode="decimal" id="amount" placeholder="0.00" required class="p-2 border border-slate-300 rounded-lg w-full text-xs bg-white focus:ring-2 focus:ring-indigo-500 focus:outline-none">
         </div>
-        <div class="flex items-end gap-2">
-          <button type="submit" id="submitBtn" class="bg-indigo-600 text-white font-bold p-2.5 rounded-xl hover:bg-indigo-700 w-full text-sm shadow-sm transition">+ Add Expense</button>
-          <button type="button" id="cancelEditBtn" onclick="cancelEdit()" class="hidden bg-slate-500 text-white font-bold p-2.5 rounded-xl hover:bg-slate-600 text-sm transition">Cancel</button>
+        <div class="flex items-end gap-1.5">
+          <button type="submit" id="submitBtn" class="bg-indigo-600 text-white font-bold p-2 rounded-lg hover:bg-indigo-700 w-full text-xs shadow-xs transition">+ Add Expense</button>
+          <button type="button" id="cancelEditBtn" onclick="cancelEdit()" class="hidden bg-slate-500 text-white font-bold p-2 rounded-lg hover:bg-slate-600 text-xs transition">Cancel</button>
         </div>
       </form>
 
@@ -431,83 +428,83 @@
   <div id="printAreaDetailed" class="hidden font-sans print-active">
     
     <!-- Centered Logo -->
-    <div class="text-center mb-3">
-      <img src="logo.png" alt="Logo" class="mx-auto block" style="max-height: 50px; width: auto;">
+    <div class="text-center mb-2">
+      <img src="logo.png" alt="Logo" class="mx-auto block" style="max-height: 40px; width: auto;">
     </div>
 
-    <!-- 9pt Header -->
-    <div class="mb-4 report-header">
+    <!-- 7pt Header -->
+    <div class="mb-3 report-header">
       <p>Region / Area : StrikeForce/Fraud Audit-IAD</p>
       <p>Cash Advance Expenses Liquidation</p>
       <p>Region: <span id="detailedRegionName">N/A</span></p>
       <p>Date: <span id="detailedDateRange">N/A</span></p>
     </div>
 
-    <div class="overflow-x-auto mb-6">
+    <div class="overflow-x-auto mb-5">
       <table class="w-full text-left border-collapse border border-gray-400">
         <thead>
           <tr class="text-gray-800 font-bold bg-gray-100">
-            <th class="text-center w-24">Date</th>
+            <th class="text-center w-20">Date</th>
             <th class="text-left w-auto whitespace-nowrap">Description</th>
-            <th class="text-center w-28">Type</th>
-            <th class="text-center w-32">Ticket # / Remarks</th>
-            <th class="text-center w-28">Transpo / Fee (₱)</th>
-            <th class="text-center w-32">Meals / Per Diem (₱)</th>
-            <th class="text-center w-28">Total (₱)</th>
+            <th class="text-center w-24">Type</th>
+            <th class="text-center w-28">Ticket # / Remarks</th>
+            <th class="text-center w-24">Transpo / Fee (₱)</th>
+            <th class="text-center w-28">Meals / Per Diem (₱)</th>
+            <th class="text-center w-24">Total (₱)</th>
           </tr>
         </thead>
         <tbody id="printMainTableBodyDetailed"></tbody>
       </table>
     </div>
 
-    <div id="miscTableWrapperDetailed" class="overflow-x-auto max-w-2xl mb-8 hidden">
-      <h3 class="font-bold text-base text-gray-800 mb-1">Miscellaneous</h3>
+    <div id="miscTableWrapperDetailed" class="overflow-x-auto max-w-xl mb-6 hidden">
+      <h3 class="font-bold text-xs text-gray-800 mb-1">Miscellaneous</h3>
       <table class="w-full text-left border-collapse border border-gray-400">
         <thead>
           <tr class="text-gray-800 font-bold bg-gray-100">
-            <th class="text-center w-28">Date</th>
+            <th class="text-center w-24">Date</th>
             <th class="text-center w-auto whitespace-nowrap">Description</th>
-            <th class="text-center w-28">OR No.</th>
-            <th class="text-center w-32">Amount</th>
+            <th class="text-center w-24">OR No.</th>
+            <th class="text-center w-28">Amount</th>
           </tr>
         </thead>
         <tbody id="printMiscTableBodyDetailed"></tbody>
       </table>
     </div>
 
-    <div class="space-y-10">
-      <div class="w-80">
-        <h3 class="font-bold text-base text-gray-800 mb-1">Summary</h3>
+    <div class="space-y-8">
+      <div class="w-72">
+        <h3 class="font-bold text-xs text-gray-800 mb-1">Summary</h3>
         <table class="w-full text-left border-collapse border border-gray-400">
           <tbody>
-            <tr><td class="text-gray-800">Total Transpo</td><td id="detailedTotalTranspo" class="text-right font-medium text-gray-900 w-32">0.00</td></tr>
-            <tr><td class="text-gray-800">Total Meals</td><td id="detailedTotalMeals" class="text-right font-medium text-gray-900 w-32">0.00</td></tr>
-            <tr><td class="text-gray-800">Total Per Diem</td><td id="detailedTotalPerDiem" class="text-right font-medium text-gray-900 w-32">0.00</td></tr>
-            <tr><td class="text-gray-800">Terminal Fee</td><td id="detailedTotalTerminalFee" class="text-right font-medium text-gray-900 w-32">0.00</td></tr>
-            <tr><td class="text-gray-800">Miscellaneous</td><td id="detailedTotalMisc" class="text-right font-medium text-gray-900 w-32">0.00</td></tr>
-            <tr class="bg-gray-100 font-bold"><td class="text-gray-800">TOTAL Expenses</td><td id="detailedTotalExpenses" class="text-right text-gray-900 w-32">0.00</td></tr>
-            <tr><td id="detailedCALabel" class="text-gray-800 font-bold">TOTAL Cash Advance</td><td id="detailedTotalCA" class="text-right font-bold text-gray-900 w-32">0.00</td></tr>
-            <tr class="bg-gray-50 font-bold"><td class="text-gray-800">Amount for Return(Refund)</td><td id="detailedReturnRefund" class="text-right text-gray-900 w-32">0.00</td></tr>
+            <tr><td class="text-gray-800">Total Transpo</td><td id="detailedTotalTranspo" class="text-right font-medium text-gray-900 w-28">0.00</td></tr>
+            <tr><td class="text-gray-800">Total Meals</td><td id="detailedTotalMeals" class="text-right font-medium text-gray-900 w-28">0.00</td></tr>
+            <tr><td class="text-gray-800">Total Per Diem</td><td id="detailedTotalPerDiem" class="text-right font-medium text-gray-900 w-28">0.00</td></tr>
+            <tr><td class="text-gray-800">Terminal Fee</td><td id="detailedTotalTerminalFee" class="text-right font-medium text-gray-900 w-28">0.00</td></tr>
+            <tr><td class="text-gray-800">Miscellaneous</td><td id="detailedTotalMisc" class="text-right font-medium text-gray-900 w-28">0.00</td></tr>
+            <tr class="bg-gray-100 font-bold"><td class="text-gray-800">TOTAL Expenses</td><td id="detailedTotalExpenses" class="text-right text-gray-900 w-28">0.00</td></tr>
+            <tr><td id="detailedCALabel" class="text-gray-800 font-bold">TOTAL Cash Advance</td><td id="detailedTotalCA" class="text-right font-bold text-gray-900 w-28">0.00</td></tr>
+            <tr class="bg-gray-50 font-bold"><td class="text-gray-800">Amount for Return(Refund)</td><td id="detailedReturnRefund" class="text-right text-gray-900 w-28">0.00</td></tr>
           </tbody>
         </table>
       </div>
 
-      <table class="w-full mt-8 no-border-table" style="border: none !important;">
+      <table class="w-full mt-6 no-border-table" style="border: none !important;">
         <tr style="border: none !important;">
-          <td style="border: none !important; width: 50%; vertical-align: bottom; padding-right: 40px;">
-            <p class="font-bold text-gray-800 text-sm" style="margin-bottom: 5px;">Submitted by:</p>
-            <div style="height: 45px; display: flex; align-items: flex-end;">
-              <img id="detailedSignatureImg" src="" class="hidden" style="max-height: 45px; max-width: 160px; object-fit: contain; margin-bottom: -5px;" />
+          <td style="border: none !important; width: 50%; vertical-align: bottom; padding-right: 30px;">
+            <p class="font-bold text-gray-800 text-xs" style="margin-bottom: 4px;">Submitted by:</p>
+            <div style="height: 40px; display: flex; align-items: flex-end;">
+              <img id="detailedSignatureImg" src="" class="hidden" style="max-height: 40px; max-width: 140px; object-fit: contain; margin-bottom: -4px;" />
             </div>
-            <p id="detailedAccountName1" class="font-bold text-gray-800 text-sm" style="margin:0; padding:0;">Name of Account</p>
+            <p id="detailedAccountName1" class="font-bold text-gray-800 text-xs" style="margin:0; padding:0;">Name of Account</p>
             <div style="border-top: 1px solid black; width: 100%; margin-top: 2px;"></div>
-            <p class="text-xs text-gray-600 mt-1">Signature over printed name</p>
+            <p class="text-[10px] text-gray-600 mt-0.5">Signature over printed name</p>
           </td>
-          <td style="border: none !important; width: 50%; vertical-align: bottom; padding-left: 40px;">
-            <p class="font-bold text-gray-800 text-sm" style="margin-bottom: 50px;">Checked by:</p>
-            <p class="font-bold text-gray-800 text-sm" style="margin:0; padding:0;">&nbsp;</p>
+          <td style="border: none !important; width: 50%; vertical-align: bottom; padding-left: 30px;">
+            <p class="font-bold text-gray-800 text-xs" style="margin-bottom: 40px;">Checked by:</p>
+            <p class="font-bold text-gray-800 text-xs" style="margin:0; padding:0;">&nbsp;</p>
             <div style="border-top: 1px solid black; width: 100%; margin-top: 2px;"></div>
-            <p class="text-xs text-gray-600 mt-1">Signature over printed name</p>
+            <p class="text-[10px] text-gray-600 mt-0.5">Signature over printed name</p>
           </td>
         </tr>
       </table>
@@ -519,76 +516,76 @@
   <div id="printAreaSummary" class="hidden font-sans">
     
     <!-- Centered Logo -->
-    <div class="text-center mb-3">
-      <img src="logo.png" alt="Logo" class="mx-auto block" style="max-height: 50px; width: auto;">
+    <div class="text-center mb-2">
+      <img src="logo.png" alt="Logo" class="mx-auto block" style="max-height: 40px; width: auto;">
     </div>
 
-    <!-- 9pt Header -->
-    <div class="mb-4 report-header">
+    <!-- 7pt Header -->
+    <div class="mb-3 report-header">
       <p>Region / Area : StrikeForce/Fraud Audit-IAD</p>
       <p>Cash Advance Expenses Liquidation</p>
       <p>Region: <span id="printRegionName">N/A</span></p>
       <p>Date: <span id="printDateRange">N/A</span></p>
     </div>
 
-    <!-- HORIZONTAL TABLE (Transpo, Meals, Per Diem, Terminal Fee, Misc Side-by-Side) -->
-    <div class="overflow-x-auto mb-8">
+    <!-- HORIZONTAL TABLE -->
+    <div class="overflow-x-auto mb-6">
       <table class="w-full text-center border-collapse border border-gray-400">
         <thead>
           <tr class="bg-gray-100 font-bold text-gray-800">
-            <th class="border border-gray-400 p-2 text-left">Name of Account</th>
-            <th class="border border-gray-400 p-2 text-right">Total Transpo</th>
-            <th class="border border-gray-400 p-2 text-right">Total Meals</th>
-            <th class="border border-gray-400 p-2 text-right">Total Per Diem</th>
-            <th class="border border-gray-400 p-2 text-right">Terminal Fee</th>
-            <th class="border border-gray-400 p-2 text-right">Miscellaneous</th>
-            <th class="border border-gray-400 p-2 text-right bg-gray-200">Total Expenses</th>
+            <th class="border border-gray-400 p-1.5 text-left">Name of Account</th>
+            <th class="border border-gray-400 p-1.5 text-right">Total Transpo</th>
+            <th class="border border-gray-400 p-1.5 text-right">Total Meals</th>
+            <th class="border border-gray-400 p-1.5 text-right">Total Per Diem</th>
+            <th class="border border-gray-400 p-1.5 text-right">Terminal Fee</th>
+            <th class="border border-gray-400 p-1.5 text-right">Miscellaneous</th>
+            <th class="border border-gray-400 p-1.5 text-right bg-gray-200">Total Expenses</th>
           </tr>
         </thead>
         <tbody>
           <tr>
-            <td id="printAccountNameMainSummary" class="border border-gray-400 p-2 font-bold text-left">Name of Account</td>
-            <td id="printTotalTranspoSummary" class="border border-gray-400 p-2 text-right">0.00</td>
-            <td id="printTotalMealsSummary" class="border border-gray-400 p-2 text-right">0.00</td>
-            <td id="printTotalPerDiemSummary" class="border border-gray-400 p-2 text-right">0.00</td>
-            <td id="printTotalTerminalFeeSummary" class="border border-gray-400 p-2 text-right">0.00</td>
-            <td id="printTotalMiscSummary" class="border border-gray-400 p-2 text-right">0.00</td>
-            <td id="printTotalExpensesSummary1" class="border border-gray-400 p-2 text-right font-bold bg-gray-100">0.00</td>
+            <td id="printAccountNameMainSummary" class="border border-gray-400 p-1.5 font-bold text-left">Name of Account</td>
+            <td id="printTotalTranspoSummary" class="border border-gray-400 p-1.5 text-right">0.00</td>
+            <td id="printTotalMealsSummary" class="border border-gray-400 p-1.5 text-right">0.00</td>
+            <td id="printTotalPerDiemSummary" class="border border-gray-400 p-1.5 text-right">0.00</td>
+            <td id="printTotalTerminalFeeSummary" class="border border-gray-400 p-1.5 text-right">0.00</td>
+            <td id="printTotalMiscSummary" class="border border-gray-400 p-1.5 text-right">0.00</td>
+            <td id="printTotalExpensesSummary1" class="border border-gray-400 p-1.5 text-right font-bold bg-gray-100">0.00</td>
           </tr>
         </tbody>
       </table>
     </div>
 
     <!-- SUMMARY BOX BELOW -->
-    <div class="space-y-10">
-      <div class="w-80">
-        <h3 class="font-bold text-base text-gray-800 mb-1">Summary</h3>
+    <div class="space-y-8">
+      <div class="w-72">
+        <h3 class="font-bold text-xs text-gray-800 mb-1">Summary</h3>
         <table class="w-full text-left border-collapse border border-gray-400">
           <tbody>
-            <tr><td class="text-gray-800 font-bold">TOTAL Expenses</td><td id="printSummaryTotalExpenses" class="text-right font-bold text-gray-900 w-32">0.00</td></tr>
-            <tr><td id="summaryCALabel2" class="text-gray-800 font-bold">TOTAL Cash Advance</td><td id="printSummaryTotalCA" class="text-right font-bold text-gray-900 w-32">0.00</td></tr>
-            <tr><td class="text-gray-800 font-bold">Amount for Return(Refund)</td><td id="printSummaryReturnRefund" class="text-right font-bold text-gray-900 w-32">0.00</td></tr>
+            <tr><td class="text-gray-800 font-bold">TOTAL Expenses</td><td id="printSummaryTotalExpenses" class="text-right font-bold text-gray-900 w-28">0.00</td></tr>
+            <tr><td id="summaryCALabel2" class="text-gray-800 font-bold">TOTAL Cash Advance</td><td id="printSummaryTotalCA" class="text-right font-bold text-gray-900 w-28">0.00</td></tr>
+            <tr><td class="text-gray-800 font-bold">Amount for Return(Refund)</td><td id="printSummaryReturnRefund" class="text-right font-bold text-gray-900 w-28">0.00</td></tr>
           </tbody>
         </table>
       </div>
 
       <!-- SIGNATURES SECTION -->
-      <table class="w-full mt-8 no-border-table" style="border: none !important;">
+      <table class="w-full mt-6 no-border-table" style="border: none !important;">
         <tr style="border: none !important;">
-          <td style="border: none !important; width: 50%; vertical-align: bottom; padding-right: 40px;">
-            <p class="font-bold text-gray-800 text-sm" style="margin-bottom: 5px;">Submitted by:</p>
-            <div style="height: 45px; display: flex; align-items: flex-end;">
-              <img id="summarySignatureImg" src="" class="hidden" style="max-height: 45px; max-width: 160px; object-fit: contain; margin-bottom: -5px;" />
+          <td style="border: none !important; width: 50%; vertical-align: bottom; padding-right: 30px;">
+            <p class="font-bold text-gray-800 text-xs" style="margin-bottom: 4px;">Submitted by:</p>
+            <div style="height: 40px; display: flex; align-items: flex-end;">
+              <img id="summarySignatureImg" src="" class="hidden" style="max-height: 40px; max-width: 140px; object-fit: contain; margin-bottom: -4px;" />
             </div>
-            <p id="printAccountNameSubSummary" class="font-bold text-gray-800 text-sm" style="margin:0; padding:0;">Name of Account</p>
+            <p id="printAccountNameSubSummary" class="font-bold text-gray-800 text-xs" style="margin:0; padding:0;">Name of Account</p>
             <div style="border-top: 1px solid black; width: 100%; margin-top: 2px;"></div>
-            <p class="text-xs text-gray-600 mt-1">Signature over printed name</p>
+            <p class="text-[10px] text-gray-600 mt-0.5">Signature over printed name</p>
           </td>
-          <td style="border: none !important; width: 50%; vertical-align: bottom; padding-left: 40px;">
-            <p class="font-bold text-gray-800 text-sm" style="margin-bottom: 50px;">Checked by:</p>
-            <p class="font-bold text-gray-800 text-sm" style="margin:0; padding:0;">&nbsp;</p>
+          <td style="border: none !important; width: 50%; vertical-align: bottom; padding-left: 30px;">
+            <p class="font-bold text-gray-800 text-xs" style="margin-bottom: 40px;">Checked by:</p>
+            <p class="font-bold text-gray-800 text-xs" style="margin:0; padding:0;">&nbsp;</p>
             <div style="border-top: 1px solid black; width: 100%; margin-top: 2px;"></div>
-            <p class="text-xs text-gray-600 mt-1">Signature over printed name</p>
+            <p class="text-[10px] text-gray-600 mt-0.5">Signature over printed name</p>
           </td>
         </tr>
       </table>
@@ -598,17 +595,17 @@
 
   <!-- Dynamic Modal -->
   <div id="previewModal" class="hidden fixed inset-0 bg-slate-900/60 backdrop-blur-sm flex justify-center items-center p-2 sm:p-4 z-50 no-print">
-    <div class="bg-white rounded-2xl shadow-2xl max-w-5xl w-full p-4 sm:p-8 max-h-[95vh] overflow-y-auto border border-slate-200">
-      <div class="flex justify-between items-center mb-4 border-b border-slate-100 pb-3">
-        <h2 id="modalTitle" class="text-lg sm:text-xl font-bold text-slate-900">Preview</h2>
-        <button onclick="closePreviewModal()" class="text-slate-400 hover:text-slate-600 font-bold text-xl">✕</button>
+    <div class="bg-white rounded-2xl shadow-2xl max-w-5xl w-full p-4 sm:p-6 max-h-[95vh] overflow-y-auto border border-slate-200">
+      <div class="flex justify-between items-center mb-3 border-b border-slate-100 pb-2.5">
+        <h2 id="modalTitle" class="text-base sm:text-lg font-bold text-slate-900">Preview</h2>
+        <button onclick="closePreviewModal()" class="text-slate-400 hover:text-slate-600 font-bold text-lg">✕</button>
       </div>
       
-      <div id="modalContent" class="mb-6 border border-slate-200 p-2 sm:p-6 rounded-xl bg-white overflow-x-auto"></div>
+      <div id="modalContent" class="mb-5 border border-slate-200 p-2 sm:p-5 rounded-xl bg-white overflow-x-auto"></div>
       
-      <div class="flex flex-wrap justify-end gap-2.5">
-        <button onclick="closePreviewModal()" class="bg-white text-slate-700 border border-slate-300 font-semibold px-4 py-2 rounded-xl hover:bg-slate-50 text-xs sm:text-sm">Close</button>
-        <button onclick="window.print()" class="bg-indigo-600 text-white font-semibold px-4 py-2 rounded-xl hover:bg-indigo-700 text-xs sm:text-sm shadow-sm">Print / Export PDF</button>
+      <div class="flex flex-wrap justify-end gap-2">
+        <button onclick="closePreviewModal()" class="bg-white text-slate-700 border border-slate-300 font-semibold px-3.5 py-1.5 rounded-xl hover:bg-slate-50 text-xs">Close</button>
+        <button onclick="window.print()" class="bg-indigo-600 text-white font-semibold px-3.5 py-1.5 rounded-xl hover:bg-indigo-700 text-xs shadow-xs">Print / Export PDF</button>
       </div>
     </div>
   </div>
@@ -776,23 +773,23 @@
         row.className = idx % 2 === 0 ? 'bg-white hover:bg-slate-50' : 'bg-slate-50/50 hover:bg-slate-100';
 
         row.innerHTML = `
-          <td class="p-3.5 font-bold text-slate-800">${trv.regionName || 'Unspecified Region'}</td>
-          <td class="p-3.5 text-center text-slate-600 font-medium">${dateRange}</td>
-          <td class="p-3.5 text-right font-bold text-slate-900">${formatNum(trv.cashAdvance)}</td>
-          <td class="p-3.5 text-right font-bold text-indigo-600">${formatNum(totalSpent)}</td>
-          <td class="p-3.5 text-center">
+          <td class="p-3 font-bold text-slate-800">${trv.regionName || 'Unspecified Region'}</td>
+          <td class="p-3 text-center text-slate-600 font-medium">${dateRange}</td>
+          <td class="p-3 text-right font-bold text-slate-900">${formatNum(trv.cashAdvance)}</td>
+          <td class="p-3 text-right font-bold text-indigo-600">${formatNum(totalSpent)}</td>
+          <td class="p-3 text-center">
             ${trv.isArchived 
-              ? `<span class="bg-slate-100 text-slate-600 border border-slate-200 px-2.5 py-0.5 rounded-full font-bold text-xs">Archived</span>` 
-              : `<span class="bg-emerald-50 text-emerald-700 border border-emerald-200 px-2.5 py-0.5 rounded-full font-bold text-xs">Active</span>`}
+              ? `<span class="bg-slate-100 text-slate-600 border border-slate-200 px-2 py-0.5 rounded-full font-bold text-[10px]">Archived</span>` 
+              : `<span class="bg-emerald-50 text-emerald-700 border border-emerald-200 px-2 py-0.5 rounded-full font-bold text-[10px]">Active</span>`}
           </td>
-          <td class="p-3.5 text-center">
-            <button onclick="openTravel('${trv.id}')" class="bg-indigo-600 text-white font-semibold px-3 py-1.5 rounded-lg hover:bg-indigo-700 transition text-xs shadow-sm">Open</button>
+          <td class="p-3 text-center">
+            <button onclick="openTravel('${trv.id}')" class="bg-indigo-600 text-white font-semibold px-2.5 py-1 rounded-lg hover:bg-indigo-700 transition text-xs shadow-xs">Open</button>
           </td>
-          <td class="p-3.5 text-center">
-            <button onclick="openTravelSummaryPreview('${trv.id}')" class="bg-slate-800 text-white font-semibold px-3 py-1.5 rounded-lg hover:bg-slate-900 transition text-xs shadow-sm">Print</button>
+          <td class="p-3 text-center">
+            <button onclick="openTravelSummaryPreview('${trv.id}')" class="bg-slate-800 text-white font-semibold px-2.5 py-1 rounded-lg hover:bg-slate-900 transition text-xs shadow-xs">Print</button>
           </td>
-          <td class="p-3.5 text-center whitespace-nowrap">
-            <button onclick="deleteTravel('${trv.id}')" class="bg-rose-50 text-rose-600 border border-rose-200 hover:bg-rose-100 font-semibold px-2.5 py-1 rounded-lg text-xs transition">Delete</button>
+          <td class="p-3 text-center whitespace-nowrap">
+            <button onclick="deleteTravel('${trv.id}')" class="bg-rose-50 text-rose-600 border border-rose-200 hover:bg-rose-100 font-semibold px-2 py-0.5 rounded-lg text-xs transition">Delete</button>
           </td>
         `;
         tbody.appendChild(row);
@@ -1288,7 +1285,7 @@
 
       const submitBtn = document.getElementById('submitBtn');
       submitBtn.textContent = 'Save';
-      submitBtn.className = 'bg-emerald-600 text-white font-bold p-2.5 rounded-xl hover:bg-emerald-700 w-full text-sm shadow-sm transition';
+      submitBtn.className = 'bg-emerald-600 text-white font-bold p-2 rounded-lg hover:bg-emerald-700 w-full text-xs shadow-xs transition';
       document.getElementById('cancelEditBtn').classList.remove('hidden');
     }
 
@@ -1296,7 +1293,7 @@
       editingId = null;
       const submitBtn = document.getElementById('submitBtn');
       submitBtn.textContent = '+ Add Expense';
-      submitBtn.className = 'bg-indigo-600 text-white font-bold p-2.5 rounded-xl hover:bg-indigo-700 w-full text-sm shadow-sm transition';
+      submitBtn.className = 'bg-indigo-600 text-white font-bold p-2 rounded-lg hover:bg-indigo-700 w-full text-xs shadow-xs transition';
       document.getElementById('cancelEditBtn').classList.add('hidden');
       resetForm();
     }
@@ -1364,7 +1361,7 @@
       const sigImgSummary = document.getElementById('summarySignatureImg');
       const sigUploadContainer = document.getElementById('signatureUploadContainer');
 
-      // HIDE SIGNATURE UPLOAD CONTROLS IF SIGNATURE IS UPLOADED
+      // HIDE SIGNATURE UPLOAD CONTROLS ONCE SIGNATURE IS UPLOADED
       if (signatureDataUrl) {
         if (sigImgDetailed) { sigImgDetailed.src = signatureDataUrl; sigImgDetailed.classList.remove('hidden'); }
         if (sigImgSummary) { sigImgSummary.src = signatureDataUrl; sigImgSummary.classList.remove('hidden'); }
@@ -1613,7 +1610,7 @@
       
       const remElem = document.getElementById('remainingDisplay');
       remElem.textContent = formatCurrency(returnRefund);
-      remElem.className = returnRefund < 0 ? 'text-sm sm:text-base font-bold text-rose-600 mt-1' : 'text-sm sm:text-base font-bold text-indigo-900 mt-1';
+      remElem.className = returnRefund < 0 ? 'text-xs sm:text-sm font-bold text-rose-600 mt-0.5' : 'text-xs sm:text-sm font-bold text-indigo-900 mt-0.5';
     }
 
     function openPreviewModal(type) {
