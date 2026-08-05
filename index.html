@@ -172,7 +172,7 @@
           📋 All Liquidations Audit
         </button>
         <button onclick="switchAdminTab('users')" id="tabBtnUsers" class="font-bold text-xs px-3.5 py-1.5 rounded-lg bg-slate-100 text-slate-600 hover:bg-slate-200 transition">
-          👥 User Account Credentials
+          👥 User Accounts & Credentials
         </button>
       </div>
 
@@ -210,8 +210,8 @@
                 <th class="p-3">Employee Name</th>
                 <th class="p-3">Username</th>
                 <th class="p-3 text-center">Default Password</th>
-                <th class="p-3 text-center">Password Status</th>
-                <th class="p-3 text-center">Action</th>
+                <th class="p-3 text-center">Account Status</th>
+                <th class="p-3 text-center">Admin Actions</th>
               </tr>
             </thead>
             <tbody id="adminUsersTableBody"></tbody>
@@ -929,16 +929,14 @@
     function setupAdminRealtimeListeners() {
       if (!db) return;
 
-      // Listen to ALL users' travel data
       db.ref('users').on('value', (snapshot) => {
         allUsersGlobalData = snapshot.val() || {};
         renderAdminDashboard();
       });
 
-      // Listen to ALL credentials
       db.ref('credentials').on('value', (snapshot) => {
         allCredentialsGlobalData = snapshot.val() || {};
-        renderAdminUsersTable();
+        renderAdminDashboard();
       });
     }
 
@@ -1015,6 +1013,9 @@
 
       Object.keys(allUsersGlobalData).forEach(uKey => {
         const matchingUserObj = USERS_DB.find(u => u.username.replace(/[^a-zA-Z0-9]/g, '_') === uKey) || { name: uKey, username: uKey };
+        const customCreds = allCredentialsGlobalData[uKey] || {};
+        const effectiveName = customCreds.name || matchingUserObj.name;
+
         const uData = allUsersGlobalData[uKey];
 
         if (uData && uData.travels && uData.travels.length > 0) {
@@ -1030,9 +1031,8 @@
 
             const regName = trv.regionName || 'Unspecified Region';
 
-            // Filter search logic
             if (query) {
-              const matchName = matchingUserObj.name.toLowerCase().includes(query);
+              const matchName = effectiveName.toLowerCase().includes(query);
               const matchUser = matchingUserObj.username.toLowerCase().includes(query);
               const matchRegion = regName.toLowerCase().includes(query);
               if (!matchName && !matchUser && !matchRegion) return;
@@ -1044,7 +1044,7 @@
 
             row.innerHTML = `
               <td class="p-3">
-                <p class="font-bold text-slate-900 text-xs">${matchingUserObj.name}</p>
+                <p class="font-bold text-slate-900 text-xs">${effectiveName}</p>
                 <p class="text-[10px] text-slate-500 font-mono">@${matchingUserObj.username}</p>
               </td>
               <td class="p-3 font-bold text-slate-800">${regName}</td>
@@ -1079,22 +1079,28 @@
 
       USERS_DB.forEach((u, idx) => {
         const uKey = u.username.replace(/[^a-zA-Z0-9]/g, '_');
-        const customPassObj = allCredentialsGlobalData[uKey];
-        const isCustom = customPassObj && customPassObj.password;
+        const customCreds = allCredentialsGlobalData[uKey] || {};
+        const displayName = customCreds.name || u.name;
+        const isCustomPass = customCreds.password;
+        const isCustomName = customCreds.name;
 
         const row = document.createElement('tr');
         row.className = idx % 2 === 0 ? 'bg-white hover:bg-slate-50' : 'bg-slate-50/50 hover:bg-slate-100';
 
         row.innerHTML = `
-          <td class="p-3 font-bold text-slate-900">${u.name}</td>
+          <td class="p-3">
+            <p class="font-bold text-slate-900">${displayName}</p>
+            ${isCustomName ? `<span class="text-[9px] text-indigo-600 font-semibold bg-indigo-50 border border-indigo-100 px-1.5 py-0.2 rounded">Name Modified</span>` : ''}
+          </td>
           <td class="p-3 font-mono text-slate-600 text-xs">@${u.username}</td>
           <td class="p-3 text-center font-mono text-slate-500 text-xs">${u.password}</td>
           <td class="p-3 text-center">
-            ${isCustom 
-              ? `<span class="bg-indigo-50 text-indigo-700 border border-indigo-200 px-2 py-0.5 rounded-full font-bold text-[10px]">Custom Updated</span>` 
+            ${isCustomPass 
+              ? `<span class="bg-indigo-50 text-indigo-700 border border-indigo-200 px-2 py-0.5 rounded-full font-bold text-[10px]">Custom Pass</span>` 
               : `<span class="bg-slate-100 text-slate-600 border border-slate-200 px-2 py-0.5 rounded-full font-bold text-[10px]">Default</span>`}
           </td>
-          <td class="p-3 text-center">
+          <td class="p-3 text-center whitespace-nowrap space-x-1">
+            <button onclick="adminEditUserName('${u.username}')" class="bg-indigo-50 text-indigo-700 border border-indigo-200 font-semibold px-2.5 py-1 rounded-lg hover:bg-indigo-100 transition text-xs">Edit Name</button>
             <button onclick="adminResetUserPassword('${u.username}')" class="bg-rose-50 text-rose-700 border border-rose-200 font-semibold px-2.5 py-1 rounded-lg hover:bg-rose-100 transition text-xs">Reset Pass</button>
           </td>
         `;
@@ -1102,14 +1108,37 @@
       });
     }
 
+    async function adminEditUserName(username) {
+      const uKey = username.replace(/[^a-zA-Z0-9]/g, '_');
+      const foundUser = USERS_DB.find(u => u.username.toLowerCase() === username.toLowerCase());
+      
+      let currentName = foundUser ? foundUser.name : '';
+      if (allCredentialsGlobalData[uKey] && allCredentialsGlobalData[uKey].name) {
+        currentName = allCredentialsGlobalData[uKey].name;
+      }
+
+      const newName = prompt(`Edit Full Name for @${username}:`, currentName);
+      if (newName === null || newName.trim() === '') return;
+
+      try {
+        if (db) {
+          await db.ref('credentials/' + uKey + '/name').set(newName.trim());
+          alert(`Full Name for @${username} updated to "${newName.trim()}"!`);
+        }
+      } catch(err) {
+        alert("Failed to update name. Please try again.");
+      }
+    }
+
     function adminInspectTravel(uKey, trvId) {
       const uData = allUsersGlobalData[uKey];
       if (!uData || !uData.travels) return;
       
       const foundUserObj = USERS_DB.find(u => u.username.replace(/[^a-zA-Z0-9]/g, '_') === uKey);
-      
+      const customCreds = allCredentialsGlobalData[uKey] || {};
+
       currentUsername = foundUserObj ? foundUserObj.username : uKey;
-      accountName = foundUserObj ? foundUserObj.name : uKey;
+      accountName = customCreds.name || (foundUserObj ? foundUserObj.name : uKey);
 
       travels = uData.travels;
       activeTravelId = trvId;
@@ -1137,16 +1166,16 @@
     }
 
     async function adminResetUserPassword(username) {
-      const newPass = prompt(`Reset password for @${username}: Enter new password (or leave empty to reset to default):`);
+      const newPass = prompt(`Reset password for @${username}: Enter new password (or leave empty to reset password to default):`);
       if (newPass === null) return;
 
       const uKey = username.replace(/[^a-zA-Z0-9]/g, '_');
       
       if (newPass.trim() === '') {
-        await db.ref('credentials/' + uKey).remove();
+        await db.ref('credentials/' + uKey + '/password').remove();
         alert(`Password for @${username} reset back to default!`);
       } else {
-        await db.ref('credentials/' + uKey).set({ password: newPass.trim() });
+        await db.ref('credentials/' + uKey + '/password').set(newPass.trim());
         alert(`New password set for @${username}!`);
       }
     }
@@ -1217,7 +1246,7 @@
 
       try {
         if (db) {
-          await db.ref('credentials/' + userKey).set({ password: newPassInput });
+          await db.ref('credentials/' + userKey + '/password').set(newPassInput);
         }
         alert("Password updated successfully!");
         closeChangePasswordModal();
@@ -1376,13 +1405,16 @@
       }
 
       let validPass = foundUser.password;
+      let dynamicName = foundUser.name;
       const userKey = user.replace(/[^a-zA-Z0-9]/g, '_');
 
       try {
         if (db) {
           const snap = await db.ref('credentials/' + userKey).once('value');
-          if (snap.exists() && snap.val().password) {
-            validPass = snap.val().password;
+          if (snap.exists()) {
+            const val = snap.val();
+            if (val.password) validPass = val.password;
+            if (val.name) dynamicName = val.name;
           }
         }
       } catch(e) {
@@ -1393,10 +1425,10 @@
         await showLoading('Signing in & Syncing Realtime...', 600);
         sessionStorage.setItem('travel_is_logged_in', 'true');
         sessionStorage.setItem('travel_logged_username', foundUser.username);
-        sessionStorage.setItem('travel_logged_user_name', foundUser.name);
+        sessionStorage.setItem('travel_logged_user_name', dynamicName);
         
         currentUsername = foundUser.username;
-        accountName = foundUser.name;
+        accountName = dynamicName;
 
         errorDiv.classList.add('hidden');
         document.getElementById('usernameInput').value = '';
