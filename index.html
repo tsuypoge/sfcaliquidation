@@ -3,7 +3,7 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-  <title>EXPENSES TRACKER</title>
+  <title>Travel Expense Tracker - Admin Console</title>
 
   <!-- Custom Favicon -->
   <link rel="icon" type="image/png" href="logo.png">
@@ -15,6 +15,9 @@
   <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-app-compat.js"></script>
   <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-database-compat.js"></script>
   <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-auth-compat.js"></script>
+
+  <!-- PDF.js Engine for Rendering PDF Attachments in Print/Preview -->
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/pdf.js/2.16.105/pdf.min.js"></script>
   
   <style>
     .overflow-x-auto { -webkit-overflow-scrolling: touch; }
@@ -374,10 +377,23 @@
           <p class="text-[10px] text-slate-500 mt-0.5">Manage and track travel expenses, liquidation forms, and report summaries</p>
         </div>
         
-        <!-- ACTION BUTTONS -->
+        <!-- ACTION BUTTONS (INCLUDES RECEIPT & MANUAL DTR UPLOAD BUTTONS) -->
         <div class="flex flex-wrap justify-center items-center gap-1.5 w-full md:w-auto">
           <button onclick="openPreviewModal('detailed')" class="bg-indigo-600 text-white text-[11px] font-semibold px-2.5 py-1.5 rounded-lg hover:bg-indigo-700 shadow-xs transition flex-1 sm:flex-none text-center">Preview</button>
           <button onclick="openPreviewModal('combined')" class="bg-slate-900 text-white text-[11px] font-semibold px-2.5 py-1.5 rounded-lg hover:bg-slate-800 shadow-xs transition flex-1 sm:flex-none text-center">Print Summary</button>
+          
+          <!-- RECEIPT(S) UPLOAD BUTTON -->
+          <label id="receiptsBtnLabel" class="bg-white text-slate-700 border border-slate-300 text-[11px] font-semibold px-2.5 py-1.5 rounded-lg hover:bg-slate-50 cursor-pointer flex-1 sm:flex-none text-center transition flex items-center justify-center gap-1">
+            <span id="receiptsBtnText">📄 Receipt(s)</span>
+            <input type="file" id="receiptsFileInput" accept="application/pdf, image/png, image/jpeg" class="hidden" onchange="handleReceiptsUpload(event)">
+          </label>
+
+          <!-- MANUAL DTR UPLOAD BUTTON -->
+          <label id="dtrBtnLabel" class="bg-white text-slate-700 border border-slate-300 text-[11px] font-semibold px-2.5 py-1.5 rounded-lg hover:bg-slate-50 cursor-pointer flex-1 sm:flex-none text-center transition flex items-center justify-center gap-1">
+            <span id="dtrBtnText">📅 Manual DTR</span>
+            <input type="file" id="dtrFileInput" accept="application/pdf, image/png, image/jpeg" class="hidden" onchange="handleDtrUpload(event)">
+          </label>
+
           <button onclick="toggleArchive()" id="archiveBtn" class="bg-white text-slate-700 border border-slate-300 text-[11px] font-semibold px-2.5 py-1.5 rounded-lg hover:bg-slate-50 transition flex-1 sm:flex-none text-center">Archive</button>
           <button onclick="resetAllData()" title="Reset All Tracker Data" class="bg-rose-50 text-rose-700 border border-rose-200 text-[11px] font-semibold px-2.5 py-1.5 rounded-lg hover:bg-rose-100 transition flex-1 sm:flex-none text-center">Reset</button>
         </div>
@@ -497,7 +513,7 @@
       <img src="logo.png" alt="Logo" class="mx-auto block" style="max-height: 40px; width: auto;">
     </div>
     <div class="mb-3 report-header">
-      <p>Dept. : <span id="printDepartmentName">StrikeForce/Fraud Audit-IAD</span></p>
+      <p>Region / Area : <span id="printDepartmentName">StrikeForce/Fraud Audit-IAD</span></p>
       <p>Cash Advance Expenses Liquidation</p>
       <p>Region: <span id="printRegionName">N/A</span></p>
       <p>Date: <span id="printDateRange">N/A</span></p>
@@ -747,6 +763,11 @@
   </div>
 
   <script>
+    // Initialize pdf.js worker
+    if (typeof pdfjsLib !== 'undefined') {
+      pdfjsLib.GlobalWorkerOptions.workerSrc = 'https://cdnjs.cloudflare.com/ajax/libs/pdf.js/2.16.105/pdf.worker.min.js';
+    }
+
     // FIREBASE REALTIME DATABASE CONFIGURATION
     const firebaseConfig = {
       apiKey: "AIzaSyCBnHO2KzpwLlZ-HpETU2prL-ZBu_p_rD4",
@@ -794,6 +815,8 @@
     let cashAdvance = 0;
     let regionName = '';
     let signatureDataUrl = '';
+    let receiptsPdfDataUrl = '';
+    let dtrPdfDataUrl = '';
     let isArchived = false;
     let editingId = null;
 
@@ -1056,6 +1079,8 @@
               cashAdvance = found.cashAdvance || 0;
               isArchived = found.isArchived === true;
               expenses = found.expenses || [];
+              receiptsPdfDataUrl = found.receiptsPdf || '';
+              dtrPdfDataUrl = found.dtrPdf || '';
               updateUIFields();
               showScreen('mainDashboard');
             } else {
@@ -1092,7 +1117,7 @@
     }
 
     // ========================================================
-    // 👑 ADMIN SAVANT CONTROLLER LOGIC
+    // 👑 ADMIN CONTROLLER LOGIC
     // ========================================================
     function setupAdminRealtimeListeners() {
       if (!db) return;
@@ -1518,7 +1543,9 @@
         regionName: rName.trim() || 'New Travel',
         cashAdvance: caVal,
         isArchived: false,
-        expenses: []
+        expenses: [],
+        receiptsPdf: '',
+        dtrPdf: ''
       };
 
       travels.unshift(newTrv);
@@ -1540,6 +1567,8 @@
       cashAdvance = found.cashAdvance || 0;
       isArchived = found.isArchived === true;
       expenses = found.expenses || [];
+      receiptsPdfDataUrl = found.receiptsPdf || '';
+      dtrPdfDataUrl = found.dtrPdf || '';
 
       showScreen('mainDashboard');
 
@@ -1570,6 +1599,8 @@
         travels[idx].cashAdvance = cashAdvance;
         travels[idx].isArchived = isArchived;
         travels[idx].expenses = expenses;
+        travels[idx].receiptsPdf = receiptsPdfDataUrl;
+        travels[idx].dtrPdf = dtrPdfDataUrl;
       }
       saveDataToStorage();
     }
@@ -1582,6 +1613,35 @@
       if (regInputElem) regInputElem.value = regionName;
 
       updateTracker();
+    }
+
+    // HANDLERS FOR NEW RECEIPT(S) & MANUAL DTR ATTACHMENTS
+    function handleReceiptsUpload(event) {
+      if (isArchived) return;
+      const file = event.target.files[0];
+      if (!file) return;
+
+      const reader = new FileReader();
+      reader.onload = function(e) {
+        receiptsPdfDataUrl = e.target.result;
+        saveActiveTravelData();
+        updateTracker();
+      };
+      reader.readAsDataURL(file);
+    }
+
+    function handleDtrUpload(event) {
+      if (isArchived) return;
+      const file = event.target.files[0];
+      if (!file) return;
+
+      const reader = new FileReader();
+      reader.onload = function(e) {
+        dtrPdfDataUrl = e.target.result;
+        saveActiveTravelData();
+        updateTracker();
+      };
+      reader.readAsDataURL(file);
     }
 
     function toggleArchive() {
@@ -1607,7 +1667,6 @@
       const pass = document.getElementById('passwordInput').value.trim();
       const errorDiv = document.getElementById('loginError');
 
-      // Match user by Username OR Email
       const foundUser = USERS_DB.find(u => 
         u.username.toLowerCase() === userOrEmailInput || 
         (u.email && u.email.toLowerCase() === userOrEmailInput)
@@ -1700,6 +1759,8 @@
         expenses = [];
         cashAdvance = 0;
         regionName = '';
+        receiptsPdfDataUrl = '';
+        dtrPdfDataUrl = '';
         isArchived = false;
 
         saveActiveTravelData();
@@ -2093,6 +2154,27 @@
         if (sigUploadContainer) sigUploadContainer.classList.remove('hidden');
       }
 
+      // UPDATE RECEIPTS & DTR ATTACHMENT BUTTON LABELS/BADGES
+      const receiptsBtnLabel = document.getElementById('receiptsBtnLabel');
+      const receiptsBtnText = document.getElementById('receiptsBtnText');
+      if (receiptsPdfDataUrl) {
+        receiptsBtnLabel.className = "bg-emerald-50 text-emerald-700 border border-emerald-300 text-[11px] font-semibold px-2.5 py-1.5 rounded-lg hover:bg-emerald-100 cursor-pointer flex-1 sm:flex-none text-center transition flex items-center justify-center gap-1";
+        receiptsBtnText.textContent = "📄 Receipt(s) ✓";
+      } else {
+        receiptsBtnLabel.className = "bg-white text-slate-700 border border-slate-300 text-[11px] font-semibold px-2.5 py-1.5 rounded-lg hover:bg-slate-50 cursor-pointer flex-1 sm:flex-none text-center transition flex items-center justify-center gap-1";
+        receiptsBtnText.textContent = "📄 Receipt(s)";
+      }
+
+      const dtrBtnLabel = document.getElementById('dtrBtnLabel');
+      const dtrBtnText = document.getElementById('dtrBtnText');
+      if (dtrPdfDataUrl) {
+        dtrBtnLabel.className = "bg-emerald-50 text-emerald-700 border border-emerald-300 text-[11px] font-semibold px-2.5 py-1.5 rounded-lg hover:bg-emerald-100 cursor-pointer flex-1 sm:flex-none text-center transition flex items-center justify-center gap-1";
+        dtrBtnText.textContent = "📅 Manual DTR ✓";
+      } else {
+        dtrBtnLabel.className = "bg-white text-slate-700 border border-slate-300 text-[11px] font-semibold px-2.5 py-1.5 rounded-lg hover:bg-slate-50 cursor-pointer flex-1 sm:flex-none text-center transition flex items-center justify-center gap-1";
+        dtrBtnText.textContent = "📅 Manual DTR";
+      }
+
       const tbodyUI = document.getElementById('uiTableBody');
       const tbodyPrintMainDetailed = document.getElementById('printMainTableBodyDetailed');
       const tbodyPrintMiscDetailed = document.getElementById('printMiscTableBodyDetailed');
@@ -2351,14 +2433,65 @@
       remElem.className = returnRefund < 0 ? 'text-xs sm:text-sm font-bold text-rose-600 mt-0.5' : 'text-xs sm:text-sm font-bold text-indigo-900 mt-0.5';
     }
 
-    function openPreviewModal(type) {
+    async function openPreviewModal(type) {
       currentPreviewType = type;
       updateTracker();
-      renderModalContent(type);
+      await renderModalContent(type);
       document.getElementById('previewModal').classList.remove('hidden');
     }
 
-    function renderModalContent(type) {
+    // HELPER FUNCTION TO RENDER PDF OR IMAGE ATTACHMENTS INTO PREVIEW
+    async function appendAttachmentToContainer(container, base64Data, title) {
+      if (!base64Data) return;
+
+      const wrapper = document.createElement('div');
+      wrapper.className = 'page-break my-6';
+
+      const label = document.createElement('div');
+      label.className = 'my-4 border-t-2 border-dashed border-slate-300 text-center py-2 text-slate-500 text-xs font-bold uppercase tracking-wider no-print';
+      label.textContent = `--- ${title} ---`;
+      wrapper.appendChild(label);
+
+      if (base64Data.startsWith('data:image/')) {
+        const img = document.createElement('img');
+        img.src = base64Data;
+        img.className = 'max-w-full h-auto mx-auto block mb-4 border border-slate-200 shadow-xs';
+        wrapper.appendChild(img);
+      } else if (base64Data.startsWith('data:application/pdf')) {
+        try {
+          const pdfBase64 = base64Data.split(',')[1];
+          const pdfData = atob(pdfBase64);
+          const loadingTask = pdfjsLib.getDocument({ data: pdfData });
+          const pdf = await loadingTask.promise;
+
+          for (let pageNum = 1; pageNum <= pdf.numPages; pageNum++) {
+            const page = await pdf.getPage(pageNum);
+            const viewport = page.getViewport({ scale: 1.5 });
+
+            const canvas = document.createElement('canvas');
+            const context = canvas.getContext('2d');
+            canvas.height = viewport.height;
+            canvas.width = viewport.width;
+
+            await page.render({ canvasContext: context, viewport: viewport }).promise;
+
+            const pageImg = document.createElement('img');
+            pageImg.src = canvas.toDataURL('image/png');
+            pageImg.className = 'max-w-full h-auto mx-auto block mb-4 border border-slate-200 shadow-xs page-break';
+            wrapper.appendChild(pageImg);
+          }
+        } catch (err) {
+          console.error("Error rendering PDF attachment:", err);
+          const errP = document.createElement('p');
+          errP.className = 'text-center text-rose-500 text-xs font-semibold py-4';
+          errP.textContent = `[Attached ${title} PDF]`;
+          wrapper.appendChild(errP);
+        }
+      }
+      container.appendChild(wrapper);
+    }
+
+    async function renderModalContent(type) {
       const modalContent = document.getElementById('modalContent');
       const titleElem = document.getElementById('modalTitle');
       
@@ -2375,14 +2508,14 @@
         modalContent.appendChild(clone);
 
       } else if (type === 'detailed') {
-        titleElem.textContent = '';
+        titleElem.textContent = 'CA Liquidation Preview';
         document.getElementById('printAreaDetailed').classList.add('print-active');
         const clone = document.getElementById('printAreaDetailed').cloneNode(true);
         clone.classList.remove('hidden');
         modalContent.appendChild(clone);
 
       } else if (type === 'combined') {
-        titleElem.textContent = '';
+        titleElem.textContent = 'Print Liquidation Package (Summary + Detailed + Receipts + DTR)';
 
         document.getElementById('printAreaSummary').classList.add('print-active');
         document.getElementById('printAreaDetailed').classList.add('print-active', 'page-break');
@@ -2400,6 +2533,16 @@
         detailedClone.classList.remove('hidden');
         detailedClone.classList.add('page-break');
         modalContent.appendChild(detailedClone);
+
+        // APPEND RECEIPT(S) IF ATTACHED
+        if (receiptsPdfDataUrl) {
+          await appendAttachmentToContainer(modalContent, receiptsPdfDataUrl, 'ATTACHED RECEIPT(S)');
+        }
+
+        // APPEND MANUAL DTR IF ATTACHED
+        if (dtrPdfDataUrl) {
+          await appendAttachmentToContainer(modalContent, dtrPdfDataUrl, 'ATTACHED MANUAL DTR');
+        }
       }
     }
 
