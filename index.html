@@ -3,7 +3,7 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-  <title>IAD</title>
+  <title>Travel Expense Tracker - Admin Console</title>
 
   <!-- Custom Favicon -->
   <link rel="icon" type="image/png" href="logo.png">
@@ -104,7 +104,7 @@
 
         <div>
           <label class="block text-[10px] font-bold uppercase tracking-wider text-slate-600 mb-1">Username</label>
-          <input type="text" id="usernameInput" required placeholder="e.g. j.cagang" class="w-full p-2.5 border rounded-xl text-xs border-slate-300 focus:ring-2 focus:ring-indigo-500 focus:outline-none transition">
+          <input type="text" id="usernameInput" required placeholder="e.g. j.cagang or admin" class="w-full p-2.5 border rounded-xl text-xs border-slate-300 focus:ring-2 focus:ring-indigo-500 focus:outline-none transition">
         </div>
 
         <div>
@@ -119,7 +119,110 @@
     </div>
   </div>
 
-  <!-- TRAVEL LIST SCREEN (LANDING) -->
+  <!-- ADMIN CONSOLE DASHBOARD SCREEN -->
+  <div id="adminDashboardScreen" class="hidden p-2 sm:p-4">
+    <div class="max-w-7xl mx-auto bg-white rounded-2xl shadow-sm border border-slate-200 p-3 sm:p-5">
+      
+      <!-- ADMIN HEADER BAR -->
+      <div class="mb-4 p-2.5 bg-slate-900 text-white rounded-xl flex flex-col md:flex-row items-center justify-between gap-3 text-xs shadow-md">
+        <div class="flex items-center gap-2.5">
+          <span class="bg-indigo-500 text-white font-black px-2 py-0.5 rounded text-[10px] uppercase tracking-wider">ADMIN CONSOLE</span>
+          <span class="font-bold text-slate-200 text-xs">System Audit & Oversight</span>
+          <span class="text-slate-500">|</span>
+          <span id="adminClockDisplay" class="text-slate-400 font-mono text-[11px]">Loading Clock...</span>
+        </div>
+
+        <div class="flex items-center gap-2">
+          <button onclick="switchToPersonalView()" class="bg-indigo-600 hover:bg-indigo-700 text-white font-semibold text-[11px] px-3 py-1.5 rounded-lg transition shadow-xs">
+            👤 Switch to Personal View
+          </button>
+          <button onclick="handleLogout()" class="bg-rose-600 hover:bg-rose-700 text-white font-bold text-[11px] px-3 py-1.5 rounded-lg transition">
+            Logout
+          </button>
+        </div>
+      </div>
+
+      <!-- ANALYTICS CARDS -->
+      <div class="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-5 gap-3 mb-6">
+        <div class="p-3 bg-indigo-50/70 border border-indigo-100 rounded-xl">
+          <p class="text-[9px] font-bold uppercase tracking-wider text-indigo-700">Enrolled Users</p>
+          <p id="adminStatUsers" class="text-lg font-black text-indigo-950 mt-0.5">0</p>
+        </div>
+        <div class="p-3 bg-emerald-50/70 border border-emerald-100 rounded-xl">
+          <p class="text-[9px] font-bold uppercase tracking-wider text-emerald-700">Total Liquidations</p>
+          <p id="adminStatTravels" class="text-lg font-black text-emerald-950 mt-0.5">0</p>
+        </div>
+        <div class="p-3 bg-amber-50/70 border border-amber-100 rounded-xl">
+          <p class="text-[9px] font-bold uppercase tracking-wider text-amber-700">Total System CA</p>
+          <p id="adminStatCA" class="text-lg font-black text-amber-950 mt-0.5">₱0.00</p>
+        </div>
+        <div class="p-3 bg-purple-50/70 border border-purple-100 rounded-xl">
+          <p class="text-[9px] font-bold uppercase tracking-wider text-purple-700">Total System Spent</p>
+          <p id="adminStatSpent" class="text-lg font-black text-purple-950 mt-0.5">₱0.00</p>
+        </div>
+        <div class="p-3 bg-rose-50/70 border border-rose-100 rounded-xl col-span-2 sm:col-span-1">
+          <p class="text-[9px] font-bold uppercase tracking-wider text-rose-700">System Balance / Refund</p>
+          <p id="adminStatBalance" class="text-lg font-black text-rose-950 mt-0.5">₱0.00</p>
+        </div>
+      </div>
+
+      <!-- ADMIN TABS -->
+      <div class="flex items-center gap-2 border-b border-slate-200 mb-4 pb-2">
+        <button onclick="switchAdminTab('liquidations')" id="tabBtnLiquidations" class="font-bold text-xs px-3.5 py-1.5 rounded-lg bg-slate-900 text-white transition">
+          📋 All Liquidations Audit
+        </button>
+        <button onclick="switchAdminTab('users')" id="tabBtnUsers" class="font-bold text-xs px-3.5 py-1.5 rounded-lg bg-slate-100 text-slate-600 hover:bg-slate-200 transition">
+          👥 User Account Credentials
+        </button>
+      </div>
+
+      <!-- TAB 1: ALL LIQUIDATIONS TABLE -->
+      <div id="adminTabLiquidations" class="space-y-3">
+        <div class="flex flex-col sm:flex-row items-stretch sm:items-center justify-between gap-2.5">
+          <input type="text" id="adminSearchInput" oninput="renderAdminLiquidationsTable()" placeholder="🔍 Search User Name, Username, or Region..." class="p-2 border rounded-xl text-xs border-slate-300 w-full sm:w-80 focus:ring-2 focus:ring-indigo-500 focus:outline-none">
+          <p class="text-[11px] text-slate-500 font-medium">Showing real-time travel records across all accounts</p>
+        </div>
+
+        <div class="overflow-x-auto rounded-xl border border-slate-200">
+          <table class="w-full text-left border-collapse text-xs">
+            <thead>
+              <tr class="bg-slate-50 text-slate-700 font-semibold border-b border-slate-200 text-[11px]">
+                <th class="p-3">User Account</th>
+                <th class="p-3">Region / Travel Area</th>
+                <th class="p-3 text-center">Travel Dates</th>
+                <th class="p-3 text-right">Cash Advance</th>
+                <th class="p-3 text-right">Total Spent</th>
+                <th class="p-3 text-center">Status</th>
+                <th class="p-3 text-center">Audit Actions</th>
+              </tr>
+            </thead>
+            <tbody id="adminLiquidationsTableBody"></tbody>
+          </table>
+        </div>
+      </div>
+
+      <!-- TAB 2: USER CREDENTIALS MANAGEMENT TABLE -->
+      <div id="adminTabUsers" class="hidden space-y-3">
+        <div class="overflow-x-auto rounded-xl border border-slate-200">
+          <table class="w-full text-left border-collapse text-xs">
+            <thead>
+              <tr class="bg-slate-50 text-slate-700 font-semibold border-b border-slate-200 text-[11px]">
+                <th class="p-3">Employee Name</th>
+                <th class="p-3">Username</th>
+                <th class="p-3 text-center">Default Password</th>
+                <th class="p-3 text-center">Password Status</th>
+                <th class="p-3 text-center">Action</th>
+              </tr>
+            </thead>
+            <tbody id="adminUsersTableBody"></tbody>
+          </table>
+        </div>
+      </div>
+
+    </div>
+  </div>
+
+  <!-- TRAVEL LIST SCREEN (REGULAR USER LANDING) -->
   <div id="travelListScreen" class="hidden p-2 sm:p-4">
     <div class="max-w-7xl mx-auto bg-white rounded-2xl shadow-sm border border-slate-200 p-3 sm:p-5">
       <div class="mb-4 p-2 bg-slate-50 rounded-xl border border-slate-200 flex flex-col md:flex-row items-center justify-between gap-2.5 text-xs">
@@ -138,6 +241,12 @@
               <button onclick="openChangePasswordModal(); closeUserDropdowns();" class="w-full text-left px-3.5 py-2 text-xs font-semibold text-slate-700 hover:bg-indigo-50 hover:text-indigo-600 flex items-center gap-2 transition">
                 🔑 Change Password
               </button>
+              <div id="adminConsoleSwitchBtnList" class="hidden">
+                <div class="border-t border-slate-100 my-1"></div>
+                <button onclick="switchToAdminConsole()" class="w-full text-left px-3.5 py-2 text-xs font-bold text-indigo-600 hover:bg-indigo-50 flex items-center gap-2 transition">
+                  ⚡ Admin Console
+                </button>
+              </div>
               <div class="border-t border-slate-100 my-1"></div>
               <button onclick="handleLogout()" class="w-full text-left px-3.5 py-2 text-xs font-bold text-rose-600 hover:bg-rose-50 flex items-center gap-2 transition">
                 🚪 Logout
@@ -204,6 +313,12 @@
             <button onclick="openChangePasswordModal(); closeUserDropdowns();" class="w-full text-left px-3.5 py-2 text-xs font-semibold text-slate-700 hover:bg-indigo-50 hover:text-indigo-600 flex items-center gap-2 transition">
               🔑 Change Password
             </button>
+            <div id="adminConsoleSwitchBtnDash" class="hidden">
+              <div class="border-t border-slate-100 my-1"></div>
+              <button onclick="switchToAdminConsole()" class="w-full text-left px-3.5 py-2 text-xs font-bold text-indigo-600 hover:bg-indigo-50 flex items-center gap-2 transition">
+                ⚡ Admin Console
+              </button>
+            </div>
             <div class="border-t border-slate-100 my-1"></div>
             <button onclick="handleLogout()" class="w-full text-left px-3.5 py-2 text-xs font-bold text-rose-600 hover:bg-rose-50 flex items-center gap-2 transition">
               🚪 Logout
@@ -605,6 +720,9 @@
     let travels = [];
     let activeTravelId = null;
 
+    let allUsersGlobalData = {};
+    let allCredentialsGlobalData = {};
+
     let expenses = [];
     let cashAdvance = 0;
     let regionName = '';
@@ -700,10 +818,12 @@
       const login = document.getElementById('loginScreen');
       const list = document.getElementById('travelListScreen');
       const dash = document.getElementById('mainDashboard');
+      const admin = document.getElementById('adminDashboardScreen');
 
       if (login) login.classList.add('hidden');
       if (list) list.classList.add('hidden');
       if (dash) dash.classList.add('hidden');
+      if (admin) admin.classList.add('hidden');
 
       const target = document.getElementById(screenId);
       if (target) target.classList.remove('hidden');
@@ -720,6 +840,20 @@
           el.textContent = "Hi " + shortName;
         });
 
+        const isUserAdmin = currentUsername.toLowerCase() === 'admin';
+        
+        if (isUserAdmin) {
+          document.getElementById('adminConsoleSwitchBtnList').classList.remove('hidden');
+          document.getElementById('adminConsoleSwitchBtnDash').classList.remove('hidden');
+          
+          if (!sessionStorage.getItem('admin_override_personal_mode')) {
+            showScreen('adminDashboardScreen');
+            setupAdminRealtimeListeners();
+            resetInactivityTimer();
+            return;
+          }
+        }
+
         if (activeTravelId) {
           showScreen('mainDashboard');
         } else {
@@ -730,6 +864,7 @@
         resetInactivityTimer();
       } else {
         clearTimeout(inactivityTimer);
+        sessionStorage.removeItem('admin_override_personal_mode');
         showScreen('loginScreen');
       }
     }
@@ -787,6 +922,244 @@
         console.warn("Firebase Write Notice:", e);
       }
     }
+
+    // ========================================================
+    // 👑 ADMIN SAVANT CONTROLLER LOGIC
+    // ========================================================
+    function setupAdminRealtimeListeners() {
+      if (!db) return;
+
+      // Listen to ALL users' travel data
+      db.ref('users').on('value', (snapshot) => {
+        allUsersGlobalData = snapshot.val() || {};
+        renderAdminDashboard();
+      });
+
+      // Listen to ALL credentials
+      db.ref('credentials').on('value', (snapshot) => {
+        allCredentialsGlobalData = snapshot.val() || {};
+        renderAdminUsersTable();
+      });
+    }
+
+    function switchToAdminConsole() {
+      sessionStorage.removeItem('admin_override_personal_mode');
+      closeUserDropdowns();
+      showScreen('adminDashboardScreen');
+      setupAdminRealtimeListeners();
+    }
+
+    function switchToPersonalView() {
+      sessionStorage.setItem('admin_override_personal_mode', 'true');
+      checkAuthStatus();
+    }
+
+    function switchAdminTab(tabName) {
+      const tabLiq = document.getElementById('adminTabLiquidations');
+      const tabUsr = document.getElementById('adminTabUsers');
+      const btnLiq = document.getElementById('tabBtnLiquidations');
+      const btnUsr = document.getElementById('tabBtnUsers');
+
+      if (tabName === 'liquidations') {
+        tabLiq.classList.remove('hidden');
+        tabUsr.classList.add('hidden');
+        btnLiq.className = 'font-bold text-xs px-3.5 py-1.5 rounded-lg bg-slate-900 text-white transition';
+        btnUsr.className = 'font-bold text-xs px-3.5 py-1.5 rounded-lg bg-slate-100 text-slate-600 hover:bg-slate-200 transition';
+      } else {
+        tabLiq.classList.add('hidden');
+        tabUsr.classList.remove('hidden');
+        btnUsr.className = 'font-bold text-xs px-3.5 py-1.5 rounded-lg bg-slate-900 text-white transition';
+        btnLiq.className = 'font-bold text-xs px-3.5 py-1.5 rounded-lg bg-slate-100 text-slate-600 hover:bg-slate-200 transition';
+      }
+    }
+
+    function renderAdminDashboard() {
+      let totalTravelsCount = 0;
+      let totalCAAmount = 0;
+      let totalSpentAmount = 0;
+
+      Object.keys(allUsersGlobalData).forEach(uKey => {
+        const uData = allUsersGlobalData[uKey];
+        if (uData && uData.travels) {
+          totalTravelsCount += uData.travels.length;
+          uData.travels.forEach(trv => {
+            totalCAAmount += (trv.cashAdvance || 0);
+            const trvExpenses = trv.expenses || [];
+            totalSpentAmount += trvExpenses.reduce((acc, curr) => acc + (curr.amount || 0), 0);
+          });
+        }
+      });
+
+      const totalBalance = totalCAAmount - totalSpentAmount;
+
+      document.getElementById('adminStatUsers').textContent = USERS_DB.length;
+      document.getElementById('adminStatTravels').textContent = totalTravelsCount;
+      document.getElementById('adminStatCA').textContent = formatCurrency(totalCAAmount);
+      document.getElementById('adminStatSpent').textContent = formatCurrency(totalSpentAmount);
+      
+      const balElem = document.getElementById('adminStatBalance');
+      balElem.textContent = formatCurrency(totalBalance);
+      balElem.className = totalBalance < 0 ? 'text-lg font-black text-rose-600 mt-0.5' : 'text-lg font-black text-emerald-900 mt-0.5';
+
+      renderAdminLiquidationsTable();
+      renderAdminUsersTable();
+    }
+
+    function renderAdminLiquidationsTable() {
+      const tbody = document.getElementById('adminLiquidationsTableBody');
+      if (!tbody) return;
+      tbody.innerHTML = '';
+
+      const query = (document.getElementById('adminSearchInput').value || '').toLowerCase().trim();
+      let recordsFound = 0;
+
+      Object.keys(allUsersGlobalData).forEach(uKey => {
+        const matchingUserObj = USERS_DB.find(u => u.username.replace(/[^a-zA-Z0-9]/g, '_') === uKey) || { name: uKey, username: uKey };
+        const uData = allUsersGlobalData[uKey];
+
+        if (uData && uData.travels && uData.travels.length > 0) {
+          uData.travels.forEach(trv => {
+            const trvExpenses = trv.expenses || [];
+            const totalSpent = trvExpenses.reduce((acc, curr) => acc + (curr.amount || 0), 0);
+            
+            let dateRange = 'N/A';
+            if (trvExpenses.length > 0) {
+              const dates = trvExpenses.map(e => e.date).sort();
+              dateRange = formatDateRangeLong(dates[0], dates[dates.length - 1]);
+            }
+
+            const regName = trv.regionName || 'Unspecified Region';
+
+            // Filter search logic
+            if (query) {
+              const matchName = matchingUserObj.name.toLowerCase().includes(query);
+              const matchUser = matchingUserObj.username.toLowerCase().includes(query);
+              const matchRegion = regName.toLowerCase().includes(query);
+              if (!matchName && !matchUser && !matchRegion) return;
+            }
+
+            recordsFound++;
+            const row = document.createElement('tr');
+            row.className = recordsFound % 2 === 0 ? 'bg-white hover:bg-slate-50' : 'bg-slate-50/50 hover:bg-slate-100';
+
+            row.innerHTML = `
+              <td class="p-3">
+                <p class="font-bold text-slate-900 text-xs">${matchingUserObj.name}</p>
+                <p class="text-[10px] text-slate-500 font-mono">@${matchingUserObj.username}</p>
+              </td>
+              <td class="p-3 font-bold text-slate-800">${regName}</td>
+              <td class="p-3 text-center text-slate-600 font-medium">${dateRange}</td>
+              <td class="p-3 text-right font-bold text-slate-900">${formatNum(trv.cashAdvance)}</td>
+              <td class="p-3 text-right font-bold text-indigo-600">${formatNum(totalSpent)}</td>
+              <td class="p-3 text-center">
+                ${trv.isArchived 
+                  ? `<span class="bg-amber-100 text-amber-800 border border-amber-200 px-2 py-0.5 rounded-full font-bold text-[10px]">Archived</span>` 
+                  : `<span class="bg-emerald-50 text-emerald-700 border border-emerald-200 px-2 py-0.5 rounded-full font-bold text-[10px]">Active</span>`}
+              </td>
+              <td class="p-3 text-center whitespace-nowrap space-x-1.5">
+                <button onclick="adminInspectTravel('${uKey}', '${trv.id}')" class="bg-indigo-600 text-white font-semibold px-2 py-1 rounded-md hover:bg-indigo-700 transition text-[11px]">Inspect</button>
+                <button onclick="adminPrintTravel('${uKey}', '${trv.id}')" class="bg-slate-800 text-white font-semibold px-2 py-1 rounded-md hover:bg-slate-900 transition text-[11px]">Print</button>
+                ${trv.isArchived ? `<button onclick="adminForceUnlock('${uKey}', '${trv.id}')" class="bg-amber-600 text-white font-semibold px-2 py-1 rounded-md hover:bg-amber-700 transition text-[11px]">Unlock</button>` : ''}
+              </td>
+            `;
+            tbody.appendChild(row);
+          });
+        }
+      });
+
+      if (recordsFound === 0) {
+        tbody.innerHTML = `<tr><td colspan="7" class="text-center p-6 text-slate-500 font-medium">No liquidation records found in system database.</td></tr>`;
+      }
+    }
+
+    function renderAdminUsersTable() {
+      const tbody = document.getElementById('adminUsersTableBody');
+      if (!tbody) return;
+      tbody.innerHTML = '';
+
+      USERS_DB.forEach((u, idx) => {
+        const uKey = u.username.replace(/[^a-zA-Z0-9]/g, '_');
+        const customPassObj = allCredentialsGlobalData[uKey];
+        const isCustom = customPassObj && customPassObj.password;
+
+        const row = document.createElement('tr');
+        row.className = idx % 2 === 0 ? 'bg-white hover:bg-slate-50' : 'bg-slate-50/50 hover:bg-slate-100';
+
+        row.innerHTML = `
+          <td class="p-3 font-bold text-slate-900">${u.name}</td>
+          <td class="p-3 font-mono text-slate-600 text-xs">@${u.username}</td>
+          <td class="p-3 text-center font-mono text-slate-500 text-xs">${u.password}</td>
+          <td class="p-3 text-center">
+            ${isCustom 
+              ? `<span class="bg-indigo-50 text-indigo-700 border border-indigo-200 px-2 py-0.5 rounded-full font-bold text-[10px]">Custom Updated</span>` 
+              : `<span class="bg-slate-100 text-slate-600 border border-slate-200 px-2 py-0.5 rounded-full font-bold text-[10px]">Default</span>`}
+          </td>
+          <td class="p-3 text-center">
+            <button onclick="adminResetUserPassword('${u.username}')" class="bg-rose-50 text-rose-700 border border-rose-200 font-semibold px-2.5 py-1 rounded-lg hover:bg-rose-100 transition text-xs">Reset Pass</button>
+          </td>
+        `;
+        tbody.appendChild(row);
+      });
+    }
+
+    function adminInspectTravel(uKey, trvId) {
+      const uData = allUsersGlobalData[uKey];
+      if (!uData || !uData.travels) return;
+      
+      const foundUserObj = USERS_DB.find(u => u.username.replace(/[^a-zA-Z0-9]/g, '_') === uKey);
+      
+      currentUsername = foundUserObj ? foundUserObj.username : uKey;
+      accountName = foundUserObj ? foundUserObj.name : uKey;
+
+      travels = uData.travels;
+      activeTravelId = trvId;
+
+      openTravel(trvId, false);
+    }
+
+    function adminPrintTravel(uKey, trvId) {
+      adminInspectTravel(uKey, trvId);
+      openPreviewModal('combined');
+    }
+
+    async function adminForceUnlock(uKey, trvId) {
+      if (confirm("Admin Force Unlock: Re-open this archived travel liquidation for editing?")) {
+        const uData = allUsersGlobalData[uKey];
+        if (uData && uData.travels) {
+          const idx = uData.travels.findIndex(t => t.id === trvId);
+          if (idx !== -1) {
+            uData.travels[idx].isArchived = false;
+            await db.ref('users/' + uKey + '/travels').set(uData.travels);
+            alert("Travel liquidation unlocked successfully!");
+          }
+        }
+      }
+    }
+
+    async function adminResetUserPassword(username) {
+      const newPass = prompt(`Reset password for @${username}: Enter new password (or leave empty to reset to default):`);
+      if (newPass === null) return;
+
+      const uKey = username.replace(/[^a-zA-Z0-9]/g, '_');
+      
+      if (newPass.trim() === '') {
+        await db.ref('credentials/' + uKey).remove();
+        alert(`Password for @${username} reset back to default!`);
+      } else {
+        await db.ref('credentials/' + uKey).set({ password: newPass.trim() });
+        alert(`New password set for @${username}!`);
+      }
+    }
+
+    function updateAdminClock() {
+      const now = new Date();
+      const clockElem = document.getElementById('adminClockDisplay');
+      if (clockElem) {
+        clockElem.textContent = now.toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' }) + ' | ' + now.toLocaleTimeString('en-US');
+      }
+    }
+    setInterval(updateAdminClock, 1000);
+    updateAdminClock();
 
     function openChangePasswordModal() {
       document.getElementById('currentPassInput').value = '';
@@ -941,8 +1314,13 @@
       await showLoading('Returning to Dashboard...', 400);
       saveActiveTravelData();
       activeTravelId = null;
-      showScreen('travelListScreen');
-      renderTravelListTable();
+      
+      if (currentUsername.toLowerCase() === 'admin' && !sessionStorage.getItem('admin_override_personal_mode')) {
+        showScreen('adminDashboardScreen');
+      } else {
+        showScreen('travelListScreen');
+        renderTravelListTable();
+      }
     }
 
     function saveActiveTravelData() {
@@ -1034,6 +1412,7 @@
       sessionStorage.removeItem('travel_is_logged_in');
       sessionStorage.removeItem('travel_logged_username');
       sessionStorage.removeItem('travel_logged_user_name');
+      sessionStorage.removeItem('admin_override_personal_mode');
       activeTravelId = null;
       checkAuthStatus();
     }
