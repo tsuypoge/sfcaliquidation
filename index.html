@@ -354,7 +354,6 @@
   <!-- ========================================== -->
   <div id="printAreaDetailed" class="hidden font-sans print-active">
     
-    <!-- HEADER BOX ACCORDING TO USER'S IMAGE -->
     <div class="mb-4 text-base font-bold text-gray-900 leading-tight">
       <p>Region / Area : StrikeForce/Fraud Audit-IAD</p>
       <p>Cash Advance Expenses Liquidation</p>
@@ -434,6 +433,7 @@
   </div>
 
 
+  <!-- PRINT SUMMARY VIEW (SIDE-BY-SIDE TABLES) -->
   <div id="printAreaSummary" class="hidden font-sans">
     <h2 class="text-2xl font-bold text-gray-800 mb-2 font-sans">CA Liquidation Report</h2>
     <div class="mb-5 text-sm font-semibold text-gray-800 space-y-1">
@@ -441,24 +441,26 @@
       <p>Date(s): <span id="printDateRange" class="font-bold underline">N/A</span></p>
     </div>
 
-    <div class="overflow-x-auto mb-8">
-      <table class="w-full max-w-xl text-left border-collapse border border-gray-400">
-        <tbody>
-          <tr><td class="font-bold text-gray-800 w-52">Name of Account</td><td id="printAccountNameMainSummary" class="font-bold text-gray-900">Name of Account</td></tr>
-          <tr><td class="text-gray-800">Total Transpo</td><td id="printTotalTranspoSummary" class="text-right font-medium text-gray-900">0.00</td></tr>
-          <tr><td class="text-gray-800">Total Meals</td><td id="printTotalMealsSummary" class="text-right font-medium text-gray-900">0.00</td></tr>
-          <tr><td class="text-gray-800">Total Per Diem</td><td id="printTotalPerDiemSummary" class="text-right font-medium text-gray-900">0.00</td></tr>
-          <tr><td class="text-gray-800">Terminal Fee</td><td id="printTotalTerminalFeeSummary" class="text-right font-medium text-gray-900">0.00</td></tr>
-          <tr><td class="text-gray-800">Miscellaneous</td><td id="printTotalMiscSummary" class="text-right font-medium text-gray-900">0.00</td></tr>
-          <tr class="bg-gray-100 font-bold"><td class="text-gray-800">Total Expenses</td><td id="printTotalExpensesSummary1" class="text-right text-gray-900">0.00</td></tr>
-          <tr><td id="summaryCALabel1" class="text-gray-800 font-bold">Cash Advance</td><td id="printTotalCASummary1" class="text-right font-bold text-gray-900">0.00</td></tr>
-          <tr class="bg-gray-50 font-bold"><td class="text-gray-800">Amount for Return / Refund</td><td id="printReturnRefundSummary1" class="text-right text-gray-900">0.00</td></tr>
-        </tbody>
-      </table>
-    </div>
+    <!-- SIDE-BY-SIDE TABLES FLEX CONTAINER -->
+    <div class="flex flex-row items-start gap-6 mb-8">
+      
+      <!-- LEFT TABLE: MAIN BREAKDOWN (Cash Advance & Return/Refund rows removed) -->
+      <div class="overflow-x-auto flex-1 max-w-xl">
+        <table class="w-full text-left border-collapse border border-gray-400">
+          <tbody>
+            <tr><td class="font-bold text-gray-800 w-52">Name of Account</td><td id="printAccountNameMainSummary" class="font-bold text-gray-900">Name of Account</td></tr>
+            <tr><td class="text-gray-800">Total Transpo</td><td id="printTotalTranspoSummary" class="text-right font-medium text-gray-900">0.00</td></tr>
+            <tr><td class="text-gray-800">Total Meals</td><td id="printTotalMealsSummary" class="text-right font-medium text-gray-900">0.00</td></tr>
+            <tr><td class="text-gray-800">Total Per Diem</td><td id="printTotalPerDiemSummary" class="text-right font-medium text-gray-900">0.00</td></tr>
+            <tr><td class="text-gray-800">Terminal Fee</td><td id="printTotalTerminalFeeSummary" class="text-right font-medium text-gray-900">0.00</td></tr>
+            <tr><td class="text-gray-800">Miscellaneous</td><td id="printTotalMiscSummary" class="text-right font-medium text-gray-900">0.00</td></tr>
+            <tr class="bg-gray-100 font-bold"><td class="text-gray-800">Total Expenses</td><td id="printTotalExpensesSummary1" class="text-right text-gray-900">0.00</td></tr>
+          </tbody>
+        </table>
+      </div>
 
-    <div class="space-y-10">
-      <div class="w-80">
+      <!-- RIGHT TABLE: SUMMARY BOX -->
+      <div class="w-72 sm:w-80">
         <h3 class="font-bold text-base text-gray-800 mb-1">Summary</h3>
         <table class="w-full text-left border-collapse border border-gray-400">
           <tbody>
@@ -469,26 +471,28 @@
         </table>
       </div>
 
-      <table class="w-full mt-8 no-border-table" style="border: none !important;">
-        <tr style="border: none !important;">
-          <td style="border: none !important; width: 50%; vertical-align: bottom; padding-right: 40px;">
-            <p class="font-bold text-gray-800 text-sm" style="margin-bottom: 5px;">Submitted by:</p>
-            <div style="height: 45px; display: flex; align-items: flex-end;">
-              <img id="summarySignatureImg" src="" class="hidden" style="max-height: 45px; max-width: 160px; object-fit: contain; margin-bottom: -5px;" />
-            </div>
-            <p id="printAccountNameSubSummary" class="font-bold text-gray-800 text-sm" style="margin:0; padding:0;">Name of Account</p>
-            <div style="border-top: 1px solid black; width: 100%; margin-top: 2px;"></div>
-            <p class="text-xs text-gray-600 mt-1">Signature over printed name</p>
-          </td>
-          <td style="border: none !important; width: 50%; vertical-align: bottom; padding-left: 40px;">
-            <p class="font-bold text-gray-800 text-sm" style="margin-bottom: 50px;">Checked by:</p>
-            <p class="font-bold text-gray-800 text-sm" style="margin:0; padding:0;">&nbsp;</p>
-            <div style="border-top: 1px solid black; width: 100%; margin-top: 2px;"></div>
-            <p class="text-xs text-gray-600 mt-1">Signature over printed name</p>
-          </td>
-        </tr>
-      </table>
     </div>
+
+    <!-- SIGNATURES SECTION -->
+    <table class="w-full mt-8 no-border-table" style="border: none !important;">
+      <tr style="border: none !important;">
+        <td style="border: none !important; width: 50%; vertical-align: bottom; padding-right: 40px;">
+          <p class="font-bold text-gray-800 text-sm" style="margin-bottom: 5px;">Submitted by:</p>
+          <div style="height: 45px; display: flex; align-items: flex-end;">
+            <img id="summarySignatureImg" src="" class="hidden" style="max-height: 45px; max-width: 160px; object-fit: contain; margin-bottom: -5px;" />
+          </div>
+          <p id="printAccountNameSubSummary" class="font-bold text-gray-800 text-sm" style="margin:0; padding:0;">Name of Account</p>
+          <div style="border-top: 1px solid black; width: 100%; margin-top: 2px;"></div>
+          <p class="text-xs text-gray-600 mt-1">Signature over printed name</p>
+        </td>
+        <td style="border: none !important; width: 50%; vertical-align: bottom; padding-left: 40px;">
+          <p class="font-bold text-gray-800 text-sm" style="margin-bottom: 50px;">Checked by:</p>
+          <p class="font-bold text-gray-800 text-sm" style="margin:0; padding:0;">&nbsp;</p>
+          <div style="border-top: 1px solid black; width: 100%; margin-top: 2px;"></div>
+          <p class="text-xs text-gray-600 mt-1">Signature over printed name</p>
+        </td>
+      </tr>
+    </table>
   </div>
 
 
@@ -563,7 +567,6 @@
     }
 
     async function loadUserData() {
-      // 1. Load local cache
       expenses = JSON.parse(localStorage.getItem(getStorageKey('travel_expenses_v40'))) || [];
       cashAdvance = parseFloat(localStorage.getItem(getStorageKey('travel_cash_advance'))) || 0;
       regionName = localStorage.getItem(getStorageKey('travel_region_name')) || '';
@@ -571,7 +574,6 @@
 
       updateUIFields();
 
-      // 2. Fetch with Cache-Buster (_t=Date.now()) for Safari
       if (GOOGLE_SCRIPT_URL && GOOGLE_SCRIPT_URL !== "IBUTANG_ANG_IMONG_WEB_APP_URL_DIRI") {
         try {
           const res = await fetch(`${GOOGLE_SCRIPT_URL}?action=read&username=${encodeURIComponent(currentUsername)}&_t=${Date.now()}`);
@@ -1200,7 +1202,6 @@
       document.getElementById('detailedReturnRefund').textContent = formatNum(reportReturnRefund);
       document.getElementById('detailedAccountName1').textContent = accountName || 'Name of Account';
 
-      // Update Region & Dates for both Detailed Preview and Print Summary
       const currentRegionText = regionName || 'N/A';
       let dateRangeText = 'N/A';
       if (startDate || endDate) {
@@ -1213,14 +1214,13 @@
       document.getElementById('printRegionName').textContent = currentRegionText;
       document.getElementById('printDateRange').textContent = dateRangeText;
 
-      // Header fields for Detailed Preview
       const detailedRegElem = document.getElementById('detailedRegionName');
       const detailedDateElem = document.getElementById('detailedDateRange');
       if (detailedRegElem) detailedRegElem.textContent = currentRegionText;
       if (detailedDateElem) detailedDateElem.textContent = dateRangeText;
 
-      document.getElementById('summaryCALabel1').textContent = 'Cash Advance';
-      document.getElementById('summaryCALabel2').textContent = 'TOTAL Cash Advance';
+      const summaryCALabel2 = document.getElementById('summaryCALabel2');
+      if (summaryCALabel2) summaryCALabel2.textContent = 'TOTAL Cash Advance';
 
       document.getElementById('printAccountNameMainSummary').textContent = accountName || 'Name of Account';
       document.getElementById('printTotalTranspoSummary').textContent = formatNum(rTranspo);
@@ -1230,8 +1230,6 @@
       document.getElementById('printTotalMiscSummary').textContent = formatNum(rMisc);
 
       document.getElementById('printTotalExpensesSummary1').textContent = formatNum(reportTotalSpent);
-      document.getElementById('printTotalCASummary1').textContent = formatNum(reportCA);
-      document.getElementById('printReturnRefundSummary1').textContent = formatNum(reportReturnRefund);
 
       document.getElementById('printSummaryTotalExpenses').textContent = formatNum(reportTotalSpent);
       document.getElementById('printSummaryTotalCA').textContent = formatNum(reportCA);
