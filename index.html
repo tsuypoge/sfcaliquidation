@@ -30,7 +30,7 @@
       color: #000000 !important;
     }
 
-    #printAreaDetailed, #printAreaSummary, #modalContent,
+    #printAreaDetailed, #printAreaSummary, #printAreaReceipts, #printAreaDtr, #modalContent,
     #printAreaDetailed table, #printAreaSummary table, #modalContent table,
     .excel-style-table {
       font-family: Calibri, 'Segoe UI', Arial, sans-serif !important;
@@ -59,6 +59,16 @@
       border: none !important;
     }
 
+    .attachment-img {
+      max-width: 100% !important;
+      max-height: 9.2in !important;
+      width: auto !important;
+      height: auto !important;
+      display: block !important;
+      margin: 0 auto !important;
+      object-fit: contain !important;
+    }
+
     @media print {
       @page { size: letter portrait; margin: 0.4in; }
       body {
@@ -73,7 +83,14 @@
       .print-active { display: block !important; width: 100% !important; }
       #printAreaSummary.print-active { page-break-after: always !important; break-after: page !important; }
       #printAreaDetailed.print-active { page-break-before: always !important; break-before: page !important; }
-      #printAreaDetailed:not(.print-active), #printAreaSummary:not(.print-active) { display: none !important; }
+      #printAreaReceipts.print-active { page-break-before: always !important; break-before: page !important; }
+      #printAreaDtr.print-active { page-break-before: always !important; break-before: page !important; }
+      
+      #printAreaDetailed:not(.print-active), 
+      #printAreaSummary:not(.print-active),
+      #printAreaReceipts:not(.print-active),
+      #printAreaDtr:not(.print-active) { display: none !important; }
+
       .page-break { page-break-before: always !important; break-before: page !important; }
       * { box-shadow: none !important; border-radius: 0 !important; }
       table { border-collapse: collapse !important; }
@@ -657,6 +674,16 @@
         </tr>
       </table>
     </div>
+  </div>
+
+  <!-- PRINT CONTAINER FOR ATTACHED RECEIPT(S) (SEPARATE NEW PAGE) -->
+  <div id="printAreaReceipts" class="hidden font-sans page-break">
+    <div id="printAreaReceiptsContent"></div>
+  </div>
+
+  <!-- PRINT CONTAINER FOR ATTACHED MANUAL DTR (SEPARATE NEW PAGE) -->
+  <div id="printAreaDtr" class="hidden font-sans page-break">
+    <div id="printAreaDtrContent"></div>
   </div>
 
   <!-- Dynamic Modal -->
@@ -2440,23 +2467,25 @@
       document.getElementById('previewModal').classList.remove('hidden');
     }
 
-    // HELPER FUNCTION TO RENDER PDF OR IMAGE ATTACHMENTS INTO PREVIEW
-    async function appendAttachmentToContainer(container, base64Data, title) {
+    // HELPER FUNCTION TO RENDER PDF OR IMAGE ATTACHMENTS INTO DEDICATED NEW PRINT PAGES
+    async function renderAttachmentPages(base64Data, title, targetContainer) {
+      if (!targetContainer) return;
+      targetContainer.innerHTML = '';
       if (!base64Data) return;
 
-      const wrapper = document.createElement('div');
-      wrapper.className = 'page-break my-6';
-
-      const label = document.createElement('div');
-      label.className = 'my-4 border-t-2 border-dashed border-slate-300 text-center py-2 text-slate-500 text-xs font-bold uppercase tracking-wider no-print';
-      label.textContent = `--- ${title} ---`;
-      wrapper.appendChild(label);
+      const headerDiv = document.createElement('div');
+      headerDiv.className = 'text-center mb-3 report-header no-print';
+      headerDiv.innerHTML = `<p class="text-xs font-bold text-slate-600 uppercase tracking-wider">--- ${title} ---</p>`;
+      targetContainer.appendChild(headerDiv);
 
       if (base64Data.startsWith('data:image/')) {
+        const pageDiv = document.createElement('div');
+        pageDiv.className = 'w-full flex justify-center items-center py-2';
         const img = document.createElement('img');
         img.src = base64Data;
-        img.className = 'max-w-full h-auto mx-auto block mb-4 border border-slate-200 shadow-xs';
-        wrapper.appendChild(img);
+        img.className = 'attachment-img border border-gray-300 shadow-xs';
+        pageDiv.appendChild(img);
+        targetContainer.appendChild(pageDiv);
       } else if (base64Data.startsWith('data:application/pdf')) {
         try {
           const pdfBase64 = base64Data.split(',')[1];
@@ -2475,20 +2504,22 @@
 
             await page.render({ canvasContext: context, viewport: viewport }).promise;
 
+            const pageDiv = document.createElement('div');
+            pageDiv.className = pageNum > 1 ? 'page-break w-full flex justify-center items-center py-2' : 'w-full flex justify-center items-center py-2';
             const pageImg = document.createElement('img');
             pageImg.src = canvas.toDataURL('image/png');
-            pageImg.className = 'max-w-full h-auto mx-auto block mb-4 border border-slate-200 shadow-xs page-break';
-            wrapper.appendChild(pageImg);
+            pageImg.className = 'attachment-img border border-gray-300 shadow-xs';
+            pageDiv.appendChild(pageImg);
+            targetContainer.appendChild(pageDiv);
           }
         } catch (err) {
-          console.error("Error rendering PDF attachment:", err);
-          const errP = document.createElement('p');
-          errP.className = 'text-center text-rose-500 text-xs font-semibold py-4';
-          errP.textContent = `[Attached ${title} PDF]`;
-          wrapper.appendChild(errP);
+          console.error(`Error rendering ${title} PDF:`, err);
+          const errDiv = document.createElement('div');
+          errDiv.className = 'text-center text-red-600 text-xs font-bold py-4';
+          errDiv.textContent = `[Failed to load ${title} PDF]`;
+          targetContainer.appendChild(errDiv);
         }
       }
-      container.appendChild(wrapper);
     }
 
     async function renderModalContent(type) {
@@ -2497,8 +2528,23 @@
       
       document.getElementById('printAreaDetailed').classList.remove('print-active', 'page-break');
       document.getElementById('printAreaSummary').classList.remove('print-active', 'page-break');
+      document.getElementById('printAreaReceipts').classList.remove('print-active', 'page-break');
+      document.getElementById('printAreaDtr').classList.remove('print-active', 'page-break');
 
       modalContent.innerHTML = '';
+
+      // Pre-render Attachments into Background Print DOM Containers
+      if (receiptsPdfDataUrl) {
+        await renderAttachmentPages(receiptsPdfDataUrl, 'ATTACHED RECEIPT(S)', document.getElementById('printAreaReceiptsContent'));
+      } else {
+        document.getElementById('printAreaReceiptsContent').innerHTML = '';
+      }
+
+      if (dtrPdfDataUrl) {
+        await renderAttachmentPages(dtrPdfDataUrl, 'ATTACHED MANUAL DTR', document.getElementById('printAreaDtrContent'));
+      } else {
+        document.getElementById('printAreaDtrContent').innerHTML = '';
+      }
 
       if (type === 'summary') {
         titleElem.textContent = 'Print Summary Preview';
@@ -2524,24 +2570,44 @@
         summaryClone.classList.remove('hidden');
         modalContent.appendChild(summaryClone);
 
-        const separator = document.createElement('div');
-        separator.className = 'my-6 border-t-2 border-dashed border-slate-300 text-center py-2 text-slate-400 text-xs font-bold uppercase tracking-wider no-print';
-        separator.textContent = '--- Page Break (Detailed Liquidation Report Below) ---';
-        modalContent.appendChild(separator);
+        const separator1 = document.createElement('div');
+        separator1.className = 'my-6 border-t-2 border-dashed border-slate-300 text-center py-2 text-slate-400 text-xs font-bold uppercase tracking-wider no-print';
+        separator1.textContent = '--- Page Break (Detailed Liquidation Report Below) ---';
+        modalContent.appendChild(separator1);
 
         const detailedClone = document.getElementById('printAreaDetailed').cloneNode(true);
         detailedClone.classList.remove('hidden');
         detailedClone.classList.add('page-break');
         modalContent.appendChild(detailedClone);
 
-        // APPEND RECEIPT(S) IF ATTACHED
+        // APPEND ATTACHED RECEIPT(S) ON A STRICTLY NEW PAGE
         if (receiptsPdfDataUrl) {
-          await appendAttachmentToContainer(modalContent, receiptsPdfDataUrl, 'ATTACHED RECEIPT(S)');
+          document.getElementById('printAreaReceipts').classList.add('print-active', 'page-break');
+
+          const separator2 = document.createElement('div');
+          separator2.className = 'my-6 border-t-2 border-dashed border-slate-300 text-center py-2 text-slate-400 text-xs font-bold uppercase tracking-wider no-print';
+          separator2.textContent = '--- Page Break (Attached Receipt(s) Below) ---';
+          modalContent.appendChild(separator2);
+
+          const receiptsClone = document.getElementById('printAreaReceipts').cloneNode(true);
+          receiptsClone.classList.remove('hidden');
+          receiptsClone.classList.add('page-break');
+          modalContent.appendChild(receiptsClone);
         }
 
-        // APPEND MANUAL DTR IF ATTACHED
+        // APPEND ATTACHED MANUAL DTR ON ANOTHER STRICTLY NEW PAGE
         if (dtrPdfDataUrl) {
-          await appendAttachmentToContainer(modalContent, dtrPdfDataUrl, 'ATTACHED MANUAL DTR');
+          document.getElementById('printAreaDtr').classList.add('print-active', 'page-break');
+
+          const separator3 = document.createElement('div');
+          separator3.className = 'my-6 border-t-2 border-dashed border-slate-300 text-center py-2 text-slate-400 text-xs font-bold uppercase tracking-wider no-print';
+          separator3.textContent = '--- Page Break (Attached Manual DTR Below) ---';
+          modalContent.appendChild(separator3);
+
+          const dtrClone = document.getElementById('printAreaDtr').cloneNode(true);
+          dtrClone.classList.remove('hidden');
+          dtrClone.classList.add('page-break');
+          modalContent.appendChild(dtrClone);
         }
       }
     }
