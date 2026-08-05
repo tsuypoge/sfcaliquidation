@@ -17,6 +17,12 @@
       -webkit-overflow-scrolling: touch;
     }
 
+    /* Page Break Utility for Multi-page Printing */
+    .page-break {
+      page-break-before: always !important;
+      break-before: page !important;
+    }
+
     /* Standardized Report Header - Reduced to 7pt */
     .report-header, .report-header p {
       font-size: 7pt !important;
@@ -82,6 +88,10 @@
       #printAreaDetailed:not(.print-active),
       #printAreaSummary:not(.print-active) {
         display: none !important;
+      }
+      .page-break {
+        page-break-before: always !important;
+        break-before: page !important;
       }
       * {
         box-shadow: none !important;
@@ -843,9 +853,10 @@
       updateUIFields();
     }
 
+    // UPDATED PRINT ACTION: OPENS COMBINED SUMMARY + DETAILED PREVIEW
     function openTravelSummaryPreview(trvId) {
       openTravel(trvId);
-      openPreviewModal('summary');
+      openPreviewModal('combined');
     }
 
     function backToTravelList() {
@@ -919,7 +930,6 @@
       }
     }
 
-    // DIRECT LOGOUT WITHOUT CONFIRMATION PROMPT
     function handleLogout() {
       sessionStorage.removeItem('travel_is_logged_in');
       sessionStorage.removeItem('travel_logged_username');
@@ -1611,31 +1621,56 @@
       remElem.className = returnRefund < 0 ? 'text-xs sm:text-sm font-bold text-rose-600 mt-0.5' : 'text-xs sm:text-sm font-bold text-indigo-900 mt-0.5';
     }
 
+    // MULTI-PAGE PRINT FUNCTIONALITY (Summary on Page 1, Detailed on Page 2+)
     function openPreviewModal(type) {
       const modal = document.getElementById('previewModal');
       const modalContent = document.getElementById('modalContent');
       const titleElem = document.getElementById('modalTitle');
       
-      document.getElementById('printAreaDetailed').classList.remove('print-active');
-      document.getElementById('printAreaSummary').classList.remove('print-active');
+      document.getElementById('printAreaDetailed').classList.remove('print-active', 'page-break');
+      document.getElementById('printAreaSummary').classList.remove('print-active', 'page-break');
 
-      let targetId = '';
+      modalContent.innerHTML = '';
+
       if (type === 'summary') {
-        targetId = 'printAreaSummary';
         titleElem.textContent = 'Print Summary Preview';
-      } else {
-        targetId = 'printAreaDetailed';
+        document.getElementById('printAreaSummary').classList.add('print-active');
+        const clone = document.getElementById('printAreaSummary').cloneNode(true);
+        clone.classList.remove('hidden');
+        modalContent.appendChild(clone);
+
+      } else if (type === 'detailed') {
         titleElem.textContent = 'CA Liquidation Preview';
+        document.getElementById('printAreaDetailed').classList.add('print-active');
+        const clone = document.getElementById('printAreaDetailed').cloneNode(true);
+        clone.classList.remove('hidden');
+        modalContent.appendChild(clone);
+
+      } else if (type === 'combined') {
+        titleElem.textContent = 'Print Liquidation Package (Summary + Detailed)';
+
+        // Enable both print areas for printing
+        document.getElementById('printAreaSummary').classList.add('print-active');
+        document.getElementById('printAreaDetailed').classList.add('print-active', 'page-break');
+
+        // Page 1: Summary Report
+        const summaryClone = document.getElementById('printAreaSummary').cloneNode(true);
+        summaryClone.classList.remove('hidden');
+        modalContent.appendChild(summaryClone);
+
+        // Visual Separator for Modal Preview (hidden when printing)
+        const separator = document.createElement('div');
+        separator.className = 'my-6 border-t-2 border-dashed border-slate-300 text-center py-2 text-slate-400 text-xs font-bold uppercase tracking-wider no-print';
+        separator.textContent = '--- Page Break (Detailed Liquidation Report Below) ---';
+        modalContent.appendChild(separator);
+
+        // Page 2+: Detailed Report
+        const detailedClone = document.getElementById('printAreaDetailed').cloneNode(true);
+        detailedClone.classList.remove('hidden');
+        detailedClone.classList.add('page-break');
+        modalContent.appendChild(detailedClone);
       }
       
-      document.getElementById(targetId).classList.add('print-active');
-
-      const containerClone = document.getElementById(targetId).cloneNode(true);
-      containerClone.classList.remove('hidden');
-      containerClone.classList.add('block');
-      
-      modalContent.innerHTML = '';
-      modalContent.appendChild(containerClone);
       modal.classList.remove('hidden');
     }
 
