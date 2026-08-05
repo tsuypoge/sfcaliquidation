@@ -144,9 +144,55 @@
     </div>
   </div>
 
+
+  <!-- ========================================== -->
+  <!-- 1. TRAVEL LIQUIDATION LIST SCREEN (AFTER LOGIN) -->
+  <!-- ========================================== -->
+  <div id="travelListScreen" class="hidden p-3 sm:p-6 md:p-8">
+    <div class="max-w-7xl mx-auto bg-white rounded-xl shadow-md p-4 sm:p-6">
+      
+      <!-- User Info Bar -->
+      <div class="mb-4 p-2.5 bg-blue-50/80 rounded-lg border border-blue-100 flex flex-col sm:flex-row items-center justify-between gap-3 text-xs sm:text-sm">
+        <div class="flex items-center gap-2">
+          <span class="font-bold text-blue-900">User:</span>
+          <span id="listUserDisplay" class="font-bold text-gray-800">Name of Account</span>
+        </div>
+        <div class="flex items-center gap-3">
+          <button onclick="createNewTravel()" class="bg-blue-600 text-white font-bold text-xs px-3 py-1.5 rounded hover:bg-blue-700 transition">+ New Liquidation</button>
+          <button onclick="handleLogout()" class="bg-red-600 text-white font-bold text-xs px-3 py-1.5 rounded hover:bg-red-700 transition">Logout</button>
+        </div>
+      </div>
+
+      <!-- Red Styled Title Matching Image -->
+      <h2 class="text-xl sm:text-2xl font-bold text-red-600 text-center mb-6">Travel Liquidation Template / Dashboard</h2>
+
+      <!-- Liquidations Table -->
+      <div class="overflow-x-auto rounded-lg border border-gray-200">
+        <table class="w-full text-left border-collapse text-xs sm:text-sm">
+          <thead>
+            <tr class="bg-gray-100 text-gray-800 font-bold border-b border-gray-300">
+              <th class="p-3">Region / Travel Area</th>
+              <th class="p-3 text-center">Travel Dates</th>
+              <th class="p-3 text-right">Cash Advance</th>
+              <th class="p-3 text-right">Total Spent</th>
+              <th class="p-3 text-center">Status</th>
+              <th class="p-3 text-center">Liquidation Entry</th>
+              <th class="p-3 text-center">Print Summary</th>
+              <th class="p-3 text-center">Action</th>
+            </tr>
+          </thead>
+          <tbody id="travelListTableBody">
+            <!-- Dynamic rows will be inserted here -->
+          </tbody>
+        </table>
+      </div>
+
+    </div>
+  </div>
+
   
   <!-- ========================================== -->
-  <!-- MAIN APP DASHBOARD                         -->
+  <!-- 2. MAIN APP DASHBOARD (TRACKER DETAILS)    -->
   <!-- ========================================== -->
   <div id="mainDashboard" class="hidden p-2 sm:p-4 md:p-8">
     
@@ -156,9 +202,14 @@
         Syncing to Cloud...
       </div>
 
-      <!-- Top Utility Bar: Live Date/Time, User Display, Signature PNG, & Logout -->
+      <!-- Top Utility Bar: Back to Travel List, Live Clock, User, Signature, & Logout -->
       <div class="mb-4 p-2 bg-blue-50/80 rounded-lg border border-blue-100 flex flex-col md:flex-row items-stretch md:items-center justify-between gap-3 text-xs sm:text-sm">
         
+        <!-- Back to Travels List Button -->
+        <button onclick="backToTravelList()" class="bg-slate-700 text-white font-bold px-3 py-1.5 rounded hover:bg-slate-800 transition text-xs whitespace-nowrap">
+          ⬅️ Back to Travels List
+        </button>
+
         <!-- Live Date & Time -->
         <div class="flex items-center gap-1.5 font-bold text-blue-800 whitespace-nowrap">
           <span id="liveClockDisplay">Loading Date & Time...</span>
@@ -167,7 +218,6 @@
         <!-- Logged-in User Display, Signature PNG, & Logout -->
         <div class="flex flex-wrap items-center justify-between sm:justify-end gap-3 w-full md:w-auto">
           
-          <!-- Automatically Displayed User Name -->
           <div class="flex items-center gap-1.5 bg-blue-100/80 px-2.5 py-1 rounded-md border border-blue-200">
             <span id="loggedInUserDisplay" class="font-bold text-blue-900">Name of Account</span>
           </div>
@@ -184,7 +234,6 @@
             </div>
           </div>
 
-          <!-- Logout Button -->
           <button onclick="handleLogout()" title="Log out" class="bg-red-600 text-white text-xs font-bold px-3 py-1.5 rounded hover:bg-red-700 transition whitespace-nowrap">Logout</button>
         </div>
 
@@ -573,6 +622,12 @@
 
     let currentUsername = sessionStorage.getItem('travel_logged_username') || '';
     let accountName = sessionStorage.getItem('travel_logged_user_name') || '';
+    
+    // Multiple Travels Array
+    let travels = [];
+    let activeTravelId = null;
+
+    // Current Active Travel State variables
     let expenses = [];
     let cashAdvance = 0;
     let regionName = '';
@@ -582,7 +637,7 @@
 
     // Inactivity Auto-Logout Logic (2 Minutes)
     let inactivityTimer;
-    const INACTIVITY_LIMIT = 2 * 60 * 1000; // 2 minutes in milliseconds
+    const INACTIVITY_LIMIT = 2 * 60 * 1000;
 
     function resetInactivityTimer() {
       clearTimeout(inactivityTimer);
@@ -600,7 +655,6 @@
       checkAuthStatus();
     }
 
-    // Attach Event Listeners for User Activity
     ['mousemove', 'keydown', 'click', 'scroll', 'touchstart'].forEach(eventName => {
       window.addEventListener(eventName, resetInactivityTimer, true);
     });
@@ -613,52 +667,181 @@
       const isLoggedIn = sessionStorage.getItem('travel_is_logged_in') === 'true';
       if (isLoggedIn) {
         document.getElementById('loginScreen').classList.add('hidden');
-        document.getElementById('mainDashboard').classList.remove('hidden');
+        document.getElementById('mainDashboard').classList.add('hidden');
+        document.getElementById('travelListScreen').classList.remove('hidden');
         
         currentUsername = sessionStorage.getItem('travel_logged_username') || '';
         accountName = sessionStorage.getItem('travel_logged_user_name') || 'User Account';
         
+        const listUserDisplay = document.getElementById('listUserDisplay');
+        if (listUserDisplay) listUserDisplay.textContent = accountName;
+
         const userDisplay = document.getElementById('loggedInUserDisplay');
         if (userDisplay) userDisplay.textContent = accountName;
 
         loadUserData();
-        resetInactivityTimer(); // Start inactivity timer on auth
+        resetInactivityTimer();
       } else {
         clearTimeout(inactivityTimer);
         document.getElementById('loginScreen').classList.remove('hidden');
+        document.getElementById('travelListScreen').classList.add('hidden');
         document.getElementById('mainDashboard').classList.add('hidden');
       }
     }
 
     async function loadUserData() {
-      expenses = JSON.parse(localStorage.getItem(getStorageKey('travel_expenses_v40'))) || [];
-      cashAdvance = parseFloat(localStorage.getItem(getStorageKey('travel_cash_advance'))) || 0;
-      regionName = localStorage.getItem(getStorageKey('travel_region_name')) || '';
+      travels = JSON.parse(localStorage.getItem(getStorageKey('travel_list_v1'))) || [];
       signatureDataUrl = localStorage.getItem(getStorageKey('travel_signature_image')) || '';
-      isArchived = localStorage.getItem(getStorageKey('travel_is_archived')) === 'true';
 
-      updateUIFields();
+      // Fallback/Migration for single travel data to list structure
+      if (travels.length === 0) {
+        const oldExpenses = JSON.parse(localStorage.getItem(getStorageKey('travel_expenses_v40')));
+        if (oldExpenses && oldExpenses.length > 0) {
+          const defaultTravel = {
+            id: 'trv_' + Date.now(),
+            regionName: localStorage.getItem(getStorageKey('travel_region_name')) || 'Default Region',
+            cashAdvance: parseFloat(localStorage.getItem(getStorageKey('travel_cash_advance'))) || 0,
+            isArchived: localStorage.getItem(getStorageKey('travel_is_archived')) === 'true',
+            expenses: oldExpenses
+          };
+          travels.push(defaultTravel);
+          localStorage.setItem(getStorageKey('travel_list_v1'), JSON.stringify(travels));
+        }
+      }
+
+      renderTravelListTable();
 
       if (GOOGLE_SCRIPT_URL && GOOGLE_SCRIPT_URL !== "IBUTANG_ANG_IMONG_WEB_APP_URL_DIRI") {
         try {
           const res = await fetch(`${GOOGLE_SCRIPT_URL}?action=read&username=${encodeURIComponent(currentUsername)}&_t=${Date.now()}`);
           if (res.ok) {
             const cloudData = await res.json();
-            if (cloudData) {
-              expenses = cloudData.expenses || [];
-              cashAdvance = parseFloat(cloudData.cashAdvance) || 0;
-              regionName = cloudData.regionName || '';
+            if (cloudData && cloudData.travels) {
+              travels = cloudData.travels || [];
               signatureDataUrl = cloudData.signatureDataUrl || '';
-              isArchived = cloudData.isArchived === true;
-              
               saveDataToStorage(false);
-              updateUIFields();
+              renderTravelListTable();
             }
           }
         } catch (e) {
           console.warn("Could not sync from cloud, using local cached data.", e);
         }
       }
+    }
+
+    function renderTravelListTable() {
+      const tbody = document.getElementById('travelListTableBody');
+      tbody.innerHTML = '';
+
+      if (travels.length === 0) {
+        tbody.innerHTML = `<tr><td colspan="8" class="text-center p-6 text-gray-500 font-semibold">No liquidation records found. Click "+ New Liquidation" above to create one.</td></tr>`;
+        return;
+      }
+
+      travels.forEach((trv, idx) => {
+        const trvExpenses = trv.expenses || [];
+        const totalSpent = trvExpenses.reduce((acc, curr) => acc + (curr.amount || 0), 0);
+
+        let dateRange = 'N/A';
+        if (trvExpenses.length > 0) {
+          const dates = trvExpenses.map(e => e.date).sort();
+          dateRange = formatDateRangeLong(dates[0], dates[dates.length - 1]);
+        }
+
+        const row = document.createElement('tr');
+        row.className = idx % 2 === 0 ? 'bg-white hover:bg-gray-50' : 'bg-gray-50/70 hover:bg-gray-100';
+
+        row.innerHTML = `
+          <td class="p-3 font-bold text-gray-800">${trv.regionName || 'Unspecified Region'}</td>
+          <td class="p-3 text-center text-gray-700 font-medium">${dateRange}</td>
+          <td class="p-3 text-right font-bold text-blue-900">${formatNum(trv.cashAdvance)}</td>
+          <td class="p-3 text-right font-bold text-red-700">${formatNum(totalSpent)}</td>
+          <td class="p-3 text-center">
+            ${trv.isArchived 
+              ? `<span class="bg-red-100 text-red-700 px-2 py-0.5 rounded font-bold text-xs">Archived</span>` 
+              : `<span class="bg-green-100 text-green-700 px-2 py-0.5 rounded font-bold text-xs">Active</span>`}
+          </td>
+          <td class="p-3 text-center">
+            <button onclick="openTravel('${trv.id}')" class="bg-emerald-600 text-white font-bold px-3 py-1.5 rounded hover:bg-emerald-700 transition text-xs">Open</button>
+          </td>
+          <td class="p-3 text-center">
+            <button onclick="openTravelSummaryPreview('${trv.id}')" class="bg-emerald-600 text-white font-bold px-3 py-1.5 rounded hover:bg-emerald-700 transition text-xs">Print</button>
+          </td>
+          <td class="p-3 text-center whitespace-nowrap">
+            <button onclick="deleteTravel('${trv.id}')" class="bg-red-100 text-red-600 hover:text-red-800 font-bold px-2 py-1 rounded text-xs">Delete</button>
+          </td>
+        `;
+        tbody.appendChild(row);
+      });
+    }
+
+    function createNewTravel() {
+      const rName = prompt("Enter Region / Travel Area Name (e.g. Palawan Region):");
+      if (rName === null) return;
+
+      const caValStr = prompt("Enter Cash Advance Amount (₱):", "0");
+      const caVal = parseFloat(caValStr) || 0;
+
+      const newTrv = {
+        id: 'trv_' + Date.now(),
+        regionName: rName.trim() || 'New Travel',
+        cashAdvance: caVal,
+        isArchived: false,
+        expenses: []
+      };
+
+      travels.unshift(newTrv);
+      saveDataToStorage();
+      renderTravelListTable();
+      openTravel(newTrv.id);
+    }
+
+    function deleteTravel(trvId) {
+      if (confirm("Are you sure you want to delete this travel record? This cannot be undone.")) {
+        travels = travels.filter(t => t.id !== trvId);
+        saveDataToStorage();
+        renderTravelListTable();
+      }
+    }
+
+    function openTravel(trvId) {
+      const found = travels.find(t => t.id === trvId);
+      if (!found) return;
+
+      activeTravelId = trvId;
+      regionName = found.regionName || '';
+      cashAdvance = found.cashAdvance || 0;
+      isArchived = found.isArchived === true;
+      expenses = found.expenses || [];
+
+      document.getElementById('travelListScreen').classList.add('hidden');
+      document.getElementById('mainDashboard').classList.remove('hidden');
+
+      updateUIFields();
+    }
+
+    function openTravelSummaryPreview(trvId) {
+      openTravel(trvId);
+      openPreviewModal('summary');
+    }
+
+    function backToTravelList() {
+      saveActiveTravelData();
+      document.getElementById('mainDashboard').classList.add('hidden');
+      document.getElementById('travelListScreen').classList.remove('hidden');
+      renderTravelListTable();
+    }
+
+    function saveActiveTravelData() {
+      if (!activeTravelId) return;
+      const idx = travels.findIndex(t => t.id === activeTravelId);
+      if (idx !== -1) {
+        travels[idx].regionName = regionName;
+        travels[idx].cashAdvance = cashAdvance;
+        travels[idx].isArchived = isArchived;
+        travels[idx].expenses = expenses;
+      }
+      saveDataToStorage();
     }
 
     function updateUIFields() {
@@ -675,14 +858,14 @@
       if (isArchived) {
         if (confirm("Do you want to Unarchive / Re-open this liquidation? This will allow editing again.")) {
           isArchived = false;
-          saveDataToStorage();
+          saveActiveTravelData();
           updateTracker();
         }
       } else {
         if (confirm("Are you sure you want to Archive / Finalize this liquidation? This will lock inputs and prevent edits.")) {
           isArchived = true;
           if (editingId !== null) cancelEdit();
-          saveDataToStorage();
+          saveActiveTravelData();
           updateTracker();
         }
       }
@@ -748,22 +931,16 @@
     }
 
     function resetAllData() {
-      if (confirm("Are you sure you want to reset your tracker data? This action cannot be undone.")) {
+      if (confirm("Are you sure you want to reset this travel record? This action cannot be undone.")) {
         expenses = [];
         cashAdvance = 0;
         regionName = '';
-        signatureDataUrl = '';
         isArchived = false;
 
-        localStorage.removeItem(getStorageKey('travel_expenses_v40'));
-        localStorage.removeItem(getStorageKey('travel_cash_advance'));
-        localStorage.removeItem(getStorageKey('travel_region_name'));
-        localStorage.removeItem(getStorageKey('travel_signature_image'));
-        localStorage.removeItem(getStorageKey('travel_is_archived'));
+        saveActiveTravelData();
 
         document.getElementById('cashAdvanceInput').value = '';
         document.getElementById('regionNameInput').value = '';
-        document.getElementById('signatureInput').value = '';
         document.getElementById('filterStartDate').value = '';
         document.getElementById('filterEndDate').value = '';
 
@@ -773,7 +950,7 @@
         updateTracker();
 
         const toast = document.getElementById('toast');
-        toast.textContent = 'Tracker Reset Successfully!';
+        toast.textContent = 'Travel Record Reset Successfully!';
         toast.classList.remove('hidden');
         setTimeout(() => toast.classList.add('hidden'), 2500);
       }
@@ -804,14 +981,14 @@
       let rawVal = elem.value.replace(/[^0-9.]/g, '');
       let caVal = parseFloat(rawVal) || 0;
       cashAdvance = caVal;
-      saveDataToStorage();
+      saveActiveTravelData();
       updateTracker();
     }
 
     function handleRegionNameInput(elem) {
       if (isArchived) return;
       regionName = elem.value.trim();
-      saveDataToStorage();
+      saveActiveTravelData();
       updateTracker();
     }
 
@@ -1026,17 +1203,14 @@
         resetForm();
       }
 
-      saveDataToStorage();
+      saveActiveTravelData();
       updateTracker();
     });
 
     function saveDataToStorage(syncCloud = true) {
       if (!currentUsername) return;
       
-      localStorage.setItem(getStorageKey('travel_expenses_v40'), JSON.stringify(expenses));
-      localStorage.setItem(getStorageKey('travel_cash_advance'), cashAdvance);
-      localStorage.setItem(getStorageKey('travel_region_name'), regionName);
-      localStorage.setItem(getStorageKey('travel_is_archived'), isArchived);
+      localStorage.setItem(getStorageKey('travel_list_v1'), JSON.stringify(travels));
       if (signatureDataUrl) {
         localStorage.setItem(getStorageKey('travel_signature_image'), signatureDataUrl);
       } else {
@@ -1050,7 +1224,7 @@
           headers: { 'Content-Type': 'application/json' },
           body: JSON.stringify({
             username: currentUsername,
-            data: { cashAdvance, regionName, signatureDataUrl, isArchived, expenses }
+            data: { travels, signatureDataUrl }
           })
         }).catch(err => console.warn("Cloud save failed:", err));
       }
@@ -1110,13 +1284,13 @@
     function deleteExpense(id) {
       if (isArchived) return;
       expenses = expenses.filter(item => item.id !== id);
-      saveDataToStorage();
+      saveActiveTravelData();
       if (editingId === id) cancelEdit();
       updateTracker();
     }
 
     function formatNum(val) {
-      if (val === 0 || !val) return '';
+      if (val === 0 || !val) return '0.00';
       return val.toLocaleString('en-US', {minimumFractionDigits: 2, maximumFractionDigits: 2});
     }
 
@@ -1125,7 +1299,7 @@
     }
 
     function updateTracker() {
-      saveDataToStorage();
+      saveActiveTravelData();
 
       const archiveBtn = document.getElementById('archiveBtn');
       const statusBadge = document.getElementById('archiveStatusBadge');
@@ -1443,11 +1617,8 @@
 
     function exportBackup() {
       const backupData = {
-        expenses: expenses,
-        cashAdvance: cashAdvance,
-        regionName: regionName,
-        signatureDataUrl: signatureDataUrl,
-        isArchived: isArchived
+        travels: travels,
+        signatureDataUrl: signatureDataUrl
       };
       const dataStr = "data:text/json;charset=utf-8," + encodeURIComponent(JSON.stringify(backupData, null, 2));
       const downloadAnchor = document.createElement('a');
@@ -1464,23 +1635,12 @@
       reader.onload = function(e) {
         try {
           const data = JSON.parse(e.target.result);
-          if (data.expenses) {
-            expenses = data.expenses;
-            cashAdvance = parseFloat(data.cashAdvance) || 0;
-            regionName = data.regionName || '';
+          if (data.travels) {
+            travels = data.travels;
             signatureDataUrl = data.signatureDataUrl || '';
-            isArchived = data.isArchived === true;
             
             saveDataToStorage();
-
-            const caInputElem = document.getElementById('cashAdvanceInput');
-            if (caInputElem) caInputElem.value = cashAdvance > 0 ? cashAdvance.toLocaleString('en-US', {minimumFractionDigits: 2, maximumFractionDigits: 2}) : '';
-
-            const regInputElem = document.getElementById('regionNameInput');
-            if (regInputElem) regInputElem.value = regionName;
-
-            setCurrentDateInput();
-            updateTracker();
+            renderTravelListTable();
             alert("Backup data restored successfully!");
           }
         } catch (err) {
