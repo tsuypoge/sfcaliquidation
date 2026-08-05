@@ -295,7 +295,7 @@
         </div>
       </div>
 
-      <!-- Setup Box: Cash Advance & Region(s) (CENTERED IN THE BAR) -->
+      <!-- Setup Box: Cash Advance & Region(s) (BOTH CENTER-ALIGNED) -->
       <div class="mb-4 p-2.5 bg-slate-50/80 rounded-xl border border-slate-200/80 flex flex-col sm:flex-row items-center justify-center gap-6 sm:gap-12">
         
         <!-- Cash Advance -->
@@ -308,7 +308,7 @@
               inputmode="decimal"
               id="cashAdvanceInput" 
               placeholder="0.00" 
-              class="p-2 border rounded-lg w-32 sm:w-40 font-bold text-slate-900 border-slate-300 text-right focus:outline-none focus:ring-2 focus:ring-indigo-500 text-xs bg-white shadow-xs" 
+              class="p-2 border rounded-lg w-32 sm:w-40 font-bold text-slate-900 border-slate-300 text-center focus:outline-none focus:ring-2 focus:ring-indigo-500 text-xs bg-white shadow-xs" 
               oninput="handleCashAdvanceInput(this)" 
               onfocus="focusCashAdvanceInput(this)" 
               onblur="blurCashAdvanceInput(this)"
@@ -323,7 +323,7 @@
             type="text" 
             id="regionNameInput" 
             placeholder="e.g. Palawan Region" 
-            class="p-2 border rounded-lg w-48 sm:w-64 text-xs font-semibold text-slate-800 border-slate-300 focus:outline-none focus:ring-2 focus:ring-indigo-500 bg-white shadow-xs"
+            class="p-2 border rounded-lg w-48 sm:w-64 text-xs font-semibold text-slate-800 border-slate-300 text-center focus:outline-none focus:ring-2 focus:ring-indigo-500 bg-white shadow-xs"
             oninput="handleRegionNameInput(this)"
           >
         </div>
@@ -1654,14 +1654,14 @@
         modalContent.appendChild(clone);
 
       } else if (type === 'detailed') {
-        titleElem.textContent = '';
+        titleElem.textContent = 'CA Liquidation Preview';
         document.getElementById('printAreaDetailed').classList.add('print-active');
         const clone = document.getElementById('printAreaDetailed').cloneNode(true);
         clone.classList.remove('hidden');
         modalContent.appendChild(clone);
 
       } else if (type === 'combined') {
-        titleElem.textContent = '';
+        titleElem.textContent = 'Print Liquidation Package (Summary Page 1 + Detailed Page 2+)';
 
         // Enable both print areas for printing in correct order (Summary first, Detailed second)
         document.getElementById('printAreaSummary').classList.add('print-active');
