@@ -152,18 +152,18 @@
   <!-- ========================================== -->
   <!-- 1. TRAVEL LIQUIDATION LIST SCREEN          -->
   <!-- ========================================== -->
-  <div id="travelListScreen" class="hidden p-3 sm:p-6 md:p-8">
+  <div id="travelListScreen" class="hidden p-2 sm:p-4 md:p-6">
     <div class="max-w-7xl mx-auto bg-white rounded-2xl shadow-sm border border-slate-200 p-4 sm:p-6">
       
-      <!-- User Info Bar -->
-      <div class="mb-6 p-3 bg-slate-50 rounded-xl border border-slate-200 flex flex-col sm:flex-row items-center justify-between gap-3 text-xs sm:text-sm">
+      <!-- Top Bar -->
+      <div class="mb-5 p-2.5 bg-slate-50 rounded-xl border border-slate-200 flex flex-col sm:flex-row items-center justify-between gap-3 text-xs sm:text-sm">
         <div class="flex items-center gap-2">
           <span class="w-2.5 h-2.5 rounded-full bg-emerald-500 inline-block"></span>
           <span id="listUserDisplay" class="font-semibold text-slate-800">Welcome Account Name</span>
         </div>
         <div class="flex items-center gap-2">
-          <button onclick="createNewTravel()" class="bg-indigo-600 text-white font-semibold text-xs px-3.5 py-2 rounded-lg hover:bg-indigo-700 shadow-sm transition">+ New Liquidation</button>
-          <button onclick="handleLogout()" class="bg-slate-100 text-slate-700 border border-slate-300 font-semibold text-xs px-3.5 py-2 rounded-lg hover:bg-slate-200 transition">Logout</button>
+          <button onclick="createNewTravel()" class="bg-indigo-600 text-white font-semibold text-xs px-3.5 py-1.5 rounded-lg hover:bg-indigo-700 shadow-sm transition">+ New Liquidation</button>
+          <button onclick="handleLogout()" class="bg-rose-50 text-rose-700 border border-rose-200 font-bold text-xs px-3.5 py-1.5 rounded-lg hover:bg-rose-100 transition">Logout</button>
         </div>
       </div>
 
@@ -201,32 +201,34 @@
   <!-- ========================================== -->
   <!-- 2. MAIN APP DASHBOARD (TRACKER DETAILS)    -->
   <!-- ========================================== -->
-  <div id="mainDashboard" class="hidden p-2 sm:p-4 md:p-8">
+  <div id="mainDashboard" class="hidden p-2 sm:p-4 md:p-6">
     
-    <div class="max-w-7xl mx-auto bg-white rounded-2xl shadow-sm border border-slate-200 p-4 sm:p-6 no-print mb-10">
+    <div class="max-w-7xl mx-auto bg-white rounded-2xl shadow-sm border border-slate-200 p-3 sm:p-5 no-print mb-10">
       
       <div id="toast" class="hidden fixed top-5 right-5 bg-slate-900 text-white px-4 py-2.5 rounded-xl shadow-xl transition-opacity duration-300 z-50 font-semibold text-xs sm:text-sm">
         Syncing to Cloud...
       </div>
 
-      <!-- Top Utility Bar: Exit Button, Live Clock, User, Signature, & Logout -->
-      <div class="mb-5 p-3 bg-slate-50/90 rounded-xl border border-slate-200/80 flex flex-col md:flex-row items-stretch md:items-center justify-between gap-3 text-xs sm:text-sm">
+      <!-- Elevated Top Bar: Exit Dashboard, Date & Time, User, Signature & Logout -->
+      <div class="mb-5 p-2 sm:p-2.5 bg-slate-50/90 rounded-xl border border-slate-200/90 flex flex-col lg:flex-row items-stretch lg:items-center justify-between gap-2.5 text-xs sm:text-sm">
         
-        <!-- Red Bold Exit Button -->
-        <button onclick="backToTravelList()" class="bg-rose-50 text-rose-700 border border-rose-200 font-bold px-4 py-2 rounded-lg hover:bg-rose-100 transition text-xs whitespace-nowrap">
-          Exit Dashboard
-        </button>
+        <!-- Left: Exit Dashboard Button -->
+        <div class="flex items-center justify-between sm:justify-start gap-2">
+          <button onclick="backToTravelList()" class="bg-rose-50 text-rose-700 border border-rose-200 font-bold px-3.5 py-1.5 rounded-lg hover:bg-rose-100 transition text-xs whitespace-nowrap">
+            Exit Dashboard
+          </button>
+        </div>
 
-        <!-- Live Date & Time -->
-        <div class="flex items-center gap-2 font-semibold text-slate-600 whitespace-nowrap bg-white px-3 py-1.5 rounded-lg border border-slate-200">
+        <!-- Middle: Live Date & Time -->
+        <div class="flex items-center justify-center gap-2 font-semibold text-slate-700 bg-white px-3 py-1.5 rounded-lg border border-slate-200/80 shadow-xs">
           <span class="w-2 h-2 rounded-full bg-indigo-500"></span>
           <span id="liveClockDisplay">Loading Date & Time...</span>
         </div>
 
-        <!-- Logged-in User Display, Signature PNG, & Logout -->
-        <div class="flex flex-wrap items-center justify-between sm:justify-end gap-2.5 w-full md:w-auto">
+        <!-- Right: Logged-in User Display, Signature PNG, & Logout -->
+        <div class="flex flex-wrap items-center justify-between lg:justify-end gap-2">
           
-          <div class="flex items-center gap-1.5 bg-white px-3 py-1.5 rounded-lg border border-slate-200">
+          <div class="flex items-center gap-1.5 bg-white px-3 py-1.5 rounded-lg border border-slate-200/80">
             <span id="loggedInUserDisplay" class="font-semibold text-slate-800">Welcome Account Name</span>
           </div>
 
@@ -242,20 +244,21 @@
             </div>
           </div>
 
-          <button onclick="handleLogout()" title="Log out" class="bg-slate-200 text-slate-700 font-semibold text-xs px-3 py-1.5 rounded-lg hover:bg-slate-300 transition whitespace-nowrap">Logout</button>
+          <!-- Logout Button -->
+          <button onclick="handleLogout()" title="Log out" class="bg-rose-600 text-white font-bold text-xs px-3.5 py-1.5 rounded-lg hover:bg-rose-700 transition whitespace-nowrap shadow-xs">Logout</button>
         </div>
 
       </div>
 
       <!-- Header Section: Region Name Liquidation Title & Modern Action Buttons -->
-      <div class="flex flex-col md:flex-row justify-between items-start md:items-center mb-6 gap-4 border-b border-slate-100 pb-5">
+      <div class="flex flex-col md:flex-row justify-between items-start md:items-center mb-5 border-b border-slate-100 pb-4 gap-3">
         <div>
           <h1 class="text-xl sm:text-2xl font-bold text-slate-900 tracking-tight flex items-center flex-wrap gap-2">
             <span id="headerRegionDisplay" class="text-indigo-600 font-extrabold">Region Name</span> 
             <span>Liquidation</span>
-            <span id="archiveStatusBadge" class="hidden bg-amber-50 text-amber-700 border border-amber-200 text-xs px-2.5 py-1 rounded-full font-bold uppercase tracking-wider">LOCKED / ARCHIVED</span>
+            <span id="archiveStatusBadge" class="hidden bg-amber-50 text-amber-700 border border-amber-200 text-xs px-2.5 py-0.5 rounded-full font-bold uppercase tracking-wider">LOCKED / ARCHIVED</span>
           </h1>
-          <p class="text-xs text-slate-500 mt-1">Manage and track travel expenses, liquidation forms, and report summaries</p>
+          <p class="text-xs text-slate-500 mt-0.5">Manage and track travel expenses, liquidation forms, and report summaries</p>
         </div>
         
         <!-- Action Buttons Group -->
@@ -273,7 +276,7 @@
       </div>
 
       <!-- Setup Box: Cash Advance & Region(s) -->
-      <div class="mb-5 p-4 bg-slate-50/80 rounded-xl border border-slate-200/80 flex flex-col sm:flex-row items-stretch sm:items-center justify-between gap-4">
+      <div class="mb-5 p-3.5 bg-slate-50/80 rounded-xl border border-slate-200/80 flex flex-col sm:flex-row items-stretch sm:items-center justify-between gap-4">
         
         <!-- Cash Advance -->
         <div class="flex items-center justify-between sm:justify-start gap-3">
@@ -308,7 +311,7 @@
       </div>
 
       <!-- Date Range Filter Bar for Reports -->
-      <div class="mb-6 p-3.5 bg-indigo-50/50 rounded-xl border border-indigo-100 flex flex-col sm:flex-row items-stretch sm:items-center justify-between gap-3">
+      <div class="mb-5 p-3.5 bg-indigo-50/50 rounded-xl border border-indigo-100 flex flex-col sm:flex-row items-stretch sm:items-center justify-between gap-3">
         <div class="flex items-center gap-2.5 flex-wrap">
           <span class="text-xs sm:text-sm font-bold text-indigo-950 whitespace-nowrap">Report Date Range:</span>
           <input type="date" id="filterStartDate" class="p-1.5 border rounded-lg text-xs sm:text-sm border-indigo-200 bg-white text-slate-800 shadow-sm" onchange="updateTracker()">
