@@ -104,7 +104,7 @@
         </div>
 
         <div>
-          <label id="loginInputLabel" class="block text-[10px] font-bold uppercase tracking-wider text-slate-600 mb-1">Username or Email</label>
+          <label id="loginInputLabel" class="block text-[10px] font-bold uppercase tracking-wider text-slate-600 mb-1">Username</label>
           <input type="text" id="usernameInput" required placeholder="e.g. r.duero" class="w-full p-2.5 border rounded-xl text-xs border-slate-300 focus:ring-2 focus:ring-indigo-500 focus:outline-none transition">
         </div>
 
@@ -248,10 +248,11 @@
             </button>
 
             <!-- DROPDOWN MENU -->
-            <div id="userDropdownMenuList" class="hidden absolute left-0 mt-2 w-52 bg-white rounded-xl shadow-xl border border-slate-200 py-2 z-50">
+            <div id="userDropdownMenuList" class="hidden absolute left-0 mt-2 w-56 bg-white rounded-xl shadow-xl border border-slate-200 py-2 z-50">
               <div class="px-3.5 py-1.5 bg-slate-50 border-b border-slate-100 mb-1">
                 <p class="font-bold text-slate-900 text-xs truncate userFullNameDisplay">Full Name</p>
                 <p class="text-[10px] text-indigo-600 font-semibold truncate userDesignationDisplay">Designation</p>
+                <p class="text-[9px] text-slate-500 font-medium truncate userDepartmentDisplay">Department</p>
               </div>
               <button onclick="openChangePasswordModal(); closeUserDropdowns();" class="w-full text-left px-3.5 py-2 text-xs font-semibold text-slate-700 hover:bg-indigo-50 hover:text-indigo-600 flex items-center gap-2 transition">
                 🔑 Change Password
@@ -324,10 +325,11 @@
             <svg class="w-3.5 h-3.5 text-slate-500 ml-0.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M19 9l-7 7-7-7"></path></svg>
           </button>
 
-          <div id="userDropdownMenuDash" class="hidden absolute left-0 mt-2 w-52 bg-white rounded-xl shadow-xl border border-slate-200 py-2 z-50">
+          <div id="userDropdownMenuDash" class="hidden absolute left-0 mt-2 w-56 bg-white rounded-xl shadow-xl border border-slate-200 py-2 z-50">
             <div class="px-3.5 py-1.5 bg-slate-50 border-b border-slate-100 mb-1">
               <p class="font-bold text-slate-900 text-xs truncate userFullNameDisplay">Full Name</p>
               <p class="text-[10px] text-indigo-600 font-semibold truncate userDesignationDisplay">Designation</p>
+              <p class="text-[9px] text-slate-500 font-medium truncate userDepartmentDisplay">Department</p>
             </div>
             <button onclick="openChangePasswordModal(); closeUserDropdowns();" class="w-full text-left px-3.5 py-2 text-xs font-semibold text-slate-700 hover:bg-indigo-50 hover:text-indigo-600 flex items-center gap-2 transition">
               🔑 Change Password
@@ -495,7 +497,7 @@
       <img src="logo.png" alt="Logo" class="mx-auto block" style="max-height: 40px; width: auto;">
     </div>
     <div class="mb-3 report-header">
-      <p>Dept. : StrikeForce/Fraud Audit-IAD</p>
+      <p>Region / Area : StrikeForce/Fraud Audit-IAD</p>
       <p>Cash Advance Expenses Liquidation</p>
       <p>Region: <span id="printRegionName">N/A</span></p>
       <p>Date: <span id="printDateRange">N/A</span></p>
@@ -725,6 +727,11 @@
         </div>
 
         <div>
+          <label class="block text-[10px] font-bold uppercase tracking-wider text-slate-600 mb-1">Department</label>
+          <input type="text" id="adminEditProfileDepartmentInput" required placeholder="Department" class="w-full p-2 border rounded-xl border-slate-300 focus:ring-2 focus:ring-indigo-500 focus:outline-none">
+        </div>
+
+        <div>
           <label class="block text-[10px] font-bold uppercase tracking-wider text-slate-600 mb-1">Email Address</label>
           <input type="email" id="adminEditProfileEmailInput" required placeholder="Email Address" class="w-full p-2 border rounded-xl border-slate-300 focus:ring-2 focus:ring-indigo-500 focus:outline-none">
         </div>
@@ -753,25 +760,26 @@
 
     // Enrolled Users Database
     const USERS_DB = [
-      { username: "m.aca-ac", email: "m.aca-ac@sfcaliquidation.biz", password: "aca-ac", name: "Michaelfel T. Aca-ac", designation: "Audit Specialist" },
-      { username: "r.duero", email: "r.duero@sfcaliquidation.biz", password: "duero", name: "Rey John A. Duero", designation: "Audit Specialist" },
-      { username: "s.genobaten", email: "s.genobaten@sfcaliquidation.biz", password: "genobaten", name: "Samuel IV F. Genobaten", designation: "Audit Specialist" },
-      { username: "m.nambatac", email: "m.nambatac@sfcaliquidation.biz", password: "nambatac", name: "Mario B. Nambatac", designation: "Audit Specialist" },
-      { username: "e.agsoy", email: "e.agsoy@sfcaliquidation.biz", password: "agsoy", name: "Eduardo R. Agsoy, Jr.", designation: "Audit Specialist" },
-      { username: "n.calasang", email: "n.calasang@sfcaliquidation.biz", password: "calasang", name: "Neil Erick D. Calasang", designation: "Audit Specialist" },
-      { username: "n.salva", email: "n.salva@sfcaliquidation.biz", password: "salva", name: "Nestor N. Salva", designation: "Audit Specialist" },
-      { username: "e.interone", email: "e.interone@sfcaliquidation.biz", password: "interone", name: "Edgardo T. Interone", designation: "Audit Specialist" },
-      { username: "l.ugay", email: "l.ugay@sfcaliquidation.biz", password: "ugay", name: "Le Cris L. Ugay", designation: "Audit Specialist" },
-      { username: "a.ortega", email: "a.ortega@sfcaliquidation.biz", password: "ortega", name: "Ace G. Ortega", designation: "Audit Specialist" },
-      { username: "j.cagang", email: "j.cagang@sfcaliquidation.biz", password: "cagang", name: "Jonathan R. Cagang", designation: "Audit Specialist" },
-      { username: "r.cenera", email: "r.cenera@sfcaliquidation.biz", password: "cenera", name: "Ricardo R. Cenera", designation: "Audit Specialist" },
-      { username: "h.entienza", email: "h.entienza@sfcaliquidation.biz", password: "entienza", name: "Hendrix T. Entienza", designation: "Audit Specialist" },
-      { username: "admin", email: "admin@sfcaliquidation.biz", password: "1234", name: "Administrator", designation: "System Administrator" }
+      { username: "m.aca-ac", email: "m.aca-ac@sfcaliquidation.biz", password: "aca-ac", name: "Michaelfel T. Aca-ac", designation: "Audit Specialist", department: "Internal Audit Department" },
+      { username: "r.duero", email: "r.duero@sfcaliquidation.biz", password: "duero", name: "Rey John A. Duero", designation: "Audit Specialist", department: "Internal Audit Department" },
+      { username: "s.genobaten", email: "s.genobaten@sfcaliquidation.biz", password: "genobaten", name: "Samuel IV F. Genobaten", designation: "Audit Specialist", department: "Internal Audit Department" },
+      { username: "m.nambatac", email: "m.nambatac@sfcaliquidation.biz", password: "nambatac", name: "Mario B. Nambatac", designation: "Audit Specialist", department: "Internal Audit Department" },
+      { username: "e.agsoy", email: "e.agsoy@sfcaliquidation.biz", password: "agsoy", name: "Eduardo R. Agsoy, Jr.", designation: "Audit Specialist", department: "Internal Audit Department" },
+      { username: "n.calasang", email: "n.calasang@sfcaliquidation.biz", password: "calasang", name: "Neil Erick D. Calasang", designation: "Audit Specialist", department: "Internal Audit Department" },
+      { username: "n.salva", email: "n.salva@sfcaliquidation.biz", password: "salva", name: "Nestor N. Salva", designation: "Audit Specialist", department: "Internal Audit Department" },
+      { username: "e.interone", email: "e.interone@sfcaliquidation.biz", password: "interone", name: "Edgardo T. Interone", designation: "Audit Specialist", department: "Internal Audit Department" },
+      { username: "l.ugay", email: "l.ugay@sfcaliquidation.biz", password: "ugay", name: "Le Cris L. Ugay", designation: "Audit Specialist", department: "Internal Audit Department" },
+      { username: "a.ortega", email: "a.ortega@sfcaliquidation.biz", password: "ortega", name: "Ace G. Ortega", designation: "Audit Specialist", department: "Internal Audit Department" },
+      { username: "j.cagang", email: "j.cagang@sfcaliquidation.biz", password: "cagang", name: "Jonathan R. Cagang", designation: "Audit Specialist", department: "Internal Audit Department" },
+      { username: "r.cenera", email: "r.cenera@sfcaliquidation.biz", password: "cenera", name: "Ricardo R. Cenera", designation: "Audit Specialist", department: "Internal Audit Department" },
+      { username: "h.entienza", email: "h.entienza@sfcaliquidation.biz", password: "entienza", name: "Hendrix T. Entienza", designation: "Audit Specialist", department: "Internal Audit Department" },
+      { username: "admin", email: "admin@sfcaliquidation.biz", password: "1234", name: "Administrator", designation: "System Administrator", department: "Executive Office" }
     ];
 
     let currentUsername = sessionStorage.getItem('travel_logged_username') || '';
     let accountName = sessionStorage.getItem('travel_logged_user_name') || '';
     let accountDesignation = sessionStorage.getItem('travel_logged_designation') || '';
+    let accountDepartment = sessionStorage.getItem('travel_logged_department') || '';
     let accountEmail = sessionStorage.getItem('travel_logged_email') || '';
     
     let travels = [];
@@ -788,7 +796,6 @@
     let editingId = null;
 
     let currentPreviewType = 'combined';
-    let currentLoginMode = 'username'; // 'username' | 'email'
 
     let inactivityTimer;
     const INACTIVITY_LIMIT = 2 * 60 * 1000;
@@ -806,6 +813,7 @@
       sessionStorage.removeItem('travel_logged_username');
       sessionStorage.removeItem('travel_logged_user_name');
       sessionStorage.removeItem('travel_logged_designation');
+      sessionStorage.removeItem('travel_logged_department');
       sessionStorage.removeItem('travel_logged_email');
       checkAuthStatus();
     }
@@ -843,27 +851,6 @@
       return firstNameParts.join(' ') || parts[0];
     }
 
-    function toggleLoginMode() {
-      const label = document.getElementById('loginInputLabel');
-      const input = document.getElementById('usernameInput');
-      const link = document.getElementById('loginToggleLink');
-
-      if (currentLoginMode === 'username') {
-        currentLoginMode = 'email';
-        label.textContent = 'Email Address';
-        input.placeholder = 'e.g. r.duero@sfcaliquidation.biz';
-        input.type = 'email';
-        link.textContent = 'Login with Username';
-      } else {
-        currentLoginMode = 'username';
-        label.textContent = 'Username';
-        input.placeholder = 'e.g. r.duero or admin';
-        input.type = 'text';
-        link.textContent = 'Login with Email';
-      }
-      input.value = '';
-    }
-
     // HANDLE GOOGLE AUTH POPUP / ONE-TAP CHROME LOGIN
     async function handleGoogleLogin() {
       if (typeof firebase === 'undefined' || !firebase.auth) {
@@ -883,12 +870,10 @@
           return;
         }
 
-        // Search in USERS_DB
         let foundUser = USERS_DB.find(u =>
           (u.email && u.email.toLowerCase() === googleEmail)
         );
 
-        // Also check if Admin updated their Email in Realtime Database
         if (!foundUser && db) {
           const snap = await db.ref('credentials').once('value');
           const creds = snap.val() || {};
@@ -907,6 +892,7 @@
           let userKey = foundUser.username.replace(/[^a-zA-Z0-9]/g, '_');
           let dynamicName = foundUser.name;
           let dynamicDesig = foundUser.designation || 'Audit Specialist';
+          let dynamicDept = foundUser.department || 'Internal Audit Department';
           let dynamicEmail = googleEmail;
 
           if (db) {
@@ -915,6 +901,7 @@
               const val = snap.val();
               if (val.name) dynamicName = val.name;
               if (val.designation) dynamicDesig = val.designation;
+              if (val.department) dynamicDept = val.department;
               if (val.email) dynamicEmail = val.email;
             }
           }
@@ -923,11 +910,13 @@
           sessionStorage.setItem('travel_logged_username', foundUser.username);
           sessionStorage.setItem('travel_logged_user_name', dynamicName);
           sessionStorage.setItem('travel_logged_designation', dynamicDesig);
+          sessionStorage.setItem('travel_logged_department', dynamicDept);
           sessionStorage.setItem('travel_logged_email', dynamicEmail);
 
           currentUsername = foundUser.username;
           accountName = dynamicName;
           accountDesignation = dynamicDesig;
+          accountDepartment = dynamicDept;
           accountEmail = dynamicEmail;
 
           checkAuthStatus();
@@ -994,6 +983,7 @@
         currentUsername = sessionStorage.getItem('travel_logged_username') || '';
         accountName = sessionStorage.getItem('travel_logged_user_name') || 'User Account';
         accountDesignation = sessionStorage.getItem('travel_logged_designation') || '';
+        accountDepartment = sessionStorage.getItem('travel_logged_department') || '';
         accountEmail = sessionStorage.getItem('travel_logged_email') || '';
         
         const shortName = getShortFirstName(accountName);
@@ -1007,6 +997,10 @@
 
         document.querySelectorAll('.userDesignationDisplay').forEach(el => {
           el.textContent = accountDesignation || 'Audit Specialist';
+        });
+
+        document.querySelectorAll('.userDepartmentDisplay').forEach(el => {
+          el.textContent = accountDepartment || 'Internal Audit Department';
         });
 
         const isUserAdmin = currentUsername.toLowerCase() === 'admin';
@@ -1258,10 +1252,11 @@
         
         const displayName = customCreds.name || u.name;
         const displayDesig = customCreds.designation || u.designation || 'Audit Specialist';
+        const displayDept = customCreds.department || u.department || 'Internal Audit Department';
         const displayEmail = customCreds.email || u.email || `${u.username}@sfcaliquidation.biz`;
 
         const isCustomPass = customCreds.password;
-        const isCustomProfile = customCreds.name || customCreds.designation || customCreds.email;
+        const isCustomProfile = customCreds.name || customCreds.designation || customCreds.department || customCreds.email;
 
         const row = document.createElement('tr');
         row.className = idx % 2 === 0 ? 'bg-white hover:bg-slate-50' : 'bg-slate-50/50 hover:bg-slate-100';
@@ -1270,6 +1265,7 @@
           <td class="p-3">
             <p class="font-bold text-slate-900">${displayName}</p>
             <p class="text-[10px] text-indigo-600 font-semibold">${displayDesig}</p>
+            <p class="text-[9px] text-slate-500 font-medium">${displayDept}</p>
           </td>
           <td class="p-3 font-mono text-slate-600 text-xs">
             <p class="font-bold text-slate-800">@${u.username}</p>
@@ -1297,11 +1293,13 @@
 
       const currentName = customCreds.name || (foundUser ? foundUser.name : '');
       const currentDesig = customCreds.designation || (foundUser ? foundUser.designation : 'Audit Specialist');
+      const currentDept = customCreds.department || (foundUser ? foundUser.department : 'Internal Audit Department');
       const currentEmail = customCreds.email || (foundUser ? foundUser.email : `${username}@sfcaliquidation.biz`);
 
       document.getElementById('adminEditProfileUsername').value = username;
       document.getElementById('adminEditProfileNameInput').value = currentName;
       document.getElementById('adminEditProfileDesigInput').value = currentDesig;
+      document.getElementById('adminEditProfileDepartmentInput').value = currentDept;
       document.getElementById('adminEditProfileEmailInput').value = currentEmail;
 
       document.getElementById('adminEditProfileModal').classList.remove('hidden');
@@ -1318,6 +1316,7 @@
 
       const newName = document.getElementById('adminEditProfileNameInput').value.trim();
       const newDesig = document.getElementById('adminEditProfileDesigInput').value.trim();
+      const newDept = document.getElementById('adminEditProfileDepartmentInput').value.trim();
       const newEmail = document.getElementById('adminEditProfileEmailInput').value.trim().toLowerCase();
 
       try {
@@ -1325,6 +1324,7 @@
           await db.ref('credentials/' + uKey).update({
             name: newName,
             designation: newDesig,
+            department: newDept,
             email: newEmail
           });
           alert(`Profile for @${username} updated successfully!`);
@@ -1345,6 +1345,7 @@
       currentUsername = foundUserObj ? foundUserObj.username : uKey;
       accountName = customCreds.name || (foundUserObj ? foundUserObj.name : uKey);
       accountDesignation = customCreds.designation || (foundUserObj ? foundUserObj.designation : 'Audit Specialist');
+      accountDepartment = customCreds.department || (foundUserObj ? foundUserObj.department : 'Internal Audit Department');
       accountEmail = customCreds.email || (foundUserObj ? foundUserObj.email : '');
 
       travels = uData.travels;
@@ -1604,14 +1605,11 @@
       const pass = document.getElementById('passwordInput').value.trim();
       const errorDiv = document.getElementById('loginError');
 
-      // Match user depending on Username or Email mode
-      const foundUser = USERS_DB.find(u => {
-        if (currentLoginMode === 'username') {
-          return u.username.toLowerCase() === userOrEmailInput;
-        } else {
-          return (u.email && u.email.toLowerCase() === userOrEmailInput) || u.username.toLowerCase() === userOrEmailInput;
-        }
-      });
+      // Match user by Username OR Email
+      const foundUser = USERS_DB.find(u => 
+        u.username.toLowerCase() === userOrEmailInput || 
+        (u.email && u.email.toLowerCase() === userOrEmailInput)
+      );
 
       if (!foundUser) {
         errorDiv.classList.remove('hidden');
@@ -1621,6 +1619,7 @@
       let validPass = foundUser.password;
       let dynamicName = foundUser.name;
       let dynamicDesig = foundUser.designation || 'Audit Specialist';
+      let dynamicDept = foundUser.department || 'Internal Audit Department';
       let dynamicEmail = foundUser.email || `${foundUser.username}@sfcaliquidation.biz`;
 
       const userKey = foundUser.username.replace(/[^a-zA-Z0-9]/g, '_');
@@ -1633,6 +1632,7 @@
             if (val.password) validPass = val.password;
             if (val.name) dynamicName = val.name;
             if (val.designation) dynamicDesig = val.designation;
+            if (val.department) dynamicDept = val.department;
             if (val.email) dynamicEmail = val.email;
           }
         }
@@ -1646,11 +1646,13 @@
         sessionStorage.setItem('travel_logged_username', foundUser.username);
         sessionStorage.setItem('travel_logged_user_name', dynamicName);
         sessionStorage.setItem('travel_logged_designation', dynamicDesig);
+        sessionStorage.setItem('travel_logged_department', dynamicDept);
         sessionStorage.setItem('travel_logged_email', dynamicEmail);
         
         currentUsername = foundUser.username;
         accountName = dynamicName;
         accountDesignation = dynamicDesig;
+        accountDepartment = dynamicDept;
         accountEmail = dynamicEmail;
 
         errorDiv.classList.add('hidden');
@@ -1668,6 +1670,7 @@
       sessionStorage.removeItem('travel_logged_username');
       sessionStorage.removeItem('travel_logged_user_name');
       sessionStorage.removeItem('travel_logged_designation');
+      sessionStorage.removeItem('travel_logged_department');
       sessionStorage.removeItem('travel_logged_email');
       sessionStorage.removeItem('admin_override_personal_mode');
       activeTravelId = null;
