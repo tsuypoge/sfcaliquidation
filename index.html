@@ -570,6 +570,31 @@
     let isArchived = false;
     let editingId = null;
 
+    // Inactivity Auto-Logout Logic (2 Minutes)
+    let inactivityTimer;
+    const INACTIVITY_LIMIT = 2 * 60 * 1000; // 2 minutes in milliseconds
+
+    function resetInactivityTimer() {
+      clearTimeout(inactivityTimer);
+      const isLoggedIn = sessionStorage.getItem('travel_is_logged_in') === 'true';
+      if (isLoggedIn) {
+        inactivityTimer = setTimeout(autoLogout, INACTIVITY_LIMIT);
+      }
+    }
+
+    function autoLogout() {
+      sessionStorage.removeItem('travel_is_logged_in');
+      sessionStorage.removeItem('travel_logged_username');
+      sessionStorage.removeItem('travel_logged_user_name');
+      alert("Session expired due to 2 minutes of inactivity. Please log in again.");
+      checkAuthStatus();
+    }
+
+    // Attach Event Listeners for User Activity
+    ['mousemove', 'keydown', 'click', 'scroll', 'touchstart'].forEach(eventName => {
+      window.addEventListener(eventName, resetInactivityTimer, true);
+    });
+
     function getStorageKey(keyName) {
       return currentUsername ? `${keyName}_${currentUsername}` : keyName;
     }
@@ -587,7 +612,9 @@
         if (userDisplay) userDisplay.textContent = accountName;
 
         loadUserData();
+        resetInactivityTimer(); // Start inactivity timer on auth
       } else {
+        clearTimeout(inactivityTimer);
         document.getElementById('loginScreen').classList.remove('hidden');
         document.getElementById('mainDashboard').classList.add('hidden');
       }
