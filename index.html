@@ -69,6 +69,16 @@
       object-fit: contain !important;
     }
 
+    .grid-receipt-img {
+      max-width: 100% !important;
+      max-height: 3.4in !important;
+      width: auto !important;
+      height: auto !important;
+      display: block !important;
+      margin: 0 auto !important;
+      object-fit: contain !important;
+    }
+
     @media print {
       @page { size: letter portrait; margin: 0.4in; }
       body {
@@ -394,16 +404,10 @@
           <p class="text-[10px] text-slate-500 mt-0.5">Manage and track travel expenses, liquidation forms, and report summaries</p>
         </div>
         
-        <!-- ACTION BUTTONS (INCLUDES RECEIPT & MANUAL DTR UPLOAD BUTTONS) -->
+        <!-- ACTION BUTTONS -->
         <div class="flex flex-wrap justify-center items-center gap-1.5 w-full md:w-auto">
           <button onclick="openPreviewModal('detailed')" class="bg-indigo-600 text-white text-[11px] font-semibold px-2.5 py-1.5 rounded-lg hover:bg-indigo-700 shadow-xs transition flex-1 sm:flex-none text-center">Preview</button>
           <button onclick="openPreviewModal('combined')" class="bg-slate-900 text-white text-[11px] font-semibold px-2.5 py-1.5 rounded-lg hover:bg-slate-800 shadow-xs transition flex-1 sm:flex-none text-center">Print Summary</button>
-          
-          <!-- RECEIPT(S) UPLOAD BUTTON -->
-          <label id="receiptsBtnLabel" class="bg-white text-slate-700 border border-slate-300 text-[11px] font-semibold px-2.5 py-1.5 rounded-lg hover:bg-slate-50 cursor-pointer flex-1 sm:flex-none text-center transition flex items-center justify-center gap-1">
-            <span id="receiptsBtnText">📄 Receipt(s)</span>
-            <input type="file" id="receiptsFileInput" accept="application/pdf, image/png, image/jpeg" class="hidden" onchange="handleReceiptsUpload(event)">
-          </label>
 
           <!-- MANUAL DTR UPLOAD BUTTON -->
           <label id="dtrBtnLabel" class="bg-white text-slate-700 border border-slate-300 text-[11px] font-semibold px-2.5 py-1.5 rounded-lg hover:bg-slate-50 cursor-pointer flex-1 sm:flex-none text-center transition flex items-center justify-center gap-1">
@@ -462,7 +466,7 @@
         </div>
       </div>
 
-      <form id="expenseForm" class="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-4 gap-3 mb-5 bg-slate-50/80 p-3 rounded-xl border border-slate-200 text-xs">
+      <form id="expenseForm" class="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-4 lg:grid-cols-5 gap-3 mb-5 bg-slate-50/80 p-3 rounded-xl border border-slate-200 text-xs">
         <div>
           <label class="block text-[10px] font-bold text-slate-600 uppercase tracking-wider mb-1">Date</label>
           <input type="date" id="dateInput" required class="p-2 border border-slate-300 rounded-lg w-full text-xs bg-white focus:ring-2 focus:ring-indigo-500 focus:outline-none">
@@ -498,7 +502,17 @@
           <label class="block text-[10px] font-bold text-slate-600 uppercase tracking-wider mb-1">Amount (₱)</label>
           <input type="number" step="any" inputmode="decimal" id="amount" placeholder="0.00" required class="p-2 border border-slate-300 rounded-lg w-full text-xs bg-white focus:ring-2 focus:ring-indigo-500 focus:outline-none">
         </div>
-        <div class="flex items-end gap-1.5">
+
+        <!-- NEW: ATTACH RECEIPT INPUT IN EXPENSE FORM -->
+        <div>
+          <label class="block text-[10px] font-bold text-slate-600 uppercase tracking-wider mb-1">Attach Receipt</label>
+          <label class="p-1.5 border border-slate-300 rounded-lg w-full text-xs bg-white focus-within:ring-2 focus-within:ring-indigo-500 cursor-pointer flex items-center justify-between">
+            <span id="expenseReceiptStatusText" class="text-slate-500 font-medium truncate">No file chosen</span>
+            <input type="file" id="expenseReceiptInput" accept="image/*, application/pdf" class="hidden" onchange="handleExpenseReceiptSelect(event)">
+          </label>
+        </div>
+
+        <div class="flex items-end gap-1.5 col-span-1 sm:col-span-2 lg:col-span-1">
           <button type="submit" id="submitBtn" class="bg-indigo-600 text-white font-bold p-2 rounded-lg hover:bg-indigo-700 w-full text-xs shadow-xs transition">+ Add Expense</button>
           <button type="button" id="cancelEditBtn" onclick="cancelEdit()" class="hidden bg-slate-500 text-white font-bold p-2 rounded-lg hover:bg-slate-600 text-xs transition">Cancel</button>
         </div>
@@ -515,6 +529,7 @@
               <th class="w-24 text-center">Transpo (₱)</th>
               <th class="w-28 text-center">Meals/Per Diem (₱)</th>
               <th class="w-24 text-center">Total (₱)</th>
+              <th class="w-20 text-center">Receipt</th>
               <th class="w-20 text-center">Action</th>
             </tr>
           </thead>
@@ -676,7 +691,7 @@
     </div>
   </div>
 
-  <!-- PRINT CONTAINER FOR ATTACHED RECEIPT(S) (SEPARATE NEW PAGE) -->
+  <!-- PRINT CONTAINER FOR ATTACHED RECEIPTS (2x2 GRID, 4 PER PAGE WITH DATE & DESC) -->
   <div id="printAreaReceipts" class="hidden font-sans page-break">
     <div id="printAreaReceiptsContent"></div>
   </div>
@@ -842,8 +857,8 @@
     let cashAdvance = 0;
     let regionName = '';
     let signatureDataUrl = '';
-    let receiptsPdfDataUrl = '';
     let dtrPdfDataUrl = '';
+    let tempExpenseReceiptDataUrl = '';
     let isArchived = false;
     let editingId = null;
 
@@ -1106,7 +1121,6 @@
               cashAdvance = found.cashAdvance || 0;
               isArchived = found.isArchived === true;
               expenses = found.expenses || [];
-              receiptsPdfDataUrl = found.receiptsPdf || '';
               dtrPdfDataUrl = found.dtrPdf || '';
               updateUIFields();
               showScreen('mainDashboard');
@@ -1571,7 +1585,6 @@
         cashAdvance: caVal,
         isArchived: false,
         expenses: [],
-        receiptsPdf: '',
         dtrPdf: ''
       };
 
@@ -1594,7 +1607,6 @@
       cashAdvance = found.cashAdvance || 0;
       isArchived = found.isArchived === true;
       expenses = found.expenses || [];
-      receiptsPdfDataUrl = found.receiptsPdf || '';
       dtrPdfDataUrl = found.dtrPdf || '';
 
       showScreen('mainDashboard');
@@ -1626,7 +1638,6 @@
         travels[idx].cashAdvance = cashAdvance;
         travels[idx].isArchived = isArchived;
         travels[idx].expenses = expenses;
-        travels[idx].receiptsPdf = receiptsPdfDataUrl;
         travels[idx].dtrPdf = dtrPdfDataUrl;
       }
       saveDataToStorage();
@@ -1642,21 +1653,51 @@
       updateTracker();
     }
 
-    // HANDLERS FOR NEW RECEIPT(S) & MANUAL DTR ATTACHMENTS
-    function handleReceiptsUpload(event) {
+    // HANDLER FOR EXPENSE RECEIPT FILE SELECT IN FORM
+    async function handleExpenseReceiptSelect(event) {
       if (isArchived) return;
       const file = event.target.files[0];
-      if (!file) return;
+      const statusText = document.getElementById('expenseReceiptStatusText');
 
-      const reader = new FileReader();
-      reader.onload = function(e) {
-        receiptsPdfDataUrl = e.target.result;
-        saveActiveTravelData();
-        updateTracker();
-      };
-      reader.readAsDataURL(file);
+      if (!file) {
+        tempExpenseReceiptDataUrl = '';
+        if (statusText) statusText.textContent = 'No file chosen';
+        return;
+      }
+
+      if (statusText) statusText.textContent = file.name;
+
+      if (file.type.startsWith('image/')) {
+        const reader = new FileReader();
+        reader.onload = function(e) {
+          tempExpenseReceiptDataUrl = e.target.result;
+        };
+        reader.readAsDataURL(file);
+      } else if (file.type === 'application/pdf') {
+        try {
+          const arrayBuffer = await file.arrayBuffer();
+          const loadingTask = pdfjsLib.getDocument({ data: arrayBuffer });
+          const pdf = await loadingTask.promise;
+          const page = await pdf.getPage(1);
+          const viewport = page.getViewport({ scale: 1.5 });
+
+          const canvas = document.createElement('canvas');
+          const context = canvas.getContext('2d');
+          canvas.height = viewport.height;
+          canvas.width = viewport.width;
+
+          await page.render({ canvasContext: context, viewport: viewport }).promise;
+          tempExpenseReceiptDataUrl = canvas.toDataURL('image/png');
+        } catch(err) {
+          console.error("PDF receipt convert error:", err);
+          const reader = new FileReader();
+          reader.onload = function(e) { tempExpenseReceiptDataUrl = e.target.result; };
+          reader.readAsDataURL(file);
+        }
+      }
     }
 
+    // HANDLER FOR MANUAL DTR ATTACHMENT
     function handleDtrUpload(event) {
       if (isArchived) return;
       const file = event.target.files[0];
@@ -1786,8 +1827,8 @@
         expenses = [];
         cashAdvance = 0;
         regionName = '';
-        receiptsPdfDataUrl = '';
         dtrPdfDataUrl = '';
+        tempExpenseReceiptDataUrl = '';
         isArchived = false;
 
         saveActiveTravelData();
@@ -2039,15 +2080,37 @@
       const rawTicket = document.getElementById('ticketNo').value.trim();
       let desc = document.getElementById('desc').value.trim();
       const amount = parseFloat(document.getElementById('amount').value);
+      const receiptImg = tempExpenseReceiptDataUrl || '';
 
       if (editingId !== null) {
         const index = expenses.findIndex(item => item.id === editingId);
         if (index !== -1) {
-          expenses[index] = { id: editingId, date, mainCategory: category, subType: selectedSubType, customSubtype: customSubtypeVal, ticketNo: rawTicket, desc, amount };
+          const oldReceipt = expenses[index].receiptImg || '';
+          expenses[index] = { 
+            id: editingId, 
+            date, 
+            mainCategory: category, 
+            subType: selectedSubType, 
+            customSubtype: customSubtypeVal, 
+            ticketNo: rawTicket, 
+            desc, 
+            amount, 
+            receiptImg: receiptImg || oldReceipt 
+          };
         }
         cancelEdit();
       } else {
-        expenses.push({ id: Date.now(), date, mainCategory: category, subType: selectedSubType, customSubtype: customSubtypeVal, ticketNo: rawTicket, desc, amount });
+        expenses.push({ 
+          id: Date.now(), 
+          date, 
+          mainCategory: category, 
+          subType: selectedSubType, 
+          customSubtype: customSubtypeVal, 
+          ticketNo: rawTicket, 
+          desc, 
+          amount, 
+          receiptImg 
+        });
         resetForm();
       }
 
@@ -2082,6 +2145,10 @@
       document.getElementById('desc').value = item.desc || '';
       document.getElementById('amount').value = item.amount;
 
+      tempExpenseReceiptDataUrl = item.receiptImg || '';
+      const statusText = document.getElementById('expenseReceiptStatusText');
+      if (statusText) statusText.textContent = item.receiptImg ? 'Receipt Attached ✓' : 'No file chosen';
+
       const submitBtn = document.getElementById('submitBtn');
       submitBtn.textContent = 'Save';
       submitBtn.className = 'bg-emerald-600 text-white font-bold p-2 rounded-lg hover:bg-emerald-700 w-full text-xs shadow-xs transition';
@@ -2102,6 +2169,11 @@
       document.getElementById('amount').value = '';
       document.getElementById('ticketNo').value = '';
       document.getElementById('customSubtype').value = '';
+      document.getElementById('expenseReceiptInput').value = '';
+      tempExpenseReceiptDataUrl = '';
+      const statusText = document.getElementById('expenseReceiptStatusText');
+      if (statusText) statusText.textContent = 'No file chosen';
+
       setCurrentDateInput();
       handleCategoryChange();
     }
@@ -2181,17 +2253,7 @@
         if (sigUploadContainer) sigUploadContainer.classList.remove('hidden');
       }
 
-      // UPDATE RECEIPTS & DTR ATTACHMENT BUTTON LABELS/BADGES
-      const receiptsBtnLabel = document.getElementById('receiptsBtnLabel');
-      const receiptsBtnText = document.getElementById('receiptsBtnText');
-      if (receiptsPdfDataUrl) {
-        receiptsBtnLabel.className = "bg-emerald-50 text-emerald-700 border border-emerald-300 text-[11px] font-semibold px-2.5 py-1.5 rounded-lg hover:bg-emerald-100 cursor-pointer flex-1 sm:flex-none text-center transition flex items-center justify-center gap-1";
-        receiptsBtnText.textContent = "📄 Receipt(s) ✓";
-      } else {
-        receiptsBtnLabel.className = "bg-white text-slate-700 border border-slate-300 text-[11px] font-semibold px-2.5 py-1.5 rounded-lg hover:bg-slate-50 cursor-pointer flex-1 sm:flex-none text-center transition flex items-center justify-center gap-1";
-        receiptsBtnText.textContent = "📄 Receipt(s)";
-      }
-
+      // UPDATE MANUAL DTR ATTACHMENT BUTTON LABEL/BADGE
       const dtrBtnLabel = document.getElementById('dtrBtnLabel');
       const dtrBtnText = document.getElementById('dtrBtnText');
       if (dtrPdfDataUrl) {
@@ -2290,6 +2352,11 @@
               ? `<td class="font-bold text-center" rowspan="${items.length + 1}">${formatDateShort(date)}</td>`
               : '';
 
+            let receiptTd = isPrint ? '' : `
+              <td class="text-center whitespace-nowrap no-print">
+                ${item.receiptImg ? `<span class="bg-emerald-50 text-emerald-700 border border-emerald-200 px-1.5 py-0.5 rounded font-bold text-[10px]" title="Receipt attached">Attached ✓</span>` : `<span class="text-slate-400 text-[10px]">None</span>`}
+              </td>`;
+
             let actionCol = isPrint ? '' : `
               <td class="text-center whitespace-nowrap no-print">
                 ${isArchived 
@@ -2307,6 +2374,7 @@
               <td class="text-right text-slate-800">${formatNum(transpoAmt)}</td>
               <td class="text-right text-slate-800">${formatNum(mealsAmt)}</td>
               <td class="text-right font-bold text-slate-800"></td>
+              ${receiptTd}
               ${actionCol}
             `;
             tbody.appendChild(row);
@@ -2315,7 +2383,7 @@
           const subtotalRow = document.createElement('tr');
           const dayTotal = dayTranspoFee + dayMealsPerDiem;
           
-          let actionColEmpty = isPrint ? '' : `<td class="text-center no-print"></td>`;
+          let actionColEmpty = isPrint ? '' : `<td class="text-center no-print"></td><td class="text-center no-print"></td>`;
 
           subtotalRow.innerHTML = `
             <td></td>
@@ -2467,7 +2535,54 @@
       document.getElementById('previewModal').classList.remove('hidden');
     }
 
-    // HELPER FUNCTION TO RENDER PDF OR IMAGE ATTACHMENTS INTO DEDICATED NEW PRINT PAGES
+    // HELPER FUNCTION TO RENDER ATTACHED EXPENSE RECEIPTS IN A 2x2 GRID (4 PER PAGE)
+    function renderExpenseReceiptsGrid(expensesList, targetContainer) {
+      if (!targetContainer) return;
+      targetContainer.innerHTML = '';
+
+      const itemsWithReceipts = expensesList.filter(e => e.receiptImg);
+      if (itemsWithReceipts.length === 0) return;
+
+      // Group into chunks of 4 receipts per page
+      for (let i = 0; i < itemsWithReceipts.length; i += 4) {
+        const chunk = itemsWithReceipts.slice(i, i + 4);
+
+        const pageDiv = document.createElement('div');
+        pageDiv.className = 'page-break w-full py-4 font-sans';
+
+        const grid = document.createElement('div');
+        grid.className = 'grid grid-cols-2 gap-6 w-full items-start';
+
+        chunk.forEach(item => {
+          const card = document.createElement('div');
+          card.className = 'flex flex-col justify-between items-center p-3 border border-gray-300 rounded bg-white text-center shadow-xs min-h-[4.2in]';
+
+          const imgBox = document.createElement('div');
+          imgBox.className = 'w-full flex-1 flex justify-center items-center overflow-hidden mb-2';
+
+          const img = document.createElement('img');
+          img.src = item.receiptImg;
+          img.className = 'grid-receipt-img';
+          imgBox.appendChild(img);
+
+          const descBox = document.createElement('div');
+          descBox.className = 'w-full border-t border-gray-200 pt-2 text-[8pt] text-gray-800 font-sans';
+          descBox.innerHTML = `
+            <p class="font-bold text-gray-900">Date: ${formatDateLong(item.date)}</p>
+            <p class="text-gray-700 font-semibold truncate max-w-full">${item.desc || item.mainCategory} (${formatCurrency(item.amount)})</p>
+          `;
+
+          card.appendChild(imgBox);
+          card.appendChild(descBox);
+          grid.appendChild(card);
+        });
+
+        pageDiv.appendChild(grid);
+        targetContainer.appendChild(pageDiv);
+      }
+    }
+
+    // HELPER FUNCTION TO RENDER PDF OR IMAGE ATTACHMENTS FOR MANUAL DTR
     async function renderAttachmentPages(base64Data, title, targetContainer) {
       if (!targetContainer) return;
       targetContainer.innerHTML = '';
@@ -2527,15 +2642,12 @@
       document.getElementById('printAreaDtr').classList.remove('print-active', 'page-break');
 
       modalContent.innerHTML = '';
-      titleElem.textContent = ''; // Removed Preview Header Text
+      titleElem.textContent = ''; 
 
-      // Pre-render Attachments into Background Print DOM Containers
-      if (receiptsPdfDataUrl) {
-        await renderAttachmentPages(receiptsPdfDataUrl, 'ATTACHED RECEIPT(S)', document.getElementById('printAreaReceiptsContent'));
-      } else {
-        document.getElementById('printAreaReceiptsContent').innerHTML = '';
-      }
+      // Render Expense Receipts Grid
+      renderExpenseReceiptsGrid(expenses, document.getElementById('printAreaReceiptsContent'));
 
+      // Pre-render Manual DTR Attachment
       if (dtrPdfDataUrl) {
         await renderAttachmentPages(dtrPdfDataUrl, 'ATTACHED MANUAL DTR', document.getElementById('printAreaDtrContent'));
       } else {
@@ -2572,8 +2684,9 @@
         detailedClone.classList.add('page-break');
         modalContent.appendChild(detailedClone);
 
-        // APPEND ATTACHED RECEIPT(S) ON A STRICTLY SEPARATE NEW PAGE
-        if (receiptsPdfDataUrl) {
+        // APPEND ATTACHED EXPENSE RECEIPT(S) ON A STRICTLY SEPARATE NEW PAGE (2x2 GRID)
+        const hasExpenseReceipts = expenses.some(e => e.receiptImg);
+        if (hasExpenseReceipts) {
           document.getElementById('printAreaReceipts').classList.add('print-active', 'page-break');
 
           const separator2 = document.createElement('div');
