@@ -295,7 +295,7 @@
         </div>
       </div>
 
-      <!-- Setup Box: Cash Advance & Region(s) (BOTH CENTER-ALIGNED) -->
+      <!-- Setup Box: Cash Advance & Region(s) (CENTER-ALIGNED) -->
       <div class="mb-4 p-2.5 bg-slate-50/80 rounded-xl border border-slate-200/80 flex flex-col sm:flex-row items-center justify-center gap-6 sm:gap-12">
         
         <!-- Cash Advance -->
@@ -328,20 +328,6 @@
           >
         </div>
 
-      </div>
-
-      <!-- Date Range Filter Bar -->
-      <div class="mb-4 p-2.5 bg-indigo-50/50 rounded-xl border border-indigo-100 flex flex-col sm:flex-row items-stretch sm:items-center justify-between gap-2.5">
-        <div class="flex items-center gap-2 flex-wrap">
-          <span class="text-[11px] font-bold text-indigo-950 whitespace-nowrap">Report Date Range:</span>
-          <input type="date" id="filterStartDate" class="p-1 border rounded-md text-[11px] border-indigo-200 bg-white text-slate-800 shadow-xs" onchange="updateTracker()">
-          <span class="text-[10px] font-semibold text-slate-500">to</span>
-          <input type="date" id="filterEndDate" class="p-1 border rounded-md text-[11px] border-indigo-200 bg-white text-slate-800 shadow-xs" onchange="updateTracker()">
-          <button type="button" onclick="clearDateFilter()" class="bg-white text-slate-700 border border-slate-300 text-[10px] px-2 py-1 rounded-md font-medium hover:bg-slate-50 transition">Clear Filter</button>
-        </div>
-        <div class="text-[10px] text-indigo-900/80 italic font-medium">
-          * Applies <b>Cash Advance ÷ 2</b> ONLY IF a Date Range is specified.
-        </div>
       </div>
 
       <!-- Modern KPI Cards Section -->
@@ -619,13 +605,31 @@
   <!-- Dynamic Modal -->
   <div id="previewModal" class="hidden fixed inset-0 bg-slate-900/60 backdrop-blur-sm flex justify-center items-center p-2 sm:p-4 z-50 no-print">
     <div class="bg-white rounded-2xl shadow-2xl max-w-5xl w-full p-4 sm:p-6 max-h-[95vh] overflow-y-auto border border-slate-200">
+      
+      <!-- Modal Header -->
       <div class="flex justify-between items-center mb-3 border-b border-slate-100 pb-2.5">
         <h2 id="modalTitle" class="text-base sm:text-lg font-bold text-slate-900">Preview</h2>
         <button onclick="closePreviewModal()" class="text-slate-400 hover:text-slate-600 font-bold text-lg">✕</button>
       </div>
+
+      <!-- DATE RANGE FILTER INSIDE PREVIEW MODAL -->
+      <div id="modalDateFilterBar" class="mb-3 p-2.5 bg-indigo-50/60 rounded-xl border border-indigo-100 flex flex-col sm:flex-row items-stretch sm:items-center justify-between gap-2.5 no-print">
+        <div class="flex items-center gap-2 flex-wrap">
+          <span class="text-[11px] font-bold text-indigo-950 whitespace-nowrap">Report Date Range:</span>
+          <input type="date" id="modalFilterStartDate" class="p-1 border rounded-md text-[11px] border-indigo-200 bg-white text-slate-800 shadow-xs" onchange="applyModalDateFilter()">
+          <span class="text-[10px] font-semibold text-slate-500">to</span>
+          <input type="date" id="modalFilterEndDate" class="p-1 border rounded-md text-[11px] border-indigo-200 bg-white text-slate-800 shadow-xs" onchange="applyModalDateFilter()">
+          <button type="button" onclick="clearModalDateFilter()" class="bg-white text-slate-700 border border-slate-300 text-[10px] px-2 py-1 rounded-md font-medium hover:bg-slate-50 transition">Clear Filter</button>
+        </div>
+        <div class="text-[10px] text-indigo-900/80 italic font-medium">
+          * Applies <b>Cash Advance ÷ 2</b> ONLY IF a Date Range is specified.
+        </div>
+      </div>
       
+      <!-- Modal Content Body -->
       <div id="modalContent" class="mb-5 border border-slate-200 p-2 sm:p-5 rounded-xl bg-white overflow-x-auto"></div>
       
+      <!-- Modal Footer -->
       <div class="flex flex-wrap justify-end gap-2">
         <button onclick="closePreviewModal()" class="bg-white text-slate-700 border border-slate-300 font-semibold px-3.5 py-1.5 rounded-xl hover:bg-slate-50 text-xs">Close</button>
         <button onclick="window.print()" class="bg-indigo-600 text-white font-semibold px-3.5 py-1.5 rounded-xl hover:bg-indigo-700 text-xs shadow-xs">Print / Export PDF</button>
@@ -669,6 +673,9 @@
     let signatureDataUrl = '';
     let isArchived = false;
     let editingId = null;
+
+    // Current Active Modal Preview Type ('summary', 'detailed', or 'combined')
+    let currentPreviewType = 'combined';
 
     // Inactivity Auto-Logout Logic (2 Minutes)
     let inactivityTimer;
@@ -970,12 +977,6 @@
       document.getElementById('dateInput').valueAsDate = new Date();
     }
 
-    function clearDateFilter() {
-      document.getElementById('filterStartDate').value = '';
-      document.getElementById('filterEndDate').value = '';
-      updateTracker();
-    }
-
     function resetAllData() {
       if (confirm("Are you sure you want to reset this travel record? This action cannot be undone.")) {
         expenses = [];
@@ -987,8 +988,6 @@
 
         document.getElementById('cashAdvanceInput').value = '';
         document.getElementById('regionNameInput').value = '';
-        document.getElementById('filterStartDate').value = '';
-        document.getElementById('filterEndDate').value = '';
 
         if (editingId !== null) cancelEdit();
 
@@ -1346,6 +1345,20 @@
       return '₱' + val.toLocaleString('en-US', {minimumFractionDigits: 2, maximumFractionDigits: 2});
     }
 
+    // MODAL DATE FILTER HANDLERS
+    function applyModalDateFilter() {
+      updateTracker();
+      renderModalContent(currentPreviewType);
+    }
+
+    function clearModalDateFilter() {
+      const startElem = document.getElementById('modalFilterStartDate');
+      const endElem = document.getElementById('modalFilterEndDate');
+      if (startElem) startElem.value = '';
+      if (endElem) endElem.value = '';
+      applyModalDateFilter();
+    }
+
     function updateTracker() {
       saveActiveTravelData();
 
@@ -1404,8 +1417,11 @@
 
       let totalTranspo = 0, totalMeals = 0, totalPerDiem = 0, totalTerminalFee = 0, totalMisc = 0;
 
-      const startDate = document.getElementById('filterStartDate').value;
-      const endDate = document.getElementById('filterEndDate').value;
+      // READ DATE FILTER FROM MODAL INPUTS IF SET
+      const modalStartElem = document.getElementById('modalFilterStartDate');
+      const modalEndElem = document.getElementById('modalFilterEndDate');
+      const startDate = modalStartElem ? modalStartElem.value : '';
+      const endDate = modalEndElem ? modalEndElem.value : '';
 
       expenses.forEach(item => {
         if (item.mainCategory === 'Transportation') totalTranspo += item.amount;
@@ -1570,6 +1586,7 @@
 
       const reportTotalSpent = rTranspo + rMeals + rPerDiem + rTerminal + rMisc;
       
+      // CASH ADVANCE ÷ 2 ONLY IF A DATE RANGE IS SPECIFIED IN MODAL FILTER
       const hasDateRange = (startDate !== '' || endDate !== '');
       const reportCA = hasDateRange ? (cashAdvance / 2) : cashAdvance;
       const reportReturnRefund = reportCA - reportTotalSpent;
@@ -1635,9 +1652,15 @@
       remElem.className = returnRefund < 0 ? 'text-xs sm:text-sm font-bold text-rose-600 mt-0.5' : 'text-xs sm:text-sm font-bold text-indigo-900 mt-0.5';
     }
 
-    // MULTI-PAGE PRINT FUNCTIONALITY (Summary strictly Page 1 Letter size, Detailed Page 2+)
+    // MULTI-PAGE PRINT FUNCTIONALITY WITH IN-MODAL DATE FILTER
     function openPreviewModal(type) {
-      const modal = document.getElementById('previewModal');
+      currentPreviewType = type;
+      updateTracker();
+      renderModalContent(type);
+      document.getElementById('previewModal').classList.remove('hidden');
+    }
+
+    function renderModalContent(type) {
       const modalContent = document.getElementById('modalContent');
       const titleElem = document.getElementById('modalTitle');
       
@@ -1663,7 +1686,7 @@
       } else if (type === 'combined') {
         titleElem.textContent = 'Print Liquidation Package (Summary Page 1 + Detailed Page 2+)';
 
-        // Enable both print areas for printing in correct order (Summary first, Detailed second)
+        // Enable both print areas for printing in correct order (Summary Page 1, Detailed Page 2+)
         document.getElementById('printAreaSummary').classList.add('print-active');
         document.getElementById('printAreaDetailed').classList.add('print-active', 'page-break');
 
@@ -1684,8 +1707,6 @@
         detailedClone.classList.add('page-break');
         modalContent.appendChild(detailedClone);
       }
-      
-      modal.classList.remove('hidden');
     }
 
     function closePreviewModal() {
