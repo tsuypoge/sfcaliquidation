@@ -775,6 +775,41 @@
       return dateStr;
     }
 
+    // Long Form Date Formatter (e.g., June 8, 2026 or June 8 - July 11, 2026)
+    function formatDateLong(dateStr) {
+      if (!dateStr) return '';
+      const parts = dateStr.split('-');
+      if (parts.length !== 3) return dateStr;
+      const months = ["January", "February", "March", "April", "May", "June", "July", "August", "September", "October", "November", "December"];
+      const m = months[parseInt(parts[1], 10) - 1];
+      const d = parseInt(parts[2], 10);
+      return `${m} ${d}, ${parts[0]}`;
+    }
+
+    function formatDateRangeLong(startDateStr, endDateStr) {
+      if (!startDateStr && !endDateStr) return 'N/A';
+      if (startDateStr && !endDateStr) return formatDateLong(startDateStr);
+      if (!startDateStr && endDateStr) return formatDateLong(endDateStr);
+
+      const [sYear, sMonth, sDay] = startDateStr.split('-');
+      const [eYear, eMonth, eDay] = endDateStr.split('-');
+      const months = ["January", "February", "March", "April", "May", "June", "July", "August", "September", "October", "November", "December"];
+      
+      const sm = months[parseInt(sMonth, 10) - 1];
+      const em = months[parseInt(eMonth, 10) - 1];
+      const sd = parseInt(sDay, 10);
+      const ed = parseInt(eDay, 10);
+
+      if (sYear === eYear) {
+        if (sMonth === eMonth) {
+          if (sd === ed) return `${sm} ${sd}, ${sYear}`;
+          return `${sm} ${sd}-${ed}, ${sYear}`;
+        }
+        return `${sm} ${sd}-${em} ${ed}, ${sYear}`;
+      }
+      return `${sm} ${sd}, ${sYear} - ${em} ${ed}, ${eYear}`;
+    }
+
     function handleCategoryChange() {
       const category = document.getElementById('category').value;
       const subOptionLabel = document.getElementById('subOptionLabel');
@@ -1215,10 +1250,10 @@
       const currentRegionText = regionName || 'N/A';
       let dateRangeText = 'N/A';
       if (startDate || endDate) {
-        dateRangeText = `${formatDateShort(startDate) || 'Start'} - ${formatDateShort(endDate) || 'End'}`;
+        dateRangeText = formatDateRangeLong(startDate, endDate);
       } else if (filteredReportExpenses.length > 0) {
         const sorted = filteredReportExpenses.map(e => e.date).sort();
-        dateRangeText = `${formatDateShort(sorted[0])} - ${formatDateShort(sorted[sorted.length - 1])}`;
+        dateRangeText = formatDateRangeLong(sorted[0], sorted[sorted.length - 1]);
       }
 
       document.getElementById('printRegionName').textContent = currentRegionText;
