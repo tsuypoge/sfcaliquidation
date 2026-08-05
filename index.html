@@ -611,46 +611,55 @@
       if (!currentUsername || !db) return;
       const userKey = getSanitizedUsername();
 
-      db.ref('users/' + userKey).on('value', (snapshot) => {
-        const val = snapshot.val();
-        if (val) {
-          travels = val.travels || [];
-          signatureDataUrl = val.signatureDataUrl || '';
-          
-          renderTravelListTable();
+      try {
+        db.ref('users/' + userKey).on('value', (snapshot) => {
+          const val = snapshot.val();
+          if (val) {
+            travels = val.travels || [];
+            signatureDataUrl = val.signatureDataUrl || '';
+            
+            renderTravelListTable();
 
-          if (activeTravelId) {
-            const found = travels.find(t => t.id === activeTravelId);
-            if (found) {
-              regionName = found.regionName || '';
-              cashAdvance = found.cashAdvance || 0;
-              isArchived = found.isArchived === true;
-              expenses = found.expenses || [];
-              updateUIFields();
-            }
-          } else {
-            const activeTravel = travels.find(t => !t.isArchived);
-            if (activeTravel && document.getElementById('mainDashboard').classList.contains('hidden')) {
-              openTravel(activeTravel.id);
+            if (activeTravelId) {
+              const found = travels.find(t => t.id === activeTravelId);
+              if (found) {
+                regionName = found.regionName || '';
+                cashAdvance = found.cashAdvance || 0;
+                isArchived = found.isArchived === true;
+                expenses = found.expenses || [];
+                updateUIFields();
+              }
+            } else {
+              const activeTravel = travels.find(t => !t.isArchived);
+              if (activeTravel && document.getElementById('mainDashboard').classList.contains('hidden')) {
+                openTravel(activeTravel.id);
+              }
             }
           }
-        }
-      });
+        });
+      } catch(e) {
+        console.warn("Firebase Read Listener Notice:", e);
+      }
     }
 
     function saveDataToStorage() {
       if (!currentUsername || !db) return;
       const userKey = getSanitizedUsername();
 
-      db.ref('users/' + userKey).set({
-        travels: travels,
-        signatureDataUrl: signatureDataUrl,
-        lastUpdated: Date.now()
-      });
+      try {
+        db.ref('users/' + userKey).set({
+          travels: travels,
+          signatureDataUrl: signatureDataUrl,
+          lastUpdated: Date.now()
+        });
+      } catch(e) {
+        console.warn("Firebase Write Notice:", e);
+      }
     }
 
     function renderTravelListTable() {
       const tbody = document.getElementById('travelListTableBody');
+      if (!tbody) return;
       tbody.innerHTML = '';
 
       if (travels.length === 0) {
@@ -1576,7 +1585,7 @@
       reader.readAsText(event.target.files[0]);
     }
 
-    // DOM CONTENT LOADED SAFETY WRAPPER (PREVENTS BLANK WHITE SCREEN)
+    // SAFE DOM CONTENT LOADED INITIALIZATION
     document.addEventListener('DOMContentLoaded', () => {
       try {
         if (typeof firebase !== 'undefined') {
