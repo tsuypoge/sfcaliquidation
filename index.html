@@ -17,12 +17,6 @@
       -webkit-overflow-scrolling: touch;
     }
 
-    /* Page Break Utility for Multi-page Printing */
-    .page-break {
-      page-break-before: always !important;
-      break-before: page !important;
-    }
-
     /* Standardized Report Header - Reduced to 7pt */
     .report-header, .report-header p {
       font-size: 7pt !important;
@@ -68,14 +62,18 @@
       border: none !important;
     }
 
-    /* Print Specific Styles */
+    /* Print Specific Styles - Strict Letter Size & Page Breaks */
     @media print {
+      @page {
+        size: letter portrait;
+        margin: 0.4in;
+      }
       body {
         -webkit-print-color-adjust: exact !important;
         print-color-adjust: exact !important;
         background-color: white !important;
         margin: 0 !important;
-        padding: 8px !important;
+        padding: 0 !important;
         font-family: Calibri, 'Segoe UI', Arial, sans-serif !important;
       }
       .no-print {
@@ -84,6 +82,11 @@
       .print-active {
         display: block !important;
         width: 100% !important;
+      }
+      /* Ensure Page 1 Summary strictly breaks to Page 2 */
+      #printAreaSummary.print-active {
+        page-break-after: always !important;
+        break-after: page !important;
       }
       #printAreaDetailed:not(.print-active),
       #printAreaSummary:not(.print-active) {
@@ -271,7 +274,7 @@
         <!-- Action Buttons Group -->
         <div class="flex flex-wrap justify-center items-center gap-1.5 w-full md:w-auto">
           <button onclick="openPreviewModal('detailed')" class="bg-indigo-600 text-white text-[11px] font-semibold px-2.5 py-1.5 rounded-lg hover:bg-indigo-700 shadow-xs transition flex-1 sm:flex-none text-center">Preview</button>
-          <button onclick="openPreviewModal('summary')" class="bg-slate-900 text-white text-[11px] font-semibold px-2.5 py-1.5 rounded-lg hover:bg-slate-800 shadow-xs transition flex-1 sm:flex-none text-center">Print Summary</button>
+          <button onclick="openPreviewModal('combined')" class="bg-slate-900 text-white text-[11px] font-semibold px-2.5 py-1.5 rounded-lg hover:bg-slate-800 shadow-xs transition flex-1 sm:flex-none text-center">Print Summary</button>
           <button onclick="toggleArchive()" id="archiveBtn" class="bg-white text-slate-700 border border-slate-300 text-[11px] font-semibold px-2.5 py-1.5 rounded-lg hover:bg-slate-50 transition flex-1 sm:flex-none text-center">Archive</button>
           <button onclick="exportBackup()" class="bg-white text-slate-700 border border-slate-300 text-[11px] font-semibold px-2.5 py-1.5 rounded-lg hover:bg-slate-50 transition flex-1 sm:flex-none text-center">Backup</button>
           <label class="bg-white text-slate-700 border border-slate-300 text-[11px] font-semibold px-2.5 py-1.5 rounded-lg hover:bg-slate-50 cursor-pointer flex-1 sm:flex-none text-center transition">
@@ -853,7 +856,7 @@
       updateUIFields();
     }
 
-    // UPDATED PRINT ACTION: OPENS COMBINED SUMMARY + DETAILED PREVIEW
+    // UPDATED PRINT ACTION: OPENS COMBINED SUMMARY (PAGE 1 LETTER) + DETAILED PREVIEW (PAGE 2+)
     function openTravelSummaryPreview(trvId) {
       openTravel(trvId);
       openPreviewModal('combined');
@@ -930,6 +933,7 @@
       }
     }
 
+    // DIRECT LOGOUT WITHOUT CONFIRMATION PROMPT
     function handleLogout() {
       sessionStorage.removeItem('travel_is_logged_in');
       sessionStorage.removeItem('travel_logged_username');
@@ -1621,7 +1625,7 @@
       remElem.className = returnRefund < 0 ? 'text-xs sm:text-sm font-bold text-rose-600 mt-0.5' : 'text-xs sm:text-sm font-bold text-indigo-900 mt-0.5';
     }
 
-    // MULTI-PAGE PRINT FUNCTIONALITY (Summary on Page 1, Detailed on Page 2+)
+    // MULTI-PAGE PRINT FUNCTIONALITY (Summary strictly Page 1 Letter size, Detailed Page 2+)
     function openPreviewModal(type) {
       const modal = document.getElementById('previewModal');
       const modalContent = document.getElementById('modalContent');
@@ -1647,13 +1651,13 @@
         modalContent.appendChild(clone);
 
       } else if (type === 'combined') {
-        titleElem.textContent = 'Print Liquidation Package (Summary + Detailed)';
+        titleElem.textContent = 'Print Liquidation Package (Summary Page 1 + Detailed Page 2+)';
 
         // Enable both print areas for printing
         document.getElementById('printAreaSummary').classList.add('print-active');
         document.getElementById('printAreaDetailed').classList.add('print-active', 'page-break');
 
-        // Page 1: Summary Report
+        // Page 1: Summary Report (Letter Size 1 Page)
         const summaryClone = document.getElementById('printAreaSummary').cloneNode(true);
         summaryClone.classList.remove('hidden');
         modalContent.appendChild(summaryClone);
