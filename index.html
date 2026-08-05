@@ -150,20 +150,33 @@
 
 
   <!-- ========================================== -->
-  <!-- 1. TRAVEL LIQUIDATION LIST SCREEN          -->
+  <!-- 1. TRAVEL LIQUIDATION LIST SCREEN (LANDING)-->
   <!-- ========================================== -->
   <div id="travelListScreen" class="hidden p-2 sm:p-4 md:p-6">
     <div class="max-w-7xl mx-auto bg-white rounded-2xl shadow-sm border border-slate-200 p-4 sm:p-6">
       
-      <!-- Top Bar -->
-      <div class="mb-5 p-2.5 bg-slate-50 rounded-xl border border-slate-200 flex flex-col sm:flex-row items-center justify-between gap-3 text-xs sm:text-sm">
-        <div class="flex items-center gap-2">
-          <span class="w-2.5 h-2.5 rounded-full bg-emerald-500 inline-block"></span>
-          <span id="listUserDisplay" class="font-semibold text-slate-800">Welcome Account Name</span>
+      <!-- Top Bar: User Display, Live Clock, New Liquidation & Logout -->
+      <div class="mb-5 p-3 bg-slate-50 rounded-xl border border-slate-200 flex flex-col md:flex-row items-center justify-between gap-3 text-xs sm:text-sm">
+        
+        <div class="flex flex-wrap items-center gap-3">
+          <!-- Welcome User -->
+          <div class="flex items-center gap-2">
+            <span class="w-2.5 h-2.5 rounded-full bg-emerald-500 inline-block"></span>
+            <span id="listUserDisplay" class="font-bold text-slate-800">Welcome Account Name</span>
+          </div>
+
+          <span class="hidden sm:inline text-slate-300">|</span>
+
+          <!-- Live Date & Time on Landing Page -->
+          <div class="flex items-center gap-2 font-semibold text-slate-600 bg-white px-3 py-1 rounded-lg border border-slate-200/80 shadow-xs text-xs">
+            <span class="w-2 h-2 rounded-full bg-indigo-500"></span>
+            <span id="liveClockDisplay">Loading Date & Time...</span>
+          </div>
         </div>
+
         <div class="flex items-center gap-2">
-          <button onclick="createNewTravel()" class="bg-indigo-600 text-white font-semibold text-xs px-3.5 py-1.5 rounded-lg hover:bg-indigo-700 shadow-sm transition">+ New Liquidation</button>
-          <button onclick="handleLogout()" class="bg-rose-50 text-rose-700 border border-rose-200 font-bold text-xs px-3.5 py-1.5 rounded-lg hover:bg-rose-100 transition">Logout</button>
+          <button onclick="createNewTravel()" class="bg-indigo-600 text-white font-semibold text-xs px-3.5 py-2 rounded-lg hover:bg-indigo-700 shadow-sm transition">+ New Liquidation</button>
+          <button onclick="handleLogout()" class="bg-rose-50 text-rose-700 border border-rose-200 font-bold text-xs px-3.5 py-2 rounded-lg hover:bg-rose-100 transition">Logout</button>
         </div>
       </div>
 
@@ -209,38 +222,25 @@
         Syncing to Cloud...
       </div>
 
-      <!-- Elevated Top Bar: Exit Dashboard, Date & Time, User, Signature & Logout -->
-      <div class="mb-5 p-2 sm:p-2.5 bg-slate-50/90 rounded-xl border border-slate-200/90 flex flex-col lg:flex-row items-stretch lg:items-center justify-between gap-2.5 text-xs sm:text-sm">
+      <!-- Clean Header Bar: Exit Dashboard (Left) & Signature Upload (if not uploaded) / Logout (Right) -->
+      <div class="mb-5 p-2 sm:p-2.5 bg-slate-50/90 rounded-xl border border-slate-200/90 flex items-center justify-between gap-2.5 text-xs sm:text-sm">
         
         <!-- Left: Exit Dashboard Button -->
-        <div class="flex items-center justify-between sm:justify-start gap-2">
-          <button onclick="backToTravelList()" class="bg-rose-50 text-rose-700 border border-rose-200 font-bold px-3.5 py-1.5 rounded-lg hover:bg-rose-100 transition text-xs whitespace-nowrap">
-            Exit Dashboard
-          </button>
-        </div>
+        <button onclick="backToTravelList()" class="bg-rose-50 text-rose-700 border border-rose-200 font-bold px-3.5 py-1.5 rounded-lg hover:bg-rose-100 transition text-xs whitespace-nowrap">
+          Exit Dashboard
+        </button>
 
-        <!-- Middle: Live Date & Time -->
-        <div class="flex items-center justify-center gap-2 font-semibold text-slate-700 bg-white px-3 py-1.5 rounded-lg border border-slate-200/80 shadow-xs">
-          <span class="w-2 h-2 rounded-full bg-indigo-500"></span>
-          <span id="liveClockDisplay">Loading Date & Time...</span>
-        </div>
-
-        <!-- Right: Logged-in User Display, Signature PNG, & Logout -->
-        <div class="flex flex-wrap items-center justify-between lg:justify-end gap-2">
+        <!-- Right: Signature Upload (hides once uploaded) & Logout Button -->
+        <div class="flex items-center gap-2.5">
           
-          <div class="flex items-center gap-1.5 bg-white px-3 py-1.5 rounded-lg border border-slate-200/80">
-            <span id="loggedInUserDisplay" class="font-semibold text-slate-800">Welcome Account Name</span>
-          </div>
-
-          <!-- Signature PNG Upload Button -->
-          <div class="flex items-center gap-1.5">
+          <!-- Signature PNG Upload Container (Automatically hides when signature is uploaded) -->
+          <div id="signatureUploadContainer" class="flex items-center gap-1.5">
             <label class="font-medium text-slate-600 whitespace-nowrap">Signature:</label>
             <div class="flex items-center gap-1">
               <label class="bg-white text-slate-700 border border-slate-300 text-xs font-semibold px-2.5 py-1.5 rounded-lg cursor-pointer hover:bg-slate-50 transition whitespace-nowrap">
                 Upload PNG
                 <input type="file" id="signatureInput" accept="image/png, image/jpeg" class="hidden" onchange="handleSignatureUpload(event)">
               </label>
-              <button type="button" id="removeSigBtn" onclick="removeSignature()" class="hidden bg-rose-50 text-rose-600 border border-rose-200 text-xs font-bold px-2 py-1.5 rounded-lg hover:bg-rose-100 transition" title="Remove Signature">✕</button>
             </div>
           </div>
 
@@ -688,9 +688,6 @@
         
         const listUserDisplay = document.getElementById('listUserDisplay');
         if (listUserDisplay) listUserDisplay.textContent = "Welcome " + accountName;
-
-        const userDisplay = document.getElementById('loggedInUserDisplay');
-        if (userDisplay) userDisplay.textContent = "Welcome " + accountName;
 
         loadUserData();
         resetInactivityTimer();
@@ -1363,6 +1360,21 @@
         handleCategoryChange();
       }
 
+      const sigImgDetailed = document.getElementById('detailedSignatureImg');
+      const sigImgSummary = document.getElementById('summarySignatureImg');
+      const sigUploadContainer = document.getElementById('signatureUploadContainer');
+
+      // HIDE SIGNATURE UPLOAD CONTROLS IF SIGNATURE IS UPLOADED
+      if (signatureDataUrl) {
+        if (sigImgDetailed) { sigImgDetailed.src = signatureDataUrl; sigImgDetailed.classList.remove('hidden'); }
+        if (sigImgSummary) { sigImgSummary.src = signatureDataUrl; sigImgSummary.classList.remove('hidden'); }
+        if (sigUploadContainer) sigUploadContainer.classList.add('hidden');
+      } else {
+        if (sigImgDetailed) { sigImgDetailed.src = ''; sigImgDetailed.classList.add('hidden'); }
+        if (sigImgSummary) { sigImgSummary.src = ''; sigImgSummary.classList.add('hidden'); }
+        if (sigUploadContainer) sigUploadContainer.classList.remove('hidden');
+      }
+
       const tbodyUI = document.getElementById('uiTableBody');
       const tbodyPrintMainDetailed = document.getElementById('printMainTableBodyDetailed');
       const tbodyPrintMiscDetailed = document.getElementById('printMiscTableBodyDetailed');
@@ -1542,20 +1554,6 @@
       const hasDateRange = (startDate !== '' || endDate !== '');
       const reportCA = hasDateRange ? (cashAdvance / 2) : cashAdvance;
       const reportReturnRefund = reportCA - reportTotalSpent;
-
-      const sigImgDetailed = document.getElementById('detailedSignatureImg');
-      const sigImgSummary = document.getElementById('summarySignatureImg');
-      const removeSigBtn = document.getElementById('removeSigBtn');
-
-      if (signatureDataUrl) {
-        if (sigImgDetailed) { sigImgDetailed.src = signatureDataUrl; sigImgDetailed.classList.remove('hidden'); }
-        if (sigImgSummary) { sigImgSummary.src = signatureDataUrl; sigImgSummary.classList.remove('hidden'); }
-        if (removeSigBtn) removeSigBtn.classList.remove('hidden');
-      } else {
-        if (sigImgDetailed) { sigImgDetailed.src = ''; sigImgDetailed.classList.add('hidden'); }
-        if (sigImgSummary) { sigImgSummary.src = ''; sigImgSummary.classList.add('hidden'); }
-        if (removeSigBtn) removeSigBtn.classList.add('hidden');
-      }
 
       document.getElementById('detailedCALabel').textContent = 'TOTAL Cash Advance';
       document.getElementById('detailedTotalTranspo').textContent = formatNum(rTranspo);
