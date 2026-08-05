@@ -328,7 +328,7 @@
               <th class="p-3 text-right">Cash Advance</th>
               <th class="p-3 text-right">Total Spent</th>
               <th class="p-3 text-center">Status</th>
-              <th class="p-3 text-center">Liquidation Entry</th>
+              <th class="p-3 text-center">Liquidation Entry / Actions</th>
             </tr>
           </thead>
           <tbody id="travelListTableBody"></tbody>
@@ -866,7 +866,6 @@
             const ctx = canvas.getContext('2d');
             ctx.drawImage(img, 0, 0, width, height);
 
-            // Compress to standard JPEG format at quality ~65% (typically 80KB-200KB)
             const compressedBase64 = canvas.toDataURL('image/jpeg', quality);
             resolve(compressedBase64);
           };
@@ -1663,12 +1662,45 @@
               ? `<span class="bg-slate-100 text-slate-600 border border-slate-200 px-2 py-0.5 rounded-full font-bold text-[10px]">Archived</span>` 
               : `<span class="bg-emerald-50 text-emerald-700 border border-emerald-200 px-2 py-0.5 rounded-full font-bold text-[10px]">Active</span>`}
           </td>
-          <td class="p-3 text-center">
-            <button onclick="openTravel('${trv.id}')" class="bg-indigo-600 text-white font-semibold px-2.5 py-1 rounded-lg hover:bg-indigo-700 transition text-xs shadow-xs">Open</button>
+          <td class="p-3 text-center whitespace-nowrap space-x-1">
+            <button onclick="openTravel('${trv.id}')" class="bg-indigo-600 text-white font-semibold px-2 py-1 rounded-lg hover:bg-indigo-700 transition text-xs shadow-xs">Open</button>
+            <button onclick="toggleArchiveFromList('${trv.id}')" class="bg-amber-500 text-white font-semibold px-2 py-1 rounded-lg hover:bg-amber-600 transition text-xs shadow-xs">${trv.isArchived ? 'Unarchive' : 'Archive'}</button>
+            <button onclick="deleteTravelFromList('${trv.id}')" class="bg-rose-600 text-white font-semibold px-2 py-1 rounded-lg hover:bg-rose-700 transition text-xs shadow-xs">Delete</button>
           </td>
         `;
         tbody.appendChild(row);
       });
+    }
+
+    function toggleArchiveFromList(trvId) {
+      const found = travels.find(t => t.id === trvId);
+      if (!found) return;
+
+      if (found.isArchived) {
+        if (confirm(`Unarchive / Re-open "${found.regionName}"?`)) {
+          found.isArchived = false;
+          saveDataToStorage();
+          renderTravelListTable();
+        }
+      } else {
+        if (confirm(`Archive "${found.regionName}"? This will lock inputs when opened.`)) {
+          found.isArchived = true;
+          saveDataToStorage();
+          renderTravelListTable();
+        }
+      }
+    }
+
+    function deleteTravelFromList(trvId) {
+      const found = travels.find(t => t.id === trvId);
+      if (!found) return;
+
+      if (confirm(`Are you sure you want to PERMANENTLY DELETE "${found.regionName}"? This action cannot be undone.`)) {
+        travels = travels.filter(t => t.id !== trvId);
+        if (activeTravelId === trvId) activeTravelId = null;
+        saveDataToStorage();
+        renderTravelListTable();
+      }
     }
 
     function createNewTravel() {
