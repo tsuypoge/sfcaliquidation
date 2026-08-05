@@ -692,6 +692,40 @@
     </div>
   </div>
 
+  <!-- ADMIN EDIT PROFILE MODAL -->
+  <div id="adminEditProfileModal" class="hidden fixed inset-0 bg-slate-900/60 backdrop-blur-sm flex justify-center items-center p-4 z-[60] no-print">
+    <div class="bg-white rounded-2xl shadow-2xl max-w-sm w-full p-5 sm:p-6 border border-slate-200">
+      <div class="flex justify-between items-center mb-4 border-b border-slate-100 pb-2">
+        <h3 class="text-base font-bold text-slate-900">👤 Edit User Profile</h3>
+        <button onclick="closeAdminEditProfileModal()" class="text-slate-400 hover:text-slate-600 font-bold text-lg">✕</button>
+      </div>
+
+      <form onsubmit="handleAdminSaveProfile(event)" class="space-y-3.5 text-xs">
+        <input type="hidden" id="adminEditProfileUsername">
+
+        <div>
+          <label class="block text-[10px] font-bold uppercase tracking-wider text-slate-600 mb-1">Full Name</label>
+          <input type="text" id="adminEditProfileNameInput" required placeholder="Full Name" class="w-full p-2 border rounded-xl border-slate-300 focus:ring-2 focus:ring-indigo-500 focus:outline-none">
+        </div>
+
+        <div>
+          <label class="block text-[10px] font-bold uppercase tracking-wider text-slate-600 mb-1">Designation / Position</label>
+          <input type="text" id="adminEditProfileDesigInput" required placeholder="Designation" class="w-full p-2 border rounded-xl border-slate-300 focus:ring-2 focus:ring-indigo-500 focus:outline-none">
+        </div>
+
+        <div>
+          <label class="block text-[10px] font-bold uppercase tracking-wider text-slate-600 mb-1">Email Address</label>
+          <input type="email" id="adminEditProfileEmailInput" required placeholder="Email Address" class="w-full p-2 border rounded-xl border-slate-300 focus:ring-2 focus:ring-indigo-500 focus:outline-none">
+        </div>
+
+        <div class="flex justify-end gap-2 pt-2">
+          <button type="button" onclick="closeAdminEditProfileModal()" class="bg-slate-100 text-slate-700 font-semibold px-3 py-1.5 rounded-xl hover:bg-slate-200">Cancel</button>
+          <button type="submit" class="bg-indigo-600 text-white font-bold px-4 py-1.5 rounded-xl hover:bg-indigo-700 shadow-xs">Save Changes</button>
+        </div>
+      </form>
+    </div>
+  </div>
+
   <script>
     // FIREBASE REALTIME DATABASE CONFIGURATION
     const firebaseConfig = {
@@ -1133,80 +1167,57 @@
               ? `<span class="bg-indigo-50 text-indigo-700 border border-indigo-200 px-2 py-0.5 rounded-full font-bold text-[10px]">Updated</span>` 
               : `<span class="bg-slate-100 text-slate-600 border border-slate-200 px-2 py-0.5 rounded-full font-bold text-[10px]">Default</span>`}
           </td>
-          <td class="p-3 text-center whitespace-nowrap space-x-1">
-            <button onclick="adminEditUserName('${u.username}')" class="bg-indigo-50 text-indigo-700 border border-indigo-200 font-semibold px-2 py-0.5 rounded text-xs hover:bg-indigo-100 transition">Edit Name</button>
-            <button onclick="adminEditUserDesignation('${u.username}')" class="bg-purple-50 text-purple-700 border border-purple-200 font-semibold px-2 py-0.5 rounded text-xs hover:bg-purple-100 transition">Edit Desig</button>
-            <button onclick="adminEditUserEmail('${u.username}')" class="bg-emerald-50 text-emerald-700 border border-emerald-200 font-semibold px-2 py-0.5 rounded text-xs hover:bg-emerald-100 transition">Edit Email</button>
-            <button onclick="adminResetUserPassword('${u.username}')" class="bg-rose-50 text-rose-700 border border-rose-200 font-semibold px-2 py-0.5 rounded text-xs hover:bg-rose-100 transition">Reset Pass</button>
+          <td class="p-3 text-center whitespace-nowrap space-x-1.5">
+            <button onclick="adminOpenEditProfileModal('${u.username}')" class="bg-indigo-50 text-indigo-700 border border-indigo-200 font-semibold px-2.5 py-1 rounded-lg hover:bg-indigo-100 transition text-xs">Edit Profile</button>
+            <button onclick="adminResetUserPassword('${u.username}')" class="bg-rose-50 text-rose-700 border border-rose-200 font-semibold px-2.5 py-1 rounded-lg hover:bg-rose-100 transition text-xs">Reset Pass</button>
           </td>
         `;
         tbody.appendChild(row);
       });
     }
 
-    async function adminEditUserName(username) {
+    function adminOpenEditProfileModal(username) {
       const uKey = username.replace(/[^a-zA-Z0-9]/g, '_');
       const foundUser = USERS_DB.find(u => u.username.toLowerCase() === username.toLowerCase());
-      
-      let currentName = foundUser ? foundUser.name : '';
-      if (allCredentialsGlobalData[uKey] && allCredentialsGlobalData[uKey].name) {
-        currentName = allCredentialsGlobalData[uKey].name;
-      }
+      const customCreds = allCredentialsGlobalData[uKey] || {};
 
-      const newName = prompt(`Edit Full Name for @${username}:`, currentName);
-      if (newName === null || newName.trim() === '') return;
+      const currentName = customCreds.name || (foundUser ? foundUser.name : '');
+      const currentDesig = customCreds.designation || (foundUser ? foundUser.designation : 'Audit Specialist');
+      const currentEmail = customCreds.email || (foundUser ? foundUser.email : `${username}@sfcaliquidation.biz`);
 
-      try {
-        if (db) {
-          await db.ref('credentials/' + uKey + '/name').set(newName.trim());
-          alert(`Full Name for @${username} updated to "${newName.trim()}"!`);
-        }
-      } catch(err) {
-        alert("Failed to update name. Please try again.");
-      }
+      document.getElementById('adminEditProfileUsername').value = username;
+      document.getElementById('adminEditProfileNameInput').value = currentName;
+      document.getElementById('adminEditProfileDesigInput').value = currentDesig;
+      document.getElementById('adminEditProfileEmailInput').value = currentEmail;
+
+      document.getElementById('adminEditProfileModal').classList.remove('hidden');
     }
 
-    async function adminEditUserDesignation(username) {
-      const uKey = username.replace(/[^a-zA-Z0-9]/g, '_');
-      const foundUser = USERS_DB.find(u => u.username.toLowerCase() === username.toLowerCase());
-      
-      let currentDesig = (foundUser && foundUser.designation) ? foundUser.designation : 'Audit Specialist';
-      if (allCredentialsGlobalData[uKey] && allCredentialsGlobalData[uKey].designation) {
-        currentDesig = allCredentialsGlobalData[uKey].designation;
-      }
-
-      const newDesig = prompt(`Edit Designation / Position for @${username}:`, currentDesig);
-      if (newDesig === null || newDesig.trim() === '') return;
-
-      try {
-        if (db) {
-          await db.ref('credentials/' + uKey + '/designation').set(newDesig.trim());
-          alert(`Designation for @${username} updated to "${newDesig.trim()}"!`);
-        }
-      } catch(err) {
-        alert("Failed to update designation. Please try again.");
-      }
+    function closeAdminEditProfileModal() {
+      document.getElementById('adminEditProfileModal').classList.add('hidden');
     }
 
-    async function adminEditUserEmail(username) {
+    async function handleAdminSaveProfile(e) {
+      e.preventDefault();
+      const username = document.getElementById('adminEditProfileUsername').value;
       const uKey = username.replace(/[^a-zA-Z0-9]/g, '_');
-      const foundUser = USERS_DB.find(u => u.username.toLowerCase() === username.toLowerCase());
-      
-      let currentEmail = (foundUser && foundUser.email) ? foundUser.email : `${username}@sfcaliquidation.biz`;
-      if (allCredentialsGlobalData[uKey] && allCredentialsGlobalData[uKey].email) {
-        currentEmail = allCredentialsGlobalData[uKey].email;
-      }
 
-      const newEmail = prompt(`Edit Email Address for @${username}:`, currentEmail);
-      if (newEmail === null || newEmail.trim() === '') return;
+      const newName = document.getElementById('adminEditProfileNameInput').value.trim();
+      const newDesig = document.getElementById('adminEditProfileDesigInput').value.trim();
+      const newEmail = document.getElementById('adminEditProfileEmailInput').value.trim().toLowerCase();
 
       try {
         if (db) {
-          await db.ref('credentials/' + uKey + '/email').set(newEmail.trim().toLowerCase());
-          alert(`Email for @${username} updated to "${newEmail.trim().toLowerCase()}"!`);
+          await db.ref('credentials/' + uKey).update({
+            name: newName,
+            designation: newDesig,
+            email: newEmail
+          });
+          alert(`Profile for @${username} updated successfully!`);
+          closeAdminEditProfileModal();
         }
       } catch(err) {
-        alert("Failed to update email. Please try again.");
+        alert("Failed to update profile. Please try again.");
       }
     }
 
@@ -1479,7 +1490,6 @@
       const pass = document.getElementById('passwordInput').value.trim();
       const errorDiv = document.getElementById('loginError');
 
-      // Match user by username OR email address
       const foundUser = USERS_DB.find(u => 
         u.username.toLowerCase() === userOrEmailInput || 
         (u.email && u.email.toLowerCase() === userOrEmailInput)
