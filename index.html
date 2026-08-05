@@ -433,7 +433,7 @@
   </div>
 
 
-  <!-- PRINT SUMMARY VIEW (SIDE-BY-SIDE TABLES) -->
+  <!-- PRINT SUMMARY VIEW (HORIZONTAL SIDE-BY-SIDE CATEGORY TABLE) -->
   <div id="printAreaSummary" class="hidden font-sans">
     <h2 class="text-2xl font-bold text-gray-800 mb-2 font-sans">CA Liquidation Report</h2>
     <div class="mb-5 text-sm font-semibold text-gray-800 space-y-1">
@@ -441,26 +441,37 @@
       <p>Date(s): <span id="printDateRange" class="font-bold underline">N/A</span></p>
     </div>
 
-    <!-- SIDE-BY-SIDE TABLES FLEX CONTAINER -->
-    <div class="flex flex-row items-start gap-6 mb-8">
-      
-      <!-- LEFT TABLE: MAIN BREAKDOWN (Cash Advance & Return/Refund rows removed) -->
-      <div class="overflow-x-auto flex-1 max-w-xl">
-        <table class="w-full text-left border-collapse border border-gray-400">
-          <tbody>
-            <tr><td class="font-bold text-gray-800 w-52">Name of Account</td><td id="printAccountNameMainSummary" class="font-bold text-gray-900">Name of Account</td></tr>
-            <tr><td class="text-gray-800">Total Transpo</td><td id="printTotalTranspoSummary" class="text-right font-medium text-gray-900">0.00</td></tr>
-            <tr><td class="text-gray-800">Total Meals</td><td id="printTotalMealsSummary" class="text-right font-medium text-gray-900">0.00</td></tr>
-            <tr><td class="text-gray-800">Total Per Diem</td><td id="printTotalPerDiemSummary" class="text-right font-medium text-gray-900">0.00</td></tr>
-            <tr><td class="text-gray-800">Terminal Fee</td><td id="printTotalTerminalFeeSummary" class="text-right font-medium text-gray-900">0.00</td></tr>
-            <tr><td class="text-gray-800">Miscellaneous</td><td id="printTotalMiscSummary" class="text-right font-medium text-gray-900">0.00</td></tr>
-            <tr class="bg-gray-100 font-bold"><td class="text-gray-800">Total Expenses</td><td id="printTotalExpensesSummary1" class="text-right text-gray-900">0.00</td></tr>
-          </tbody>
-        </table>
-      </div>
+    <!-- HORIZONTAL TABLE (Transpo, Meals, Per Diem, Terminal Fee, Misc Side-by-Side) -->
+    <div class="overflow-x-auto mb-8">
+      <table class="w-full text-center border-collapse border border-gray-400">
+        <thead>
+          <tr class="bg-gray-100 font-bold text-gray-800">
+            <th class="border border-gray-400 p-2 text-left">Name of Account</th>
+            <th class="border border-gray-400 p-2 text-right">Total Transpo</th>
+            <th class="border border-gray-400 p-2 text-right">Total Meals</th>
+            <th class="border border-gray-400 p-2 text-right">Total Per Diem</th>
+            <th class="border border-gray-400 p-2 text-right">Terminal Fee</th>
+            <th class="border border-gray-400 p-2 text-right">Miscellaneous</th>
+            <th class="border border-gray-400 p-2 text-right bg-gray-200">Total Expenses</th>
+          </tr>
+        </thead>
+        <tbody>
+          <tr>
+            <td id="printAccountNameMainSummary" class="border border-gray-400 p-2 font-bold text-left">Name of Account</td>
+            <td id="printTotalTranspoSummary" class="border border-gray-400 p-2 text-right">0.00</td>
+            <td id="printTotalMealsSummary" class="border border-gray-400 p-2 text-right">0.00</td>
+            <td id="printTotalPerDiemSummary" class="border border-gray-400 p-2 text-right">0.00</td>
+            <td id="printTotalTerminalFeeSummary" class="border border-gray-400 p-2 text-right">0.00</td>
+            <td id="printTotalMiscSummary" class="border border-gray-400 p-2 text-right">0.00</td>
+            <td id="printTotalExpensesSummary1" class="border border-gray-400 p-2 text-right font-bold bg-gray-100">0.00</td>
+          </tr>
+        </tbody>
+      </table>
+    </div>
 
-      <!-- RIGHT TABLE: SUMMARY BOX -->
-      <div class="w-72 sm:w-80">
+    <!-- SUMMARY BOX BELOW -->
+    <div class="space-y-10">
+      <div class="w-80">
         <h3 class="font-bold text-base text-gray-800 mb-1">Summary</h3>
         <table class="w-full text-left border-collapse border border-gray-400">
           <tbody>
@@ -471,28 +482,27 @@
         </table>
       </div>
 
+      <!-- SIGNATURES SECTION -->
+      <table class="w-full mt-8 no-border-table" style="border: none !important;">
+        <tr style="border: none !important;">
+          <td style="border: none !important; width: 50%; vertical-align: bottom; padding-right: 40px;">
+            <p class="font-bold text-gray-800 text-sm" style="margin-bottom: 5px;">Submitted by:</p>
+            <div style="height: 45px; display: flex; align-items: flex-end;">
+              <img id="summarySignatureImg" src="" class="hidden" style="max-height: 45px; max-width: 160px; object-fit: contain; margin-bottom: -5px;" />
+            </div>
+            <p id="printAccountNameSubSummary" class="font-bold text-gray-800 text-sm" style="margin:0; padding:0;">Name of Account</p>
+            <div style="border-top: 1px solid black; width: 100%; margin-top: 2px;"></div>
+            <p class="text-xs text-gray-600 mt-1">Signature over printed name</p>
+          </td>
+          <td style="border: none !important; width: 50%; vertical-align: bottom; padding-left: 40px;">
+            <p class="font-bold text-gray-800 text-sm" style="margin-bottom: 50px;">Checked by:</p>
+            <p class="font-bold text-gray-800 text-sm" style="margin:0; padding:0;">&nbsp;</p>
+            <div style="border-top: 1px solid black; width: 100%; margin-top: 2px;"></div>
+            <p class="text-xs text-gray-600 mt-1">Signature over printed name</p>
+          </td>
+        </tr>
+      </table>
     </div>
-
-    <!-- SIGNATURES SECTION -->
-    <table class="w-full mt-8 no-border-table" style="border: none !important;">
-      <tr style="border: none !important;">
-        <td style="border: none !important; width: 50%; vertical-align: bottom; padding-right: 40px;">
-          <p class="font-bold text-gray-800 text-sm" style="margin-bottom: 5px;">Submitted by:</p>
-          <div style="height: 45px; display: flex; align-items: flex-end;">
-            <img id="summarySignatureImg" src="" class="hidden" style="max-height: 45px; max-width: 160px; object-fit: contain; margin-bottom: -5px;" />
-          </div>
-          <p id="printAccountNameSubSummary" class="font-bold text-gray-800 text-sm" style="margin:0; padding:0;">Name of Account</p>
-          <div style="border-top: 1px solid black; width: 100%; margin-top: 2px;"></div>
-          <p class="text-xs text-gray-600 mt-1">Signature over printed name</p>
-        </td>
-        <td style="border: none !important; width: 50%; vertical-align: bottom; padding-left: 40px;">
-          <p class="font-bold text-gray-800 text-sm" style="margin-bottom: 50px;">Checked by:</p>
-          <p class="font-bold text-gray-800 text-sm" style="margin:0; padding:0;">&nbsp;</p>
-          <div style="border-top: 1px solid black; width: 100%; margin-top: 2px;"></div>
-          <p class="text-xs text-gray-600 mt-1">Signature over printed name</p>
-        </td>
-      </tr>
-    </table>
   </div>
 
 
@@ -1224,9 +1234,9 @@
 
       document.getElementById('printAccountNameMainSummary').textContent = accountName || 'Name of Account';
       document.getElementById('printTotalTranspoSummary').textContent = formatNum(rTranspo);
-      document.getElementById('printTotalTerminalFeeSummary').textContent = formatNum(rTerminal);
       document.getElementById('printTotalMealsSummary').textContent = formatNum(rMeals);
       document.getElementById('printTotalPerDiemSummary').textContent = formatNum(rPerDiem);
+      document.getElementById('printTotalTerminalFeeSummary').textContent = formatNum(rTerminal);
       document.getElementById('printTotalMiscSummary').textContent = formatNum(rMisc);
 
       document.getElementById('printTotalExpensesSummary1').textContent = formatNum(reportTotalSpent);
