@@ -586,24 +586,40 @@
       return currentUsername ? currentUsername.replace(/[^a-zA-Z0-9]/g, '_') : 'guest';
     }
 
+    // HELPER TO SHOW A SPECIFIC SCREEN SAFELY
+    function showScreen(screenId) {
+      const login = document.getElementById('loginScreen');
+      const list = document.getElementById('travelListScreen');
+      const dash = document.getElementById('mainDashboard');
+
+      if (login) login.classList.add('hidden');
+      if (list) list.classList.add('hidden');
+      if (dash) dash.classList.add('hidden');
+
+      const target = document.getElementById(screenId);
+      if (target) target.classList.remove('hidden');
+    }
+
     function checkAuthStatus() {
       const isLoggedIn = sessionStorage.getItem('travel_is_logged_in') === 'true';
       if (isLoggedIn) {
-        document.getElementById('loginScreen').classList.add('hidden');
-        
         currentUsername = sessionStorage.getItem('travel_logged_username') || '';
         accountName = sessionStorage.getItem('travel_logged_user_name') || 'User Account';
         
         const listUserDisplay = document.getElementById('listUserDisplay');
         if (listUserDisplay) listUserDisplay.textContent = "Welcome " + accountName;
 
+        if (activeTravelId) {
+          showScreen('mainDashboard');
+        } else {
+          showScreen('travelListScreen');
+        }
+
         setupRealtimeFirebaseListener();
         resetInactivityTimer();
       } else {
         clearTimeout(inactivityTimer);
-        document.getElementById('loginScreen').classList.remove('hidden');
-        document.getElementById('travelListScreen').classList.add('hidden');
-        document.getElementById('mainDashboard').classList.add('hidden');
+        showScreen('loginScreen');
       }
     }
 
@@ -614,26 +630,30 @@
       try {
         db.ref('users/' + userKey).on('value', (snapshot) => {
           const val = snapshot.val();
-          if (val) {
-            travels = val.travels || [];
-            signatureDataUrl = val.signatureDataUrl || '';
-            
-            renderTravelListTable();
+          travels = (val && val.travels) ? val.travels : [];
+          signatureDataUrl = (val && val.signatureDataUrl) ? val.signatureDataUrl : '';
+          
+          renderTravelListTable();
 
-            if (activeTravelId) {
-              const found = travels.find(t => t.id === activeTravelId);
-              if (found) {
-                regionName = found.regionName || '';
-                cashAdvance = found.cashAdvance || 0;
-                isArchived = found.isArchived === true;
-                expenses = found.expenses || [];
-                updateUIFields();
-              }
+          if (activeTravelId) {
+            const found = travels.find(t => t.id === activeTravelId);
+            if (found) {
+              regionName = found.regionName || '';
+              cashAdvance = found.cashAdvance || 0;
+              isArchived = found.isArchived === true;
+              expenses = found.expenses || [];
+              updateUIFields();
+              showScreen('mainDashboard');
             } else {
-              const activeTravel = travels.find(t => !t.isArchived);
-              if (activeTravel && document.getElementById('mainDashboard').classList.contains('hidden')) {
-                openTravel(activeTravel.id);
-              }
+              activeTravelId = null;
+              showScreen('travelListScreen');
+            }
+          } else {
+            const activeTravel = travels.find(t => !t.isArchived);
+            if (activeTravel) {
+              openTravel(activeTravel.id);
+            } else {
+              showScreen('travelListScreen');
             }
           }
         });
@@ -743,8 +763,7 @@
       isArchived = found.isArchived === true;
       expenses = found.expenses || [];
 
-      document.getElementById('travelListScreen').classList.add('hidden');
-      document.getElementById('mainDashboard').classList.remove('hidden');
+      showScreen('mainDashboard');
 
       const headerReg = document.getElementById('headerRegionDisplay');
       if (headerReg) headerReg.textContent = regionName || 'Travel';
@@ -758,10 +777,10 @@
     }
 
     async function backToTravelList() {
-      await showLoading('Returning to Dashboard...', 400);
+      await showLoading('Returning to Dashboard...', 300);
       saveActiveTravelData();
-      document.getElementById('mainDashboard').classList.add('hidden');
-      document.getElementById('travelListScreen').classList.remove('hidden');
+      activeTravelId = null;
+      showScreen('travelListScreen');
       renderTravelListTable();
     }
 
@@ -831,10 +850,11 @@
     }
 
     async function handleLogout() {
-      await showLoading('Logging out...', 500);
+      await showLoading('Logging out...', 400);
       sessionStorage.removeItem('travel_is_logged_in');
       sessionStorage.removeItem('travel_logged_username');
       sessionStorage.removeItem('travel_logged_user_name');
+      activeTravelId = null;
       checkAuthStatus();
     }
 
