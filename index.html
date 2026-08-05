@@ -121,6 +121,15 @@
 <body class="bg-slate-100/70 font-sans min-h-screen text-slate-800">
 
   <!-- ========================================== -->
+  <!-- LOADING OVERLAY SPINNER                    -->
+  <!-- ========================================== -->
+  <div id="loadingOverlay" class="hidden fixed inset-0 bg-slate-900/60 backdrop-blur-sm flex flex-col justify-center items-center z-[100] text-white no-print">
+    <div class="w-10 h-10 border-4 border-indigo-400 border-t-transparent rounded-full animate-spin mb-3"></div>
+    <p id="loadingText" class="text-xs font-semibold tracking-wide">Processing...</p>
+  </div>
+
+
+  <!-- ========================================== -->
   <!-- 0. LOGIN PAGE SCREEN                      -->
   <!-- ========================================== -->
   <div id="loginScreen" class="min-h-screen flex items-center justify-center p-4 bg-slate-900">
@@ -700,6 +709,20 @@
       window.addEventListener(eventName, resetInactivityTimer, true);
     });
 
+    function showLoading(text, duration) {
+      return new Promise(resolve => {
+        const overlay = document.getElementById('loadingOverlay');
+        const textElem = document.getElementById('loadingText');
+        if (textElem) textElem.textContent = text || 'Processing...';
+        if (overlay) overlay.classList.remove('hidden');
+
+        setTimeout(() => {
+          if (overlay) overlay.classList.add('hidden');
+          resolve();
+        }, duration);
+      });
+    }
+
     function getStorageKey(keyName) {
       return currentUsername ? `${keyName}_${currentUsername}` : keyName;
     }
@@ -879,7 +902,8 @@
       openPreviewModal('combined');
     }
 
-    function backToTravelList() {
+    async function backToTravelList() {
+      await showLoading('Returning to Dashboard...', 600);
       saveActiveTravelData();
       document.getElementById('mainDashboard').classList.add('hidden');
       document.getElementById('travelListScreen').classList.remove('hidden');
@@ -925,7 +949,7 @@
       }
     }
 
-    function handleLogin(event) {
+    async function handleLogin(event) {
       event.preventDefault();
       const user = document.getElementById('usernameInput').value.trim().toLowerCase();
       const pass = document.getElementById('passwordInput').value.trim();
@@ -934,6 +958,7 @@
       const foundUser = USERS_DB.find(u => u.username.toLowerCase() === user && u.password === pass);
 
       if (foundUser) {
+        await showLoading('Signing in...', 1000);
         sessionStorage.setItem('travel_is_logged_in', 'true');
         sessionStorage.setItem('travel_logged_username', foundUser.username);
         sessionStorage.setItem('travel_logged_user_name', foundUser.name);
@@ -950,8 +975,9 @@
       }
     }
 
-    // DIRECT LOGOUT WITHOUT CONFIRMATION PROMPT
-    function handleLogout() {
+    // DIRECT LOGOUT WITH DELAY
+    async function handleLogout() {
+      await showLoading('Logging out...', 800);
       sessionStorage.removeItem('travel_is_logged_in');
       sessionStorage.removeItem('travel_logged_username');
       sessionStorage.removeItem('travel_logged_user_name');
