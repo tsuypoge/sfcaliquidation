@@ -497,7 +497,7 @@
       <img src="logo.png" alt="Logo" class="mx-auto block" style="max-height: 40px; width: auto;">
     </div>
     <div class="mb-3 report-header">
-      <p>Region / Area : StrikeForce/Fraud Audit-IAD</p>
+      <p>Region / Area : <span id="printDepartmentName">StrikeForce/Fraud Audit-IAD</span></p>
       <p>Cash Advance Expenses Liquidation</p>
       <p>Region: <span id="printRegionName">N/A</span></p>
       <p>Date: <span id="printDateRange">N/A</span></p>
@@ -548,6 +548,7 @@
             </div>
             <p id="printAccountNameSubSummary" class="font-bold text-gray-800 text-xs" style="margin:0; padding:0;">Name of Account</p>
             <p id="printAccountDesignationSubSummary" class="text-[10px] text-gray-700 italic font-medium" style="margin:0; padding:0;"></p>
+            <p id="printAccountDepartmentSubSummary" class="text-[9px] text-gray-600 font-medium" style="margin:0; padding:0;"></p>
             <div style="border-top: 1px solid black; width: 100%; margin-top: 2px;"></div>
             <p class="text-[10px] text-gray-600 mt-0.5">Signature over printed name</p>
           </td>
@@ -567,7 +568,7 @@
       <img src="logo.png" alt="Logo" class="mx-auto block" style="max-height: 40px; width: auto;">
     </div>
     <div class="mb-3 report-header">
-      <p>Region / Area : StrikeForce/Fraud Audit-IAD</p>
+      <p>Region / Area : <span id="detailedDepartmentName">StrikeForce/Fraud Audit-IAD</span></p>
       <p>Cash Advance Expenses Liquidation</p>
       <p>Region: <span id="detailedRegionName">N/A</span></p>
       <p>Date: <span id="detailedDateRange">N/A</span></p>
@@ -627,6 +628,7 @@
             </div>
             <p id="detailedAccountName1" class="font-bold text-gray-800 text-xs" style="margin:0; padding:0;">Name of Account</p>
             <p id="detailedAccountDesignation1" class="text-[10px] text-gray-700 italic font-medium" style="margin:0; padding:0;"></p>
+            <p id="detailedAccountDepartment1" class="text-[9px] text-gray-600 font-medium" style="margin:0; padding:0;"></p>
             <div style="border-top: 1px solid black; width: 100%; margin-top: 2px;"></div>
             <p class="text-[10px] text-gray-600 mt-0.5">Signature over printed name</p>
           </td>
@@ -760,19 +762,19 @@
 
     // Enrolled Users Database
     const USERS_DB = [
-      { username: "m.aca-ac", email: "m.aca-ac@sfcaliquidation.biz", password: "aca-ac", name: "Michaelfel T. Aca-ac", designation: "Audit Specialist", department: "Internal Audit Department" },
-      { username: "r.duero", email: "r.duero@sfcaliquidation.biz", password: "duero", name: "Rey John A. Duero", designation: "Audit Specialist", department: "Internal Audit Department" },
-      { username: "s.genobaten", email: "s.genobaten@sfcaliquidation.biz", password: "genobaten", name: "Samuel IV F. Genobaten", designation: "Audit Specialist", department: "Internal Audit Department" },
-      { username: "m.nambatac", email: "m.nambatac@sfcaliquidation.biz", password: "nambatac", name: "Mario B. Nambatac", designation: "Audit Specialist", department: "Internal Audit Department" },
-      { username: "e.agsoy", email: "e.agsoy@sfcaliquidation.biz", password: "agsoy", name: "Eduardo R. Agsoy, Jr.", designation: "Audit Specialist", department: "Internal Audit Department" },
-      { username: "n.calasang", email: "n.calasang@sfcaliquidation.biz", password: "calasang", name: "Neil Erick D. Calasang", designation: "Audit Specialist", department: "Internal Audit Department" },
-      { username: "n.salva", email: "n.salva@sfcaliquidation.biz", password: "salva", name: "Nestor N. Salva", designation: "Audit Specialist", department: "Internal Audit Department" },
-      { username: "e.interone", email: "e.interone@sfcaliquidation.biz", password: "interone", name: "Edgardo T. Interone", designation: "Audit Specialist", department: "Internal Audit Department" },
-      { username: "l.ugay", email: "l.ugay@sfcaliquidation.biz", password: "ugay", name: "Le Cris L. Ugay", designation: "Audit Specialist", department: "Internal Audit Department" },
-      { username: "a.ortega", email: "a.ortega@sfcaliquidation.biz", password: "ortega", name: "Ace G. Ortega", designation: "Audit Specialist", department: "Internal Audit Department" },
-      { username: "j.cagang", email: "j.cagang@sfcaliquidation.biz", password: "cagang", name: "Jonathan R. Cagang", designation: "Audit Specialist", department: "Internal Audit Department" },
-      { username: "r.cenera", email: "r.cenera@sfcaliquidation.biz", password: "cenera", name: "Ricardo R. Cenera", designation: "Audit Specialist", department: "Internal Audit Department" },
-      { username: "h.entienza", email: "h.entienza@sfcaliquidation.biz", password: "entienza", name: "Hendrix T. Entienza", designation: "Audit Specialist", department: "Internal Audit Department" },
+      { username: "m.aca-ac", email: "m.aca-ac@sfcaliquidation.biz", password: "aca-ac", name: "Michaelfel T. Aca-ac", designation: "Audit Specialist", department: "StrikeForce/Fraud Audit-IAD" },
+      { username: "r.duero", email: "r.duero@sfcaliquidation.biz", password: "duero", name: "Rey John A. Duero", designation: "Audit Specialist", department: "StrikeForce/Fraud Audit-IAD" },
+      { username: "s.genobaten", email: "s.genobaten@sfcaliquidation.biz", password: "genobaten", name: "Samuel IV F. Genobaten", designation: "Audit Specialist", department: "StrikeForce/Fraud Audit-IAD" },
+      { username: "m.nambatac", email: "m.nambatac@sfcaliquidation.biz", password: "nambatac", name: "Mario B. Nambatac", designation: "Audit Specialist", department: "StrikeForce/Fraud Audit-IAD" },
+      { username: "e.agsoy", email: "e.agsoy@sfcaliquidation.biz", password: "agsoy", name: "Eduardo R. Agsoy, Jr.", designation: "Audit Specialist", department: "StrikeForce/Fraud Audit-IAD" },
+      { username: "n.calasang", email: "n.calasang@sfcaliquidation.biz", password: "calasang", name: "Neil Erick D. Calasang", designation: "Audit Specialist", department: "StrikeForce/Fraud Audit-IAD" },
+      { username: "n.salva", email: "n.salva@sfcaliquidation.biz", password: "salva", name: "Nestor N. Salva", designation: "Audit Specialist", department: "StrikeForce/Fraud Audit-IAD" },
+      { username: "e.interone", email: "e.interone@sfcaliquidation.biz", password: "interone", name: "Edgardo T. Interone", designation: "Audit Specialist", department: "StrikeForce/Fraud Audit-IAD" },
+      { username: "l.ugay", email: "l.ugay@sfcaliquidation.biz", password: "ugay", name: "Le Cris L. Ugay", designation: "Audit Specialist", department: "StrikeForce/Fraud Audit-IAD" },
+      { username: "a.ortega", email: "a.ortega@sfcaliquidation.biz", password: "ortega", name: "Ace G. Ortega", designation: "Audit Specialist", department: "StrikeForce/Fraud Audit-IAD" },
+      { username: "j.cagang", email: "j.cagang@sfcaliquidation.biz", password: "cagang", name: "Jonathan R. Cagang", designation: "Audit Specialist", department: "StrikeForce/Fraud Audit-IAD" },
+      { username: "r.cenera", email: "r.cenera@sfcaliquidation.biz", password: "cenera", name: "Ricardo R. Cenera", designation: "Audit Specialist", department: "StrikeForce/Fraud Audit-IAD" },
+      { username: "h.entienza", email: "h.entienza@sfcaliquidation.biz", password: "entienza", name: "Hendrix T. Entienza", designation: "Audit Specialist", department: "StrikeForce/Fraud Audit-IAD" },
       { username: "admin", email: "admin@sfcaliquidation.biz", password: "1234", name: "Administrator", designation: "System Administrator", department: "Executive Office" }
     ];
 
@@ -892,7 +894,7 @@
           let userKey = foundUser.username.replace(/[^a-zA-Z0-9]/g, '_');
           let dynamicName = foundUser.name;
           let dynamicDesig = foundUser.designation || 'Audit Specialist';
-          let dynamicDept = foundUser.department || 'Internal Audit Department';
+          let dynamicDept = foundUser.department || 'StrikeForce/Fraud Audit-IAD';
           let dynamicEmail = googleEmail;
 
           if (db) {
@@ -1000,7 +1002,7 @@
         });
 
         document.querySelectorAll('.userDepartmentDisplay').forEach(el => {
-          el.textContent = accountDepartment || 'Internal Audit Department';
+          el.textContent = accountDepartment || 'StrikeForce/Fraud Audit-IAD';
         });
 
         const isUserAdmin = currentUsername.toLowerCase() === 'admin';
@@ -1252,7 +1254,7 @@
         
         const displayName = customCreds.name || u.name;
         const displayDesig = customCreds.designation || u.designation || 'Audit Specialist';
-        const displayDept = customCreds.department || u.department || 'Internal Audit Department';
+        const displayDept = customCreds.department || u.department || 'StrikeForce/Fraud Audit-IAD';
         const displayEmail = customCreds.email || u.email || `${u.username}@sfcaliquidation.biz`;
 
         const isCustomPass = customCreds.password;
@@ -1293,7 +1295,7 @@
 
       const currentName = customCreds.name || (foundUser ? foundUser.name : '');
       const currentDesig = customCreds.designation || (foundUser ? foundUser.designation : 'Audit Specialist');
-      const currentDept = customCreds.department || (foundUser ? foundUser.department : 'Internal Audit Department');
+      const currentDept = customCreds.department || (foundUser ? foundUser.department : 'StrikeForce/Fraud Audit-IAD');
       const currentEmail = customCreds.email || (foundUser ? foundUser.email : `${username}@sfcaliquidation.biz`);
 
       document.getElementById('adminEditProfileUsername').value = username;
@@ -1345,7 +1347,7 @@
       currentUsername = foundUserObj ? foundUserObj.username : uKey;
       accountName = customCreds.name || (foundUserObj ? foundUserObj.name : uKey);
       accountDesignation = customCreds.designation || (foundUserObj ? foundUserObj.designation : 'Audit Specialist');
-      accountDepartment = customCreds.department || (foundUserObj ? foundUserObj.department : 'Internal Audit Department');
+      accountDepartment = customCreds.department || (foundUserObj ? foundUserObj.department : 'StrikeForce/Fraud Audit-IAD');
       accountEmail = customCreds.email || (foundUserObj ? foundUserObj.email : '');
 
       travels = uData.travels;
@@ -1619,7 +1621,7 @@
       let validPass = foundUser.password;
       let dynamicName = foundUser.name;
       let dynamicDesig = foundUser.designation || 'Audit Specialist';
-      let dynamicDept = foundUser.department || 'Internal Audit Department';
+      let dynamicDept = foundUser.department || 'StrikeForce/Fraud Audit-IAD';
       let dynamicEmail = foundUser.email || `${foundUser.username}@sfcaliquidation.biz`;
 
       const userKey = foundUser.username.replace(/[^a-zA-Z0-9]/g, '_');
@@ -2272,6 +2274,13 @@
       const reportCA = hasDateRange ? (cashAdvance / 2) : cashAdvance;
       const reportReturnRefund = reportCA - reportTotalSpent;
 
+      const currentDept = accountDepartment || 'StrikeForce/Fraud Audit-IAD';
+
+      const printDeptElem = document.getElementById('printDepartmentName');
+      const detailedDeptElem = document.getElementById('detailedDepartmentName');
+      if (printDeptElem) printDeptElem.textContent = currentDept;
+      if (detailedDeptElem) detailedDeptElem.textContent = currentDept;
+
       document.getElementById('detailedCALabel').textContent = 'TOTAL Cash Advance';
       document.getElementById('detailedTotalTranspo').textContent = formatNum(rTranspo);
       document.getElementById('detailedTotalMeals').textContent = formatNum(rMeals);
@@ -2285,6 +2294,9 @@
       
       document.getElementById('detailedAccountName1').textContent = accountName || 'Name of Account';
       document.getElementById('detailedAccountDesignation1').textContent = accountDesignation || 'Audit Specialist';
+      
+      const detailedAccountDept1 = document.getElementById('detailedAccountDepartment1');
+      if (detailedAccountDept1) detailedAccountDept1.textContent = accountDepartment || '';
 
       const currentRegionText = regionName || 'N/A';
       let dateRangeText = 'N/A';
@@ -2321,6 +2333,9 @@
       
       document.getElementById('printAccountNameSubSummary').textContent = accountName || 'Name of Account';
       document.getElementById('printAccountDesignationSubSummary').textContent = accountDesignation || 'Audit Specialist';
+
+      const printAccountDeptSubSummary = document.getElementById('printAccountDepartmentSubSummary');
+      if (printAccountDeptSubSummary) printAccountDeptSubSummary.textContent = accountDepartment || '';
 
       const totalSpent = totalTranspo + totalMeals + totalPerDiem + totalTerminalFee + totalMisc;
       const returnRefund = cashAdvance - totalSpent;
