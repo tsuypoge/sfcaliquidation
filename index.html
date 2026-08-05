@@ -1241,7 +1241,6 @@
       }
     }
 
-    // INSTANT LOCAL SAVE & UI UPDATE ON EXPENSE SUBMIT
     document.getElementById('expenseForm').addEventListener('submit', function(e) {
       e.preventDefault();
       if (isArchived) return;
@@ -1277,34 +1276,8 @@
         resetForm();
       }
 
-      // Update active array local reference
-      if (activeTravelId) {
-        const idx = travels.findIndex(t => t.id === activeTravelId);
-        if (idx !== -1) {
-          travels[idx].expenses = expenses;
-        }
-      }
-
-      // 1. FAST Local Storage Save
-      localStorage.setItem(getStorageKey('travel_list_v1'), JSON.stringify(travels));
-
-      // 2. FAST Instant UI Render
+      saveActiveTravelData();
       updateTracker();
-
-      // 3. ASYNCHRONOUS Background Cloud Sync (Non-blocking for Safari)
-      if (GOOGLE_SCRIPT_URL && GOOGLE_SCRIPT_URL !== "IBUTANG_ANG_IMONG_WEB_APP_URL_DIRI") {
-        setTimeout(() => {
-          fetch(GOOGLE_SCRIPT_URL, {
-            method: 'POST',
-            mode: 'no-cors',
-            headers: { 'Content-Type': 'application/json' },
-            body: JSON.stringify({
-              username: currentUsername,
-              data: { travels, signatureDataUrl }
-            })
-          }).catch(err => console.warn("Cloud save failed:", err));
-        }, 50);
-      }
     });
 
     function saveDataToStorage(syncCloud = true) {
@@ -1318,17 +1291,15 @@
       }
 
       if (syncCloud && GOOGLE_SCRIPT_URL && GOOGLE_SCRIPT_URL !== "IBUTANG_ANG_IMONG_WEB_APP_URL_DIRI") {
-        setTimeout(() => {
-          fetch(GOOGLE_SCRIPT_URL, {
-            method: 'POST',
-            mode: 'no-cors',
-            headers: { 'Content-Type': 'application/json' },
-            body: JSON.stringify({
-              username: currentUsername,
-              data: { travels, signatureDataUrl }
-            })
-          }).catch(err => console.warn("Cloud save failed:", err));
-        }, 50);
+        fetch(GOOGLE_SCRIPT_URL, {
+          method: 'POST',
+          mode: 'no-cors',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({
+            username: currentUsername,
+            data: { travels, signatureDataUrl }
+          })
+        }).catch(err => console.warn("Cloud save failed:", err));
       }
     }
 
@@ -1415,6 +1386,8 @@
     }
 
     function updateTracker() {
+      saveActiveTravelData();
+
       const archiveBtn = document.getElementById('archiveBtn');
       const statusBadge = document.getElementById('archiveStatusBadge');
       const formElem = document.getElementById('expenseForm');
