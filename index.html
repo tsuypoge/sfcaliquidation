@@ -3,7 +3,7 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-  <title>Travel Expense Tracker - Admin Console</title>
+  <title>.</title>
 
   <!-- Custom Favicon -->
   <link rel="icon" type="image/png" href="logo.png">
@@ -2375,14 +2375,14 @@
         modalContent.appendChild(clone);
 
       } else if (type === 'detailed') {
-        titleElem.textContent = 'CA Liquidation Preview';
+        titleElem.textContent = '';
         document.getElementById('printAreaDetailed').classList.add('print-active');
         const clone = document.getElementById('printAreaDetailed').cloneNode(true);
         clone.classList.remove('hidden');
         modalContent.appendChild(clone);
 
       } else if (type === 'combined') {
-        titleElem.textContent = 'Print Liquidation Package (Summary Page 1 + Detailed Page 2+)';
+        titleElem.textContent = '';
 
         document.getElementById('printAreaSummary').classList.add('print-active');
         document.getElementById('printAreaDetailed').classList.add('print-active', 'page-break');
