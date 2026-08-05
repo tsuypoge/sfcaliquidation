@@ -10,20 +10,15 @@
 
   <!-- Tailwind CSS -->
   <script src="https://cdn.tailwindcss.com"></script>
+
+  <!-- Firebase Compatibility SDKs -->
+  <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-app-compat.js"></script>
+  <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-database-compat.js"></script>
   
   <style>
-    /* Custom Scrollbar for Smooth Touch Experience */
-    .overflow-x-auto {
-      -webkit-overflow-scrolling: touch;
-    }
+    .overflow-x-auto { -webkit-overflow-scrolling: touch; }
+    .page-break { page-break-before: always !important; break-before: page !important; }
 
-    /* Page Break Utility for Multi-page Printing */
-    .page-break {
-      page-break-before: always !important;
-      break-before: page !important;
-    }
-
-    /* Standardized Report Header - Strictly 7pt */
     .report-header, .report-header p {
       font-size: 7pt !important;
       font-weight: bold !important;
@@ -31,22 +26,14 @@
       color: #000000 !important;
     }
 
-    /* General Styling for Preview Window, Printable PDF, & UI Table - Strictly 7pt */
-    #printAreaDetailed,
-    #printAreaSummary,
-    #modalContent,
-    #printAreaDetailed table,
-    #printAreaSummary table,
-    #modalContent table,
+    #printAreaDetailed, #printAreaSummary, #modalContent,
+    #printAreaDetailed table, #printAreaSummary table, #modalContent table,
     .excel-style-table {
       font-family: Calibri, 'Segoe UI', Arial, sans-serif !important;
       font-size: 7pt !important;
     }
 
-    #printAreaDetailed tr,
-    #printAreaSummary tr,
-    #modalContent tr,
-    .excel-style-table tr {
+    #printAreaDetailed tr, #printAreaSummary tr, #modalContent tr, .excel-style-table tr {
       height: 12pt !important;
       line-height: 1.1 !important;
     }
@@ -68,12 +55,8 @@
       border: none !important;
     }
 
-    /* Print Specific Styles - Strict Letter Size & Page Breaks */
     @media print {
-      @page {
-        size: letter portrait;
-        margin: 0.4in;
-      }
+      @page { size: letter portrait; margin: 0.4in; }
       body {
         -webkit-print-color-adjust: exact !important;
         print-color-adjust: exact !important;
@@ -82,59 +65,30 @@
         padding: 0 !important;
         font-family: Calibri, 'Segoe UI', Arial, sans-serif !important;
       }
-      .no-print {
-        display: none !important;
-      }
-      .print-active {
-        display: block !important;
-        width: 100% !important;
-      }
-      /* Force Page 1 Summary to strictly break to Page 2 */
-      #printAreaSummary.print-active {
-        page-break-after: always !important;
-        break-after: page !important;
-      }
-      #printAreaDetailed.print-active {
-        page-break-before: always !important;
-        break-before: page !important;
-      }
-      #printAreaDetailed:not(.print-active),
-      #printAreaSummary:not(.print-active) {
-        display: none !important;
-      }
-      .page-break {
-        page-break-before: always !important;
-        break-before: page !important;
-      }
-      * {
-        box-shadow: none !important;
-        border-radius: 0 !important;
-      }
+      .no-print { display: none !important; }
+      .print-active { display: block !important; width: 100% !important; }
+      #printAreaSummary.print-active { page-break-after: always !important; break-after: page !important; }
+      #printAreaDetailed.print-active { page-break-before: always !important; break-before: page !important; }
+      #printAreaDetailed:not(.print-active), #printAreaSummary:not(.print-active) { display: none !important; }
+      .page-break { page-break-before: always !important; break-before: page !important; }
+      * { box-shadow: none !important; border-radius: 0 !important; }
       table { border-collapse: collapse !important; }
       th, td { border: 1px solid #000 !important; }
-      .no-border-table, .no-border-table th, .no-border-table td, .no-border-table tr {
-        border: none !important;
-      }
+      .no-border-table, .no-border-table th, .no-border-table td, .no-border-table tr { border: none !important; }
     }
   </style>
 </head>
 <body class="bg-slate-100/70 font-sans min-h-screen text-slate-800">
 
-  <!-- ========================================== -->
-  <!-- LOADING OVERLAY SPINNER                    -->
-  <!-- ========================================== -->
+  <!-- LOADING OVERLAY SPINNER -->
   <div id="loadingOverlay" class="hidden fixed inset-0 bg-slate-900/60 backdrop-blur-sm flex flex-col justify-center items-center z-[100] text-white no-print">
     <div class="w-10 h-10 border-4 border-indigo-400 border-t-transparent rounded-full animate-spin mb-3"></div>
-    <p id="loadingText" class="text-xs font-semibold tracking-wide">Syncing Data...</p>
+    <p id="loadingText" class="text-xs font-semibold tracking-wide">Syncing Realtime Data...</p>
   </div>
 
-
-  <!-- ========================================== -->
-  <!-- 0. LOGIN PAGE SCREEN                      -->
-  <!-- ========================================== -->
+  <!-- LOGIN SCREEN -->
   <div id="loginScreen" class="min-h-screen flex items-center justify-center p-4 bg-slate-900">
     <div class="max-w-sm w-full bg-white rounded-2xl shadow-2xl border border-slate-200 p-6 sm:p-8">
-      
       <div class="text-center mb-6">
         <div class="inline-flex items-center justify-center w-12 h-12 bg-indigo-600 text-white rounded-xl font-black text-xl mb-2.5 shadow-lg shadow-indigo-500/30">
           SF
@@ -150,56 +104,31 @@
 
         <div>
           <label class="block text-[10px] font-bold uppercase tracking-wider text-slate-600 mb-1">Username</label>
-          <input 
-            type="text" 
-            id="usernameInput" 
-            required 
-            placeholder="e.g. j.cagang" 
-            class="w-full p-2.5 border rounded-xl text-xs border-slate-300 focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500 focus:outline-none transition"
-          >
+          <input type="text" id="usernameInput" required placeholder="e.g. j.cagang" class="w-full p-2.5 border rounded-xl text-xs border-slate-300 focus:ring-2 focus:ring-indigo-500 focus:outline-none transition">
         </div>
 
         <div>
           <label class="block text-[10px] font-bold uppercase tracking-wider text-slate-600 mb-1">Password</label>
-          <input 
-            type="password" 
-            id="passwordInput" 
-            required 
-            placeholder="Enter password" 
-            class="w-full p-2.5 border rounded-xl text-xs border-slate-300 focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500 focus:outline-none transition"
-          >
+          <input type="password" id="passwordInput" required placeholder="Enter password" class="w-full p-2.5 border rounded-xl text-xs border-slate-300 focus:ring-2 focus:ring-indigo-500 focus:outline-none transition">
         </div>
 
-        <button 
-          type="submit" 
-          class="w-full bg-indigo-600 text-white font-bold py-2.5 rounded-xl hover:bg-indigo-700 active:scale-[0.99] transition duration-200 text-xs shadow-md shadow-indigo-600/25"
-        >
+        <button type="submit" class="w-full bg-indigo-600 text-white font-bold py-2.5 rounded-xl hover:bg-indigo-700 active:scale-[0.99] transition duration-200 text-xs shadow-md shadow-indigo-600/25">
           Sign In
         </button>
       </form>
     </div>
   </div>
 
-
-  <!-- ========================================== -->
-  <!-- 1. TRAVEL LIQUIDATION LIST SCREEN (LANDING)-->
-  <!-- ========================================== -->
+  <!-- TRAVEL LIST SCREEN (LANDING) -->
   <div id="travelListScreen" class="hidden p-2 sm:p-4">
     <div class="max-w-7xl mx-auto bg-white rounded-2xl shadow-sm border border-slate-200 p-3 sm:p-5">
-      
-      <!-- Top Bar: User Display, Live Clock, Sync, New Liquidation & Logout -->
       <div class="mb-4 p-2 bg-slate-50 rounded-xl border border-slate-200 flex flex-col md:flex-row items-center justify-between gap-2.5 text-xs">
-        
         <div class="flex flex-wrap items-center gap-2.5">
-          <!-- Welcome User -->
           <div class="flex items-center gap-1.5">
             <span class="w-2 h-2 rounded-full bg-emerald-500 inline-block"></span>
             <span id="listUserDisplay" class="font-bold text-slate-800 text-xs">Welcome Account Name</span>
           </div>
-
           <span class="hidden sm:inline text-slate-300">|</span>
-
-          <!-- Live Date & Time on Landing Page -->
           <div class="flex items-center gap-1.5 font-semibold text-slate-600 bg-white px-2.5 py-1 rounded-lg border border-slate-200/80 text-[11px]">
             <span class="w-1.5 h-1.5 rounded-full bg-indigo-500"></span>
             <span id="liveClockDisplay">Loading Date & Time...</span>
@@ -207,19 +136,16 @@
         </div>
 
         <div class="flex items-center gap-2">
-          <button onclick="manualCloudSync()" title="Refresh/Sync from Cloud" class="bg-slate-100 text-slate-700 border border-slate-300 font-semibold text-[11px] px-2.5 py-1.5 rounded-lg hover:bg-slate-200 transition">🔄 Sync Cloud</button>
           <button onclick="createNewTravel()" class="bg-indigo-600 text-white font-semibold text-[11px] px-3 py-1.5 rounded-lg hover:bg-indigo-700 shadow-xs transition">+ New Liquidation</button>
           <button onclick="handleLogout()" class="bg-rose-50 text-rose-700 border border-rose-200 font-bold text-[11px] px-3 py-1.5 rounded-lg hover:bg-rose-100 transition">Logout</button>
         </div>
       </div>
 
-      <!-- Section Title -->
       <div class="mb-4 text-center sm:text-left">
         <h2 class="text-lg sm:text-xl font-bold text-slate-900 tracking-tight">Travel Liquidation Dashboard</h2>
         <p class="text-[11px] text-slate-500 mt-0.5">Select an active travel profile or create a new entry below</p>
       </div>
 
-      <!-- Liquidations Table -->
       <div class="overflow-x-auto rounded-xl border border-slate-200">
         <table class="w-full text-left border-collapse text-xs">
           <thead>
@@ -234,38 +160,25 @@
               <th class="p-3 text-center">Action</th>
             </tr>
           </thead>
-          <tbody id="travelListTableBody">
-            <!-- Dynamic rows inserted here -->
-          </tbody>
+          <tbody id="travelListTableBody"></tbody>
         </table>
       </div>
-
     </div>
   </div>
 
-  
-  <!-- ========================================== -->
-  <!-- 2. MAIN APP DASHBOARD (TRACKER DETAILS)    -->
-  <!-- ========================================== -->
+  <!-- MAIN APP DASHBOARD -->
   <div id="mainDashboard" class="hidden p-2 sm:p-4">
-    
     <div class="max-w-7xl mx-auto bg-white rounded-2xl shadow-sm border border-slate-200 p-3 sm:p-4 no-print mb-8">
-      
       <div id="toast" class="hidden fixed top-4 right-4 bg-slate-900 text-white px-3.5 py-2 rounded-xl shadow-xl transition-opacity duration-300 z-50 font-semibold text-xs">
-        Syncing to Cloud...
+        Syncing Realtime...
       </div>
 
-      <!-- Top Utility Header Bar -->
       <div class="mb-4 p-2 bg-slate-50/90 rounded-xl border border-slate-200/90 flex items-center justify-between gap-2 text-xs">
-        
-        <!-- Left: Exit Dashboard Button -->
         <button onclick="backToTravelList()" class="bg-rose-50 text-rose-700 border border-rose-200 font-bold px-3 py-1 rounded-lg hover:bg-rose-100 transition text-[11px] whitespace-nowrap">
           Exit Dashboard
         </button>
 
-        <!-- Right: Signature Upload & Logout Button -->
         <div class="flex items-center gap-2">
-          
           <div id="signatureUploadContainer" class="flex items-center gap-1">
             <label class="font-medium text-slate-600 text-[11px] whitespace-nowrap">Signature:</label>
             <label class="bg-white text-slate-700 border border-slate-300 text-[11px] font-semibold px-2 py-1 rounded-lg cursor-pointer hover:bg-slate-50 transition whitespace-nowrap">
@@ -273,14 +186,10 @@
               <input type="file" id="signatureInput" accept="image/png, image/jpeg" class="hidden" onchange="handleSignatureUpload(event)">
             </label>
           </div>
-
-          <!-- Logout Button -->
           <button onclick="handleLogout()" title="Log out" class="bg-rose-600 text-white font-bold text-[11px] px-3 py-1 rounded-lg hover:bg-rose-700 transition whitespace-nowrap">Logout</button>
         </div>
-
       </div>
 
-      <!-- Header Section: Region Title & Action Buttons -->
       <div class="flex flex-col md:flex-row justify-between items-start md:items-center mb-4 border-b border-slate-100 pb-3 gap-3">
         <div>
           <h1 class="text-base sm:text-lg font-bold text-slate-900 tracking-tight flex items-center flex-wrap gap-1.5">
@@ -291,7 +200,6 @@
           <p class="text-[10px] text-slate-500 mt-0.5">Manage and track travel expenses, liquidation forms, and report summaries</p>
         </div>
         
-        <!-- Action Buttons Group -->
         <div class="flex flex-wrap justify-center items-center gap-1.5 w-full md:w-auto">
           <button onclick="openPreviewModal('detailed')" class="bg-indigo-600 text-white text-[11px] font-semibold px-2.5 py-1.5 rounded-lg hover:bg-indigo-700 shadow-xs transition flex-1 sm:flex-none text-center">Preview</button>
           <button onclick="openPreviewModal('combined')" class="bg-slate-900 text-white text-[11px] font-semibold px-2.5 py-1.5 rounded-lg hover:bg-slate-800 shadow-xs transition flex-1 sm:flex-none text-center">Print Summary</button>
@@ -305,42 +213,21 @@
         </div>
       </div>
 
-      <!-- Setup Box: Cash Advance & Region(s) (CENTER-ALIGNED) -->
       <div class="mb-4 p-2.5 bg-slate-50/80 rounded-xl border border-slate-200/80 flex flex-col sm:flex-row items-center justify-center gap-6 sm:gap-12">
-        
-        <!-- Cash Advance -->
         <div class="flex items-center gap-2">
           <label class="text-[10px] sm:text-[11px] font-bold uppercase tracking-wider text-slate-600 whitespace-nowrap">Cash Advance:</label>
           <div class="relative flex items-center">
             <span class="text-slate-500 font-bold mr-1 text-xs">₱</span>
-            <input 
-              type="text" 
-              inputmode="decimal"
-              id="cashAdvanceInput" 
-              placeholder="0.00" 
-              class="p-2 border rounded-lg w-32 sm:w-40 font-bold text-slate-900 border-slate-300 text-center focus:outline-none focus:ring-2 focus:ring-indigo-500 text-xs bg-white shadow-xs" 
-              oninput="handleCashAdvanceInput(this)" 
-              onfocus="focusCashAdvanceInput(this)" 
-              onblur="blurCashAdvanceInput(this)"
-            >
+            <input type="text" inputmode="decimal" id="cashAdvanceInput" placeholder="0.00" class="p-2 border rounded-lg w-32 sm:w-40 font-bold text-slate-900 border-slate-300 text-center focus:outline-none focus:ring-2 focus:ring-indigo-500 text-xs bg-white shadow-xs" oninput="handleCashAdvanceInput(this)" onfocus="focusCashAdvanceInput(this)" onblur="blurCashAdvanceInput(this)">
           </div>
         </div>
 
-        <!-- Region(s) -->
         <div class="flex items-center gap-2">
           <label class="text-[10px] sm:text-[11px] font-bold uppercase tracking-wider text-slate-600 whitespace-nowrap">Region(s):</label>
-          <input 
-            type="text" 
-            id="regionNameInput" 
-            placeholder="e.g. Palawan Region" 
-            class="p-2 border rounded-lg w-48 sm:w-64 text-xs font-semibold text-slate-800 border-slate-300 text-center focus:outline-none focus:ring-2 focus:ring-indigo-500 bg-white shadow-xs"
-            oninput="handleRegionNameInput(this)"
-          >
+          <input type="text" id="regionNameInput" placeholder="e.g. Palawan Region" class="p-2 border rounded-lg w-48 sm:w-64 text-xs font-semibold text-slate-800 border-slate-300 text-center focus:outline-none focus:ring-2 focus:ring-indigo-500 bg-white shadow-xs" oninput="handleRegionNameInput(this)">
         </div>
-
       </div>
 
-      <!-- Modern KPI Cards Section -->
       <div class="grid grid-cols-2 sm:grid-cols-4 lg:grid-cols-7 gap-2.5 mb-5 text-center">
         <div class="p-2 bg-white rounded-lg border border-slate-200 shadow-xs">
           <p class="text-[9px] font-bold uppercase tracking-wider text-slate-500">TRANSPO</p>
@@ -372,7 +259,6 @@
         </div>
       </div>
 
-      <!-- Add Expense Form -->
       <form id="expenseForm" class="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-4 gap-3 mb-5 bg-slate-50/80 p-3 rounded-xl border border-slate-200 text-xs">
         <div>
           <label class="block text-[10px] font-bold text-slate-600 uppercase tracking-wider mb-1">Date</label>
@@ -415,7 +301,6 @@
         </div>
       </form>
 
-      <!-- UI Expense List Table -->
       <div class="overflow-x-auto rounded-xl border border-slate-200">
         <table class="w-full text-left border-collapse min-w-[600px] excel-style-table">
           <thead>
@@ -430,36 +315,23 @@
               <th class="w-20 text-center">Action</th>
             </tr>
           </thead>
-          <tbody id="uiTableBody">
-          </tbody>
+          <tbody id="uiTableBody"></tbody>
         </table>
       </div>
     </div>
-
   </div>
 
-
-  <!-- ========================================== -->
-  <!-- PRINT / PREVIEW TEMPLATES                   -->
-  <!-- ========================================== -->
-  
-  <!-- PAGE 1: PRINT SUMMARY VIEW (Letter Size 1 Page Strict) -->
+  <!-- PRINT TEMPLATES -->
   <div id="printAreaSummary" class="hidden font-sans">
-    
-    <!-- Centered Logo -->
     <div class="text-center mb-2">
       <img src="logo.png" alt="Logo" class="mx-auto block" style="max-height: 40px; width: auto;">
     </div>
-
-    <!-- 7pt Header -->
     <div class="mb-3 report-header">
       <p>Region / Area : StrikeForce/Fraud Audit-IAD</p>
       <p>Cash Advance Expenses Liquidation</p>
       <p>Region: <span id="printRegionName">N/A</span></p>
       <p>Date: <span id="printDateRange">N/A</span></p>
     </div>
-
-    <!-- HORIZONTAL TABLE -->
     <div class="overflow-x-auto mb-6">
       <table class="w-full text-center border-collapse border border-gray-400">
         <thead>
@@ -486,8 +358,6 @@
         </tbody>
       </table>
     </div>
-
-    <!-- SUMMARY BOX BELOW -->
     <div class="space-y-8">
       <div class="w-72">
         <h3 class="font-bold text-xs text-gray-800 mb-1">Summary</h3>
@@ -499,8 +369,6 @@
           </tbody>
         </table>
       </div>
-
-      <!-- SIGNATURES SECTION -->
       <table class="w-full mt-6 no-border-table" style="border: none !important;">
         <tr style="border: none !important;">
           <td style="border: none !important; width: 50%; vertical-align: bottom; padding-right: 30px;">
@@ -523,23 +391,16 @@
     </div>
   </div>
 
-
-  <!-- PAGE 2+: DETAILED PREVIEW VIEW -->
   <div id="printAreaDetailed" class="hidden font-sans print-active">
-    
-    <!-- Centered Logo -->
     <div class="text-center mb-2">
       <img src="logo.png" alt="Logo" class="mx-auto block" style="max-height: 40px; width: auto;">
     </div>
-
-    <!-- 7pt Header -->
     <div class="mb-3 report-header">
       <p>Region / Area : StrikeForce/Fraud Audit-IAD</p>
       <p>Cash Advance Expenses Liquidation</p>
       <p>Region: <span id="detailedRegionName">N/A</span></p>
       <p>Date: <span id="detailedDateRange">N/A</span></p>
     </div>
-
     <div class="overflow-x-auto mb-5">
       <table class="w-full text-left border-collapse border border-gray-400">
         <thead>
@@ -556,7 +417,6 @@
         <tbody id="printMainTableBodyDetailed"></tbody>
       </table>
     </div>
-
     <div id="miscTableWrapperDetailed" class="overflow-x-auto max-w-xl mb-6 hidden">
       <h3 class="font-bold text-xs text-gray-800 mb-1">Miscellaneous</h3>
       <table class="w-full text-left border-collapse border border-gray-400">
@@ -571,7 +431,6 @@
         <tbody id="printMiscTableBodyDetailed"></tbody>
       </table>
     </div>
-
     <div class="space-y-8">
       <div class="w-72">
         <h3 class="font-bold text-xs text-gray-800 mb-1">Summary</h3>
@@ -588,7 +447,6 @@
           </tbody>
         </table>
       </div>
-
       <table class="w-full mt-6 no-border-table" style="border: none !important;">
         <tr style="border: none !important;">
           <td style="border: none !important; width: 50%; vertical-align: bottom; padding-right: 30px;">
@@ -611,18 +469,14 @@
     </div>
   </div>
 
-
   <!-- Dynamic Modal -->
   <div id="previewModal" class="hidden fixed inset-0 bg-slate-900/60 backdrop-blur-sm flex justify-center items-center p-2 sm:p-4 z-50 no-print">
     <div class="bg-white rounded-2xl shadow-2xl max-w-5xl w-full p-4 sm:p-6 max-h-[95vh] overflow-y-auto border border-slate-200">
-      
-      <!-- Modal Header -->
       <div class="flex justify-between items-center mb-3 border-b border-slate-100 pb-2.5">
         <h2 id="modalTitle" class="text-base sm:text-lg font-bold text-slate-900">Preview</h2>
         <button onclick="closePreviewModal()" class="text-slate-400 hover:text-slate-600 font-bold text-lg">✕</button>
       </div>
 
-      <!-- DATE RANGE FILTER INSIDE PREVIEW MODAL -->
       <div id="modalDateFilterBar" class="mb-3 p-2.5 bg-indigo-50/60 rounded-xl border border-indigo-100 flex flex-col sm:flex-row items-stretch sm:items-center justify-between gap-2.5 no-print">
         <div class="flex items-center gap-2 flex-wrap">
           <span class="text-[11px] font-bold text-indigo-950 whitespace-nowrap">Report Date Range:</span>
@@ -636,10 +490,8 @@
         </div>
       </div>
       
-      <!-- Modal Content Body -->
       <div id="modalContent" class="mb-5 border border-slate-200 p-2 sm:p-5 rounded-xl bg-white overflow-x-auto"></div>
       
-      <!-- Modal Footer -->
       <div class="flex flex-wrap justify-end gap-2">
         <button onclick="closePreviewModal()" class="bg-white text-slate-700 border border-slate-300 font-semibold px-3.5 py-1.5 rounded-xl hover:bg-slate-50 text-xs">Close</button>
         <button onclick="window.print()" class="bg-indigo-600 text-white font-semibold px-3.5 py-1.5 rounded-xl hover:bg-indigo-700 text-xs shadow-xs">Print / Export PDF</button>
@@ -648,8 +500,22 @@
   </div>
 
   <script>
-    // 🔗 GOOGLE DRIVE / GOOGLE SHEETS WEB APP URL
-    const GOOGLE_SCRIPT_URL = "https://script.google.com/macros/s/AKfycbwYexvF_1TKLy9LM_J_JC-bBMIxWueJ95VOObbzCSSvF5squJwhAirLNUkQ-gjTAOk50g/exec";
+    // ========================================================
+    // 🔥 YOUR FIREBASE REALTIME DATABASE CONFIGURATION
+    // ========================================================
+    const firebaseConfig = {
+      apiKey: "AIzaSyCBnHO2KzpwLlZ-HpETU2prL-ZBu_p_rD4",
+      authDomain: "tsuypoge-34c17.firebaseapp.com",
+      databaseURL: "https://tsuypoge-34c17-default-rtdb.asia-southeast1.firebasedatabase.app",
+      projectId: "tsuypoge-34c17",
+      storageBucket: "tsuypoge-34c17.firebasestorage.app",
+      messagingSenderId: "977466571588",
+      appId: "1:977466571588:web:c1d4e3cb973766da06f511"
+    };
+
+    // Initialize Firebase
+    firebase.initializeApp(firebaseConfig);
+    const db = firebase.database();
 
     // Enrolled Users Database
     const USERS_DB = [
@@ -672,11 +538,9 @@
     let currentUsername = sessionStorage.getItem('travel_logged_username') || '';
     let accountName = sessionStorage.getItem('travel_logged_user_name') || '';
     
-    // Multiple Travels Array
     let travels = [];
     let activeTravelId = null;
 
-    // Current Active Travel State variables
     let expenses = [];
     let cashAdvance = 0;
     let regionName = '';
@@ -684,10 +548,8 @@
     let isArchived = false;
     let editingId = null;
 
-    // Current Active Modal Preview Type ('summary', 'detailed', or 'combined')
     let currentPreviewType = 'combined';
 
-    // Inactivity Auto-Logout Logic (2 Minutes)
     let inactivityTimer;
     const INACTIVITY_LIMIT = 2 * 60 * 1000;
 
@@ -724,8 +586,8 @@
       });
     }
 
-    function getStorageKey(keyName) {
-      return currentUsername ? `${keyName}_${currentUsername}` : keyName;
+    function getSanitizedUsername() {
+      return currentUsername ? currentUsername.replace(/[^a-zA-Z0-9]/g, '_') : 'guest';
     }
 
     function checkAuthStatus() {
@@ -739,7 +601,7 @@
         const listUserDisplay = document.getElementById('listUserDisplay');
         if (listUserDisplay) listUserDisplay.textContent = "Welcome " + accountName;
 
-        loadUserData();
+        setupRealtimeFirebaseListener();
         resetInactivityTimer();
       } else {
         clearTimeout(inactivityTimer);
@@ -749,54 +611,48 @@
       }
     }
 
-    async function loadUserData() {
-      // 1. FAST Load from LocalStorage
-      travels = JSON.parse(localStorage.getItem(getStorageKey('travel_list_v1'))) || [];
-      signatureDataUrl = localStorage.getItem(getStorageKey('travel_signature_image')) || '';
+    // REALTIME LISTEN ON FIREBASE DATABASE (INSTANT SYNC ACROSS SAFARI, CHROME & DEVICES)
+    function setupRealtimeFirebaseListener() {
+      if (!currentUsername) return;
+      const userKey = getSanitizedUsername();
 
-      renderTravelListTable();
+      db.ref('users/' + userKey).on('value', (snapshot) => {
+        const val = snapshot.val();
+        if (val) {
+          travels = val.travels || [];
+          signatureDataUrl = val.signatureDataUrl || '';
+          
+          renderTravelListTable();
 
-      // AUTO-OPEN ACTIVE LIQUIDATION IF AT LEAST ONE IS ACTIVE
-      const activeTravel = travels.find(t => !t.isArchived);
-      if (activeTravel) {
-        openTravel(activeTravel.id);
-      } else {
-        document.getElementById('travelListScreen').classList.remove('hidden');
-        document.getElementById('mainDashboard').classList.add('hidden');
-      }
-
-      // 2. AUTOMATIC CLOUD SYNC FROM GOOGLE SCRIPT (CROSS-BROWSER CONSISTENCY)
-      if (GOOGLE_SCRIPT_URL && GOOGLE_SCRIPT_URL !== "IBUTANG_ANG_IMONG_WEB_APP_URL_DIRI") {
-        try {
-          const res = await fetch(`${GOOGLE_SCRIPT_URL}?action=read&username=${encodeURIComponent(currentUsername)}&_t=${Date.now()}`);
-          if (res.ok) {
-            const cloudData = await res.json();
-            if (cloudData && cloudData.travels && cloudData.travels.length > 0) {
-              travels = cloudData.travels || [];
-              signatureDataUrl = cloudData.signatureDataUrl || signatureDataUrl;
-              
-              // Cache to LocalStorage so next time it loads instantly
-              localStorage.setItem(getStorageKey('travel_list_v1'), JSON.stringify(travels));
-              if (signatureDataUrl) localStorage.setItem(getStorageKey('travel_signature_image'), signatureDataUrl);
-              
-              renderTravelListTable();
-
-              const currentActive = travels.find(t => !t.isArchived);
-              if (currentActive) {
-                openTravel(currentActive.id);
-              }
+          if (activeTravelId) {
+            const found = travels.find(t => t.id === activeTravelId);
+            if (found) {
+              regionName = found.regionName || '';
+              cashAdvance = found.cashAdvance || 0;
+              isArchived = found.isArchived === true;
+              expenses = found.expenses || [];
+              updateUIFields();
+            }
+          } else {
+            const activeTravel = travels.find(t => !t.isArchived);
+            if (activeTravel && document.getElementById('mainDashboard').classList.contains('hidden')) {
+              openTravel(activeTravel.id);
             }
           }
-        } catch (e) {
-          console.warn("Could not sync from cloud, using local cached data.", e);
         }
-      }
+      });
     }
 
-    async function manualCloudSync() {
-      await showLoading('Syncing from Cloud...', 800);
-      await loadUserData();
-      alert('Cloud Sync Complete!');
+    function saveDataToStorage() {
+      if (!currentUsername) return;
+      const userKey = getSanitizedUsername();
+
+      // Write instantly to Firebase Realtime Database
+      db.ref('users/' + userKey).set({
+        travels: travels,
+        signatureDataUrl: signatureDataUrl,
+        lastUpdated: Date.now()
+      });
     }
 
     function renderTravelListTable() {
@@ -893,14 +749,13 @@
       updateUIFields();
     }
 
-    // UPDATED PRINT ACTION: OPENS COMBINED SUMMARY (PAGE 1 LETTER) + DETAILED PREVIEW (PAGE 2+)
     function openTravelSummaryPreview(trvId) {
       openTravel(trvId);
       openPreviewModal('combined');
     }
 
     async function backToTravelList() {
-      await showLoading('Returning to Dashboard...', 600);
+      await showLoading('Returning to Dashboard...', 400);
       saveActiveTravelData();
       document.getElementById('mainDashboard').classList.add('hidden');
       document.getElementById('travelListScreen').classList.remove('hidden');
@@ -955,7 +810,7 @@
       const foundUser = USERS_DB.find(u => u.username.toLowerCase() === user && u.password === pass);
 
       if (foundUser) {
-        await showLoading('Signing in & Syncing...', 1000);
+        await showLoading('Signing in & Syncing Realtime...', 600);
         sessionStorage.setItem('travel_is_logged_in', 'true');
         sessionStorage.setItem('travel_logged_username', foundUser.username);
         sessionStorage.setItem('travel_logged_user_name', foundUser.name);
@@ -972,9 +827,8 @@
       }
     }
 
-    // DIRECT LOGOUT WITH DELAY
     async function handleLogout() {
-      await showLoading('Logging out...', 800);
+      await showLoading('Logging out...', 500);
       sessionStorage.removeItem('travel_is_logged_in');
       sessionStorage.removeItem('travel_logged_username');
       sessionStorage.removeItem('travel_logged_user_name');
@@ -1016,11 +870,6 @@
 
         setCurrentDateInput();
         updateTracker();
-
-        const toast = document.getElementById('toast');
-        toast.textContent = 'Travel Record Reset Successfully!';
-        toast.classList.remove('hidden');
-        setTimeout(() => toast.classList.add('hidden'), 2500);
       }
     }
 
@@ -1039,8 +888,8 @@
 
     function removeSignature() {
       signatureDataUrl = '';
-      localStorage.removeItem(getStorageKey('travel_signature_image'));
       document.getElementById('signatureInput').value = '';
+      saveDataToStorage();
       updateTracker();
     }
 
@@ -1238,7 +1087,6 @@
       }
     }
 
-    // INSTANT LOCAL SAVE & UI UPDATE ON EXPENSE SUBMIT
     document.getElementById('expenseForm').addEventListener('submit', function(e) {
       e.preventDefault();
       if (isArchived) return;
@@ -1274,60 +1122,9 @@
         resetForm();
       }
 
-      // Update active array local reference
-      if (activeTravelId) {
-        const idx = travels.findIndex(t => t.id === activeTravelId);
-        if (idx !== -1) {
-          travels[idx].expenses = expenses;
-        }
-      }
-
-      // 1. FAST Local Storage Save
-      localStorage.setItem(getStorageKey('travel_list_v1'), JSON.stringify(travels));
-
-      // 2. FAST Instant UI Render
+      saveActiveTravelData();
       updateTracker();
-
-      // 3. ASYNCHRONOUS Background Cloud Sync (Non-blocking for Safari)
-      if (GOOGLE_SCRIPT_URL && GOOGLE_SCRIPT_URL !== "IBUTANG_ANG_IMONG_WEB_APP_URL_DIRI") {
-        setTimeout(() => {
-          fetch(GOOGLE_SCRIPT_URL, {
-            method: 'POST',
-            mode: 'no-cors',
-            headers: { 'Content-Type': 'application/json' },
-            body: JSON.stringify({
-              username: currentUsername,
-              data: { travels, signatureDataUrl }
-            })
-          }).catch(err => console.warn("Cloud save failed:", err));
-        }, 50);
-      }
     });
-
-    function saveDataToStorage(syncCloud = true) {
-      if (!currentUsername) return;
-      
-      localStorage.setItem(getStorageKey('travel_list_v1'), JSON.stringify(travels));
-      if (signatureDataUrl) {
-        localStorage.setItem(getStorageKey('travel_signature_image'), signatureDataUrl);
-      } else {
-        localStorage.removeItem(getStorageKey('travel_signature_image'));
-      }
-
-      if (syncCloud && GOOGLE_SCRIPT_URL && GOOGLE_SCRIPT_URL !== "IBUTANG_ANG_IMONG_WEB_APP_URL_DIRI") {
-        setTimeout(() => {
-          fetch(GOOGLE_SCRIPT_URL, {
-            method: 'POST',
-            mode: 'no-cors',
-            headers: { 'Content-Type': 'application/json' },
-            body: JSON.stringify({
-              username: currentUsername,
-              data: { travels, signatureDataUrl }
-            })
-          }).catch(err => console.warn("Cloud save failed:", err));
-        }, 50);
-      }
-    }
 
     function editExpense(id) {
       if (isArchived) return;
@@ -1397,7 +1194,6 @@
       return '₱' + val.toLocaleString('en-US', {minimumFractionDigits: 2, maximumFractionDigits: 2});
     }
 
-    // MODAL DATE FILTER HANDLERS
     function applyModalDateFilter() {
       updateTracker();
       renderModalContent(currentPreviewType);
@@ -1446,7 +1242,6 @@
       const sigImgSummary = document.getElementById('summarySignatureImg');
       const sigUploadContainer = document.getElementById('signatureUploadContainer');
 
-      // HIDE SIGNATURE UPLOAD CONTROLS ONCE SIGNATURE IS UPLOADED
       if (signatureDataUrl) {
         if (sigImgDetailed) { sigImgDetailed.src = signatureDataUrl; sigImgDetailed.classList.remove('hidden'); }
         if (sigImgSummary) { sigImgSummary.src = signatureDataUrl; sigImgSummary.classList.remove('hidden'); }
@@ -1467,7 +1262,6 @@
 
       let totalTranspo = 0, totalMeals = 0, totalPerDiem = 0, totalTerminalFee = 0, totalMisc = 0;
 
-      // READ DATE FILTER FROM MODAL INPUTS IF SET
       const modalStartElem = document.getElementById('modalFilterStartDate');
       const modalEndElem = document.getElementById('modalFilterEndDate');
       const startDate = modalStartElem ? modalStartElem.value : '';
@@ -1573,7 +1367,6 @@
           
           let actionColEmpty = isPrint ? '' : `<td class="text-center no-print"></td>`;
 
-          // STRICT ALIGNMENT: 2 Empty TDs -> Ticket/Remarks ("subtotal") -> Transpo -> Meals -> Total -> ActionCol
           subtotalRow.innerHTML = `
             <td></td>
             <td></td>
@@ -1636,7 +1429,6 @@
 
       const reportTotalSpent = rTranspo + rMeals + rPerDiem + rTerminal + rMisc;
       
-      // CASH ADVANCE ÷ 2 ONLY IF A DATE RANGE IS SPECIFIED IN MODAL FILTER
       const hasDateRange = (startDate !== '' || endDate !== '');
       const reportCA = hasDateRange ? (cashAdvance / 2) : cashAdvance;
       const reportReturnRefund = reportCA - reportTotalSpent;
@@ -1702,7 +1494,6 @@
       remElem.className = returnRefund < 0 ? 'text-xs sm:text-sm font-bold text-rose-600 mt-0.5' : 'text-xs sm:text-sm font-bold text-indigo-900 mt-0.5';
     }
 
-    // MULTI-PAGE PRINT FUNCTIONALITY WITH IN-MODAL DATE FILTER
     function openPreviewModal(type) {
       currentPreviewType = type;
       updateTracker();
@@ -1736,22 +1527,18 @@
       } else if (type === 'combined') {
         titleElem.textContent = 'Print Liquidation Package (Summary Page 1 + Detailed Page 2+)';
 
-        // Enable both print areas for printing in correct order (Summary Page 1, Detailed Page 2+)
         document.getElementById('printAreaSummary').classList.add('print-active');
         document.getElementById('printAreaDetailed').classList.add('print-active', 'page-break');
 
-        // Page 1: Summary Report (Letter Size 1 Page)
         const summaryClone = document.getElementById('printAreaSummary').cloneNode(true);
         summaryClone.classList.remove('hidden');
         modalContent.appendChild(summaryClone);
 
-        // Visual Separator for Modal Preview (hidden when printing)
         const separator = document.createElement('div');
         separator.className = 'my-6 border-t-2 border-dashed border-slate-300 text-center py-2 text-slate-400 text-xs font-bold uppercase tracking-wider no-print';
         separator.textContent = '--- Page Break (Detailed Liquidation Report Below) ---';
         modalContent.appendChild(separator);
 
-        // Page 2+: Detailed Report
         const detailedClone = document.getElementById('printAreaDetailed').cloneNode(true);
         detailedClone.classList.remove('hidden');
         detailedClone.classList.add('page-break');
