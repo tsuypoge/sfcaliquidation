@@ -191,7 +191,7 @@
         Syncing Realtime...
       </div>
 
-      <!-- TOP UTILITY HEADER BAR (SWAPPED LAYOUT) -->
+      <!-- TOP UTILITY HEADER BAR -->
       <div class="mb-4 p-2 bg-slate-50/90 rounded-xl border border-slate-200/90 flex items-center justify-between gap-2 text-xs">
         
         <!-- LEFT SIDE: USER DROPDOWN WITH ARROW DOWN -->
@@ -240,15 +240,11 @@
           <p class="text-[10px] text-slate-500 mt-0.5">Manage and track travel expenses, liquidation forms, and report summaries</p>
         </div>
         
+        <!-- ACTION BUTTONS (REMOVED BACKUP & RESTORE) -->
         <div class="flex flex-wrap justify-center items-center gap-1.5 w-full md:w-auto">
           <button onclick="openPreviewModal('detailed')" class="bg-indigo-600 text-white text-[11px] font-semibold px-2.5 py-1.5 rounded-lg hover:bg-indigo-700 shadow-xs transition flex-1 sm:flex-none text-center">Preview</button>
           <button onclick="openPreviewModal('combined')" class="bg-slate-900 text-white text-[11px] font-semibold px-2.5 py-1.5 rounded-lg hover:bg-slate-800 shadow-xs transition flex-1 sm:flex-none text-center">Print Summary</button>
           <button onclick="toggleArchive()" id="archiveBtn" class="bg-white text-slate-700 border border-slate-300 text-[11px] font-semibold px-2.5 py-1.5 rounded-lg hover:bg-slate-50 transition flex-1 sm:flex-none text-center">Archive</button>
-          <button onclick="exportBackup()" class="bg-white text-slate-700 border border-slate-300 text-[11px] font-semibold px-2.5 py-1.5 rounded-lg hover:bg-slate-50 transition flex-1 sm:flex-none text-center">Backup</button>
-          <label class="bg-white text-slate-700 border border-slate-300 text-[11px] font-semibold px-2.5 py-1.5 rounded-lg hover:bg-slate-50 cursor-pointer flex-1 sm:flex-none text-center transition">
-            Restore
-            <input type="file" id="importFile" accept=".json" class="hidden" onchange="restoreBackup(event)">
-          </label>
           <button onclick="resetAllData()" title="Reset All Tracker Data" class="bg-rose-50 text-rose-700 border border-rose-200 text-[11px] font-semibold px-2.5 py-1.5 rounded-lg hover:bg-rose-100 transition flex-1 sm:flex-none text-center">Reset</button>
         </div>
       </div>
@@ -1773,41 +1769,6 @@
 
     function closePreviewModal() {
       document.getElementById('previewModal').classList.add('hidden');
-    }
-
-    function exportBackup() {
-      const backupData = {
-        travels: travels,
-        signatureDataUrl: signatureDataUrl
-      };
-      const dataStr = "data:text/json;charset=utf-8," + encodeURIComponent(JSON.stringify(backupData, null, 2));
-      const downloadAnchor = document.createElement('a');
-      downloadAnchor.setAttribute("href", dataStr);
-      const today = new Date().toISOString().split('T')[0];
-      downloadAnchor.setAttribute("download", `Expense_Backup_${currentUsername || 'user'}_${today}.json`);
-      document.body.appendChild(downloadAnchor);
-      downloadAnchor.click();
-      downloadAnchor.remove();
-    }
-
-    function restoreBackup(event) {
-      const reader = new FileReader();
-      reader.onload = function(e) {
-        try {
-          const data = JSON.parse(e.target.result);
-          if (data.travels) {
-            travels = data.travels;
-            signatureDataUrl = data.signatureDataUrl || '';
-            
-            saveDataToStorage();
-            renderTravelListTable();
-            alert("Backup data restored successfully!");
-          }
-        } catch (err) {
-          alert("Invalid backup file uploaded.");
-        }
-      };
-      reader.readAsText(event.target.files[0]);
     }
 
     // SAFE DOM CONTENT LOADED INITIALIZATION
