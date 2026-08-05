@@ -136,6 +136,7 @@
         </div>
 
         <div class="flex items-center gap-2">
+          <button onclick="openChangePasswordModal()" class="bg-slate-100 text-slate-700 border border-slate-300 font-bold text-[11px] px-3 py-1.5 rounded-lg hover:bg-slate-200 transition">🔑 Change Pass</button>
           <button onclick="createNewTravel()" class="bg-indigo-600 text-white font-semibold text-[11px] px-3 py-1.5 rounded-lg hover:bg-indigo-700 shadow-xs transition">+ New Liquidation</button>
           <button onclick="handleLogout()" class="bg-rose-50 text-rose-700 border border-rose-200 font-bold text-[11px] px-3 py-1.5 rounded-lg hover:bg-rose-100 transition">Logout</button>
         </div>
@@ -179,6 +180,8 @@
         </button>
 
         <div class="flex items-center gap-2">
+          <button onclick="openChangePasswordModal()" class="bg-white text-slate-700 border border-slate-300 font-bold text-[11px] px-2.5 py-1 rounded-lg hover:bg-slate-50 transition whitespace-nowrap">🔑 Change Pass</button>
+          
           <div id="signatureUploadContainer" class="flex items-center gap-1">
             <label class="font-medium text-slate-600 text-[11px] whitespace-nowrap">Signature:</label>
             <label class="bg-white text-slate-700 border border-slate-300 text-[11px] font-semibold px-2 py-1 rounded-lg cursor-pointer hover:bg-slate-50 transition whitespace-nowrap">
@@ -499,6 +502,40 @@
     </div>
   </div>
 
+  <!-- CHANGE PASSWORD MODAL -->
+  <div id="changePasswordModal" class="hidden fixed inset-0 bg-slate-900/60 backdrop-blur-sm flex justify-center items-center p-4 z-[60] no-print">
+    <div class="bg-white rounded-2xl shadow-2xl max-w-sm w-full p-5 sm:p-6 border border-slate-200">
+      <div class="flex justify-between items-center mb-4 border-b border-slate-100 pb-2">
+        <h3 class="text-base font-bold text-slate-900">🔑 Change Password</h3>
+        <button onclick="closeChangePasswordModal()" class="text-slate-400 hover:text-slate-600 font-bold text-lg">✕</button>
+      </div>
+
+      <form onsubmit="handleChangePassword(event)" class="space-y-3.5 text-xs">
+        <div id="changePassError" class="hidden p-2.5 bg-red-50 border border-red-200 text-red-600 text-[11px] rounded-lg font-semibold text-center"></div>
+
+        <div>
+          <label class="block text-[10px] font-bold uppercase tracking-wider text-slate-600 mb-1">Current Password</label>
+          <input type="password" id="currentPassInput" required placeholder="Enter current password" class="w-full p-2 border rounded-xl border-slate-300 focus:ring-2 focus:ring-indigo-500 focus:outline-none">
+        </div>
+
+        <div>
+          <label class="block text-[10px] font-bold uppercase tracking-wider text-slate-600 mb-1">New Password</label>
+          <input type="password" id="newPassInput" required placeholder="Enter new password" class="w-full p-2 border rounded-xl border-slate-300 focus:ring-2 focus:ring-indigo-500 focus:outline-none">
+        </div>
+
+        <div>
+          <label class="block text-[10px] font-bold uppercase tracking-wider text-slate-600 mb-1">Confirm New Password</label>
+          <input type="password" id="confirmPassInput" required placeholder="Re-enter new password" class="w-full p-2 border rounded-xl border-slate-300 focus:ring-2 focus:ring-indigo-500 focus:outline-none">
+        </div>
+
+        <div class="flex justify-end gap-2 pt-2">
+          <button type="button" onclick="closeChangePasswordModal()" class="bg-slate-100 text-slate-700 font-semibold px-3 py-1.5 rounded-xl hover:bg-slate-200">Cancel</button>
+          <button type="submit" class="bg-indigo-600 text-white font-bold px-4 py-1.5 rounded-xl hover:bg-indigo-700 shadow-xs">Update Password</button>
+        </div>
+      </form>
+    </div>
+  </div>
+
   <script>
     // FIREBASE REALTIME DATABASE CONFIGURATION
     const firebaseConfig = {
@@ -676,6 +713,72 @@
       }
     }
 
+    // CHANGE PASSWORD MODAL LOGIC
+    function openChangePasswordModal() {
+      document.getElementById('currentPassInput').value = '';
+      document.getElementById('newPassInput').value = '';
+      document.getElementById('confirmPassInput').value = '';
+      document.getElementById('changePassError').classList.add('hidden');
+      document.getElementById('changePasswordModal').classList.remove('hidden');
+    }
+
+    function closeChangePasswordModal() {
+      document.getElementById('changePasswordModal').classList.add('hidden');
+    }
+
+    async function handleChangePassword(e) {
+      e.preventDefault();
+      const currentPassInput = document.getElementById('currentPassInput').value.trim();
+      const newPassInput = document.getElementById('newPassInput').value.trim();
+      const confirmPassInput = document.getElementById('confirmPassInput').value.trim();
+      const modalError = document.getElementById('changePassError');
+
+      modalError.classList.add('hidden');
+
+      if (newPassInput !== confirmPassInput) {
+        modalError.textContent = "New passwords do not match!";
+        modalError.classList.remove('hidden');
+        return;
+      }
+
+      if (newPassInput.length < 3) {
+        modalError.textContent = "New password is too short!";
+        modalError.classList.remove('hidden');
+        return;
+      }
+
+      const userKey = getSanitizedUsername();
+      const foundUser = USERS_DB.find(u => u.username.toLowerCase() === currentUsername.toLowerCase());
+      let validPass = foundUser ? foundUser.password : '';
+
+      try {
+        if (db) {
+          const snap = await db.ref('credentials/' + userKey).once('value');
+          if (snap.exists() && snap.val().password) {
+            validPass = snap.val().password;
+          }
+        }
+      } catch(err) {
+        console.warn("Error verifying password:", err);
+      }
+
+      if (currentPassInput !== validPass) {
+        modalError.textContent = "Incorrect current password!";
+        modalError.classList.remove('hidden');
+        return;
+      }
+
+      try {
+        if (db) {
+          await db.ref('credentials/' + userKey).set({ password: newPassInput });
+        }
+        alert("Password updated successfully!");
+        closeChangePasswordModal();
+      } catch(err) {
+        alert("Could not update password. Please try again.");
+      }
+    }
+
     function renderTravelListTable() {
       const tbody = document.getElementById('travelListTableBody');
       if (!tbody) return;
@@ -752,7 +855,6 @@
       }
     }
 
-    // OPEN TRAVEL WITH DELAY SPINNER (SKIP DELAY WHEN AUTO-SYNCING)
     async function openTravel(trvId, skipDelay = false) {
       if (!skipDelay) {
         await showLoading('Opening Liquidation...', 400);
@@ -833,9 +935,29 @@
       const pass = document.getElementById('passwordInput').value.trim();
       const errorDiv = document.getElementById('loginError');
 
-      const foundUser = USERS_DB.find(u => u.username.toLowerCase() === user && u.password === pass);
+      const foundUser = USERS_DB.find(u => u.username.toLowerCase() === user);
 
-      if (foundUser) {
+      if (!foundUser) {
+        errorDiv.classList.remove('hidden');
+        return;
+      }
+
+      // Check Firebase for custom changed password
+      let validPass = foundUser.password;
+      const userKey = user.replace(/[^a-zA-Z0-9]/g, '_');
+
+      try {
+        if (db) {
+          const snap = await db.ref('credentials/' + userKey).once('value');
+          if (snap.exists() && snap.val().password) {
+            validPass = snap.val().password;
+          }
+        }
+      } catch(e) {
+        console.warn("Password check error:", e);
+      }
+
+      if (pass === validPass) {
         await showLoading('Signing in & Syncing Realtime...', 600);
         sessionStorage.setItem('travel_is_logged_in', 'true');
         sessionStorage.setItem('travel_logged_username', foundUser.username);
@@ -854,7 +976,7 @@
     }
 
     async function handleLogout() {
-      await showLoading('Logging out...', 500);
+      await showLoading('Logging out...', 400);
       sessionStorage.removeItem('travel_is_logged_in');
       sessionStorage.removeItem('travel_logged_username');
       sessionStorage.removeItem('travel_logged_user_name');
@@ -1549,7 +1671,7 @@
         modalContent.appendChild(clone);
 
       } else if (type === 'combined') {
-        titleElem.textContent = '';
+        titleElem.textContent = 'Print Liquidation Package (Summary Page 1 + Detailed Page 2+)';
 
         document.getElementById('printAreaSummary').classList.add('print-active');
         document.getElementById('printAreaDetailed').classList.add('print-active', 'page-break');
