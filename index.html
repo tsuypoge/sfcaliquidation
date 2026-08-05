@@ -409,11 +409,10 @@
           <button onclick="openPreviewModal('detailed')" class="bg-indigo-600 text-white text-[11px] font-semibold px-2.5 py-1.5 rounded-lg hover:bg-indigo-700 shadow-xs transition flex-1 sm:flex-none text-center">Preview</button>
           <button onclick="openPreviewModal('combined')" class="bg-slate-900 text-white text-[11px] font-semibold px-2.5 py-1.5 rounded-lg hover:bg-slate-800 shadow-xs transition flex-1 sm:flex-none text-center">Print Summary</button>
 
-          <!-- MANUAL DTR UPLOAD BUTTON -->
-          <label id="dtrBtnLabel" class="bg-white text-slate-700 border border-slate-300 text-[11px] font-semibold px-2.5 py-1.5 rounded-lg hover:bg-slate-50 cursor-pointer flex-1 sm:flex-none text-center transition flex items-center justify-center gap-1">
+          <!-- MANUAL DTR MODAL BUTTON -->
+          <button type="button" onclick="openDtrModal()" id="dtrBtnLabel" class="bg-white text-slate-700 border border-slate-300 text-[11px] font-semibold px-2.5 py-1.5 rounded-lg hover:bg-slate-50 flex-1 sm:flex-none text-center transition flex items-center justify-center gap-1">
             <span id="dtrBtnText">📅 Manual DTR</span>
-            <input type="file" id="dtrFileInput" accept="application/pdf, image/png, image/jpeg" class="hidden" onchange="handleDtrUpload(event)">
-          </label>
+          </button>
 
           <button onclick="toggleArchive()" id="archiveBtn" class="bg-white text-slate-700 border border-slate-300 text-[11px] font-semibold px-2.5 py-1.5 rounded-lg hover:bg-slate-50 transition flex-1 sm:flex-none text-center">Archive</button>
           <button onclick="resetAllData()" title="Reset All Tracker Data" class="bg-rose-50 text-rose-700 border border-rose-200 text-[11px] font-semibold px-2.5 py-1.5 rounded-lg hover:bg-rose-100 transition flex-1 sm:flex-none text-center">Reset</button>
@@ -503,7 +502,7 @@
           <input type="number" step="any" inputmode="decimal" id="amount" placeholder="0.00" required class="p-2 border border-slate-300 rounded-lg w-full text-xs bg-white focus:ring-2 focus:ring-indigo-500 focus:outline-none">
         </div>
 
-        <!-- NEW ATTACH RECEIPT BUTTON IN FORM -->
+        <!-- ATTACH RECEIPT BUTTON IN FORM -->
         <div>
           <label class="block text-[10px] font-bold text-slate-600 uppercase tracking-wider mb-1">Receipt Attachment</label>
           <label id="expenseReceiptBtnLabel" class="w-full bg-white text-slate-700 border border-slate-300 font-semibold p-2 rounded-lg hover:bg-slate-50 cursor-pointer transition flex items-center justify-center gap-1.5 text-xs shadow-xs">
@@ -804,6 +803,37 @@
     </div>
   </div>
 
+  <!-- MANUAL DTR MANAGEMENT MODAL -->
+  <div id="dtrModal" class="hidden fixed inset-0 bg-slate-900/60 backdrop-blur-sm flex justify-center items-center p-4 z-[60] no-print">
+    <div class="bg-white rounded-2xl shadow-2xl max-w-md w-full p-5 sm:p-6 border border-slate-200">
+      <div class="flex justify-between items-center mb-4 border-b border-slate-100 pb-2">
+        <h3 class="text-base font-bold text-slate-900">📅 Manage Manual DTRs</h3>
+        <button onclick="closeDtrModal()" class="text-slate-400 hover:text-slate-600 font-bold text-lg">✕</button>
+      </div>
+
+      <div class="space-y-4 text-xs">
+        <div>
+          <label class="block text-[10px] font-bold uppercase tracking-wider text-slate-600 mb-1">Upload New DTR File(s)</label>
+          <input type="file" id="dtrModalFileInput" accept="application/pdf, image/*" multiple class="hidden" onchange="handleDtrModalUpload(event)">
+          <button type="button" onclick="document.getElementById('dtrModalFileInput').click()" class="w-full bg-indigo-50 border border-indigo-200 text-indigo-700 font-semibold py-2.5 rounded-xl hover:bg-indigo-100 transition flex items-center justify-center gap-2">
+            📤 Upload DTR File(s)
+          </button>
+        </div>
+
+        <div>
+          <p class="text-[10px] font-bold uppercase tracking-wider text-slate-600 mb-1.5">Uploaded DTR Files (Alphabetical Order):</p>
+          <div id="dtrModalFileList" class="space-y-1.5 max-h-48 overflow-y-auto pr-1">
+            <!-- Dynamically populated -->
+          </div>
+        </div>
+
+        <div class="flex justify-end gap-2 pt-2 border-t border-slate-100">
+          <button type="button" onclick="closeDtrModal()" class="bg-slate-900 text-white font-bold px-4 py-1.5 rounded-xl hover:bg-slate-800 transition">Done</button>
+        </div>
+      </div>
+    </div>
+  </div>
+
   <script>
     // Initialize pdf.js worker
     if (typeof pdfjsLib !== 'undefined') {
@@ -857,7 +887,7 @@
     let cashAdvance = 0;
     let regionName = '';
     let signatureDataUrl = '';
-    let dtrPdfDataUrl = '';
+    let dtrFiles = []; // Array of DTR objects: { id, name, data }
     let tempExpenseReceiptDataUrl = '';
     let isArchived = false;
     let editingId = null;
@@ -1106,10 +1136,25 @@
       if (!currentUsername || !db) return;
       const userKey = getSanitizedUsername();
 
+      // Attempt LocalStorage Recovery First
+      const localBackup = localStorage.getItem('backup_travels_' + userKey);
+      if (localBackup) {
+        try {
+          const parsed = JSON.parse(localBackup);
+          if (Array.isArray(parsed) && parsed.length > 0 && travels.length === 0) {
+            travels = parsed;
+          }
+        } catch(e) {}
+      }
+
       try {
         db.ref('users/' + userKey).on('value', (snapshot) => {
           const val = snapshot.val();
-          travels = (val && val.travels) ? val.travels : [];
+          if (val && val.travels && Array.isArray(val.travels)) {
+            travels = val.travels;
+            // Update local backup
+            localStorage.setItem('backup_travels_' + userKey, JSON.stringify(travels));
+          }
           signatureDataUrl = (val && val.signatureDataUrl) ? val.signatureDataUrl : '';
           
           renderTravelListTable();
@@ -1121,7 +1166,16 @@
               cashAdvance = found.cashAdvance || 0;
               isArchived = found.isArchived === true;
               expenses = found.expenses || [];
-              dtrPdfDataUrl = found.dtrPdf || '';
+              
+              if (Array.isArray(found.dtrFiles)) {
+                dtrFiles = found.dtrFiles;
+              } else if (found.dtrPdf) {
+                dtrFiles = [{ id: 'legacy_dtr', name: 'Manual DTR.pdf', data: found.dtrPdf }];
+              } else {
+                dtrFiles = [];
+              }
+              sortDtrFiles();
+
               updateUIFields();
               showScreen('mainDashboard');
             } else {
@@ -1143,17 +1197,27 @@
     }
 
     function saveDataToStorage() {
-      if (!currentUsername || !db) return;
+      if (!currentUsername) return;
       const userKey = getSanitizedUsername();
 
+      // Save to LocalStorage immediately as a hard backup
       try {
-        db.ref('users/' + userKey).set({
-          travels: travels,
-          signatureDataUrl: signatureDataUrl,
-          lastUpdated: Date.now()
-        });
+        localStorage.setItem('backup_travels_' + userKey, JSON.stringify(travels));
       } catch(e) {
-        console.warn("Firebase Write Notice:", e);
+        console.warn("LocalStorage Backup Warning:", e);
+      }
+
+      // Save to Firebase Database
+      if (db) {
+        try {
+          db.ref('users/' + userKey).set({
+            travels: travels,
+            signatureDataUrl: signatureDataUrl,
+            lastUpdated: Date.now()
+          });
+        } catch(e) {
+          console.warn("Firebase Write Notice:", e);
+        }
       }
     }
 
@@ -1585,7 +1649,7 @@
         cashAdvance: caVal,
         isArchived: false,
         expenses: [],
-        dtrPdf: ''
+        dtrFiles: []
       };
 
       travels.unshift(newTrv);
@@ -1607,7 +1671,15 @@
       cashAdvance = found.cashAdvance || 0;
       isArchived = found.isArchived === true;
       expenses = found.expenses || [];
-      dtrPdfDataUrl = found.dtrPdf || '';
+      
+      if (Array.isArray(found.dtrFiles)) {
+        dtrFiles = found.dtrFiles;
+      } else if (found.dtrPdf) {
+        dtrFiles = [{ id: 'legacy_dtr', name: 'Manual DTR.pdf', data: found.dtrPdf }];
+      } else {
+        dtrFiles = [];
+      }
+      sortDtrFiles();
 
       showScreen('mainDashboard');
 
@@ -1638,7 +1710,7 @@
         travels[idx].cashAdvance = cashAdvance;
         travels[idx].isArchived = isArchived;
         travels[idx].expenses = expenses;
-        travels[idx].dtrPdf = dtrPdfDataUrl;
+        travels[idx].dtrFiles = dtrFiles;
       }
       saveDataToStorage();
     }
@@ -1700,19 +1772,80 @@
       }
     }
 
-    // HANDLER FOR MANUAL DTR ATTACHMENT
-    function handleDtrUpload(event) {
-      if (isArchived) return;
-      const file = event.target.files[0];
-      if (!file) return;
+    // MULTIPLE DTR LOGIC & ALPHABETICAL SORTING
+    function sortDtrFiles() {
+      dtrFiles.sort((a, b) => a.name.localeCompare(b.name, undefined, { numeric: true, sensitivity: 'base' }));
+    }
 
-      const reader = new FileReader();
-      reader.onload = function(e) {
-        dtrPdfDataUrl = e.target.result;
+    function openDtrModal() {
+      renderDtrModalFileList();
+      document.getElementById('dtrModal').classList.remove('hidden');
+    }
+
+    function closeDtrModal() {
+      document.getElementById('dtrModal').classList.add('hidden');
+    }
+
+    async function handleDtrModalUpload(event) {
+      if (isArchived) return;
+      const files = Array.from(event.target.files);
+      if (files.length === 0) return;
+
+      await showLoading("Processing DTR Upload(s)...", 300);
+
+      for (let file of files) {
+        const base64Data = await new Promise((resolve) => {
+          const reader = new FileReader();
+          reader.onload = (e) => resolve(e.target.result);
+          reader.readAsDataURL(file);
+        });
+
+        dtrFiles.push({
+          id: 'dtr_' + Date.now() + '_' + Math.random().toString(36).substr(2, 4),
+          name: file.name,
+          data: base64Data
+        });
+      }
+
+      sortDtrFiles();
+      saveActiveTravelData();
+      updateTracker();
+      renderDtrModalFileList();
+      document.getElementById('dtrModalFileInput').value = '';
+    }
+
+    function removeDtrFile(id) {
+      if (isArchived) return;
+      if (confirm("Remove this DTR file attachment?")) {
+        dtrFiles = dtrFiles.filter(f => f.id !== id);
         saveActiveTravelData();
         updateTracker();
-      };
-      reader.readAsDataURL(file);
+        renderDtrModalFileList();
+      }
+    }
+
+    function renderDtrModalFileList() {
+      const container = document.getElementById('dtrModalFileList');
+      if (!container) return;
+      container.innerHTML = '';
+
+      if (dtrFiles.length === 0) {
+        container.innerHTML = `<p class="text-slate-400 italic text-[11px] py-2 text-center">No DTR files uploaded yet.</p>`;
+        return;
+      }
+
+      dtrFiles.forEach((fileObj) => {
+        const item = document.createElement('div');
+        item.className = 'flex items-center justify-between p-2 bg-slate-50 border border-slate-200 rounded-lg text-xs';
+        item.innerHTML = `
+          <div class="flex items-center gap-2 overflow-hidden mr-2">
+            <span class="text-indigo-600 font-bold">📄</span>
+            <span class="font-semibold text-slate-800 truncate" title="${fileObj.name}">${fileObj.name}</span>
+          </div>
+          ${!isArchived ? `<button type="button" onclick="removeDtrFile('${fileObj.id}')" class="text-rose-600 hover:text-rose-800 font-bold px-1.5 py-0.5 rounded hover:bg-rose-50 transition" title="Remove DTR">🗑️</button>` : ''}
+        `;
+        container.appendChild(item);
+      });
     }
 
     function toggleArchive() {
@@ -1830,7 +1963,7 @@
         expenses = [];
         cashAdvance = 0;
         regionName = '';
-        dtrPdfDataUrl = '';
+        dtrFiles = [];
         tempExpenseReceiptDataUrl = '';
         isArchived = false;
 
@@ -2060,517 +2193,166 @@
       }
     }
 
-    function updateTracker() {
-      const archiveBtn = document.getElementById('archiveBtn');
-      const statusBadge = document.getElementById('archiveStatusBadge');
-      const formElem = document.getElementById('expenseForm');
-      const caInput = document.getElementById('cashAdvanceInput');
-      const regInput = document.getElementById('regionNameInput');
-      const headerReg = document.getElementById('headerRegionDisplay');
+    document.getElementById('expenseForm').addEventListener('submit', function(e) {
+      e.preventDefault();
+      if (isArchived) return;
 
-      if (headerReg) headerReg.textContent = regionName || 'Travel';
+      const date = document.getElementById('dateInput').value;
+      const category = document.getElementById('category').value;
+      const subOptionSelect = document.getElementById('subOptionSelect');
+      
+      let selectedSubType = '';
+      let customSubtypeVal = '';
 
-      if (isArchived) {
-        if (archiveBtn) archiveBtn.textContent = 'Unarchive';
-        if (statusBadge) statusBadge.classList.remove('hidden');
-        if (formElem) {
-          formElem.querySelectorAll('input, select, button').forEach(el => el.disabled = true);
-          formElem.classList.add('opacity-60', 'pointer-events-none');
+      if (category === 'Transportation') {
+        selectedSubType = subOptionSelect.value;
+        if (selectedSubType === 'Others') {
+          customSubtypeVal = document.getElementById('customSubtype').value.trim();
         }
-        if (caInput) caInput.disabled = true;
-        if (regInput) regInput.disabled = true;
-      } else {
-        if (archiveBtn) archiveBtn.textContent = 'Archive';
-        if (statusBadge) statusBadge.classList.add('hidden');
-        if (formElem) {
-          formElem.querySelectorAll('input, select, button').forEach(el => el.disabled = false);
-          formElem.classList.remove('opacity-60', 'pointer-events-none');
+      } else if (category === 'Others') {
+        customSubtypeVal = document.getElementById('customSubtype').value.trim();
+      }
+
+      const rawTicket = document.getElementById('ticketNo').value.trim();
+      let desc = document.getElementById('desc').value.trim();
+      const amount = parseFloat(document.getElementById('amount').value);
+      const receiptImg = tempExpenseReceiptDataUrl || '';
+
+      if (editingId !== null) {
+        const index = expenses.findIndex(item => item.id === editingId);
+        if (index !== -1) {
+          const oldReceipt = expenses[index].receiptImg || '';
+          expenses[index] = { 
+            id: editingId, 
+            date, 
+            mainCategory: category, 
+            subType: selectedSubType, 
+            customSubtype: customSubtypeVal, 
+            ticketNo: rawTicket, 
+            desc, 
+            amount, 
+            receiptImg: receiptImg || oldReceipt 
+          };
         }
-        if (caInput) caInput.disabled = false;
-        if (regInput) regInput.disabled = false;
-        handleCategoryChange();
-      }
-
-      const sigImgDetailed = document.getElementById('detailedSignatureImg');
-      const sigImgSummary = document.getElementById('summarySignatureImg');
-      const sigUploadContainer = document.getElementById('signatureUploadContainer');
-
-      if (signatureDataUrl) {
-        if (sigImgDetailed) { sigImgDetailed.src = signatureDataUrl; sigImgDetailed.classList.remove('hidden'); }
-        if (sigImgSummary) { sigImgSummary.src = signatureDataUrl; sigImgSummary.classList.remove('hidden'); }
-        if (sigUploadContainer) sigUploadContainer.classList.add('hidden');
+        cancelEdit();
       } else {
-        if (sigImgDetailed) { sigImgDetailed.src = ''; sigImgDetailed.classList.add('hidden'); }
-        if (sigImgSummary) { sigImgSummary.src = ''; sigImgSummary.classList.add('hidden'); }
-        if (sigUploadContainer) sigUploadContainer.classList.remove('hidden');
-      }
-
-      // UPDATE MANUAL DTR ATTACHMENT BUTTON LABEL/BADGE
-      const dtrBtnLabel = document.getElementById('dtrBtnLabel');
-      const dtrBtnText = document.getElementById('dtrBtnText');
-      if (dtrPdfDataUrl) {
-        dtrBtnLabel.className = "bg-emerald-50 text-emerald-700 border border-emerald-300 text-[11px] font-semibold px-2.5 py-1.5 rounded-lg hover:bg-emerald-100 cursor-pointer flex-1 sm:flex-none text-center transition flex items-center justify-center gap-1";
-        dtrBtnText.textContent = "📅 Manual DTR ✓";
-      } else {
-        dtrBtnLabel.className = "bg-white text-slate-700 border border-slate-300 text-[11px] font-semibold px-2.5 py-1.5 rounded-lg hover:bg-slate-50 cursor-pointer flex-1 sm:flex-none text-center transition flex items-center justify-center gap-1";
-        dtrBtnText.textContent = "📅 Manual DTR";
-      }
-
-      const tbodyUI = document.getElementById('uiTableBody');
-      const tbodyPrintMainDetailed = document.getElementById('printMainTableBodyDetailed');
-      const tbodyPrintMiscDetailed = document.getElementById('printMiscTableBodyDetailed');
-      
-      tbodyUI.innerHTML = '';
-      tbodyPrintMainDetailed.innerHTML = '';
-      tbodyPrintMiscDetailed.innerHTML = '';
-
-      let totalTranspo = 0, totalMeals = 0, totalPerDiem = 0, totalTerminalFee = 0, totalMisc = 0;
-
-      const modalStartElem = document.getElementById('modalFilterStartDate');
-      const modalEndElem = document.getElementById('modalFilterEndDate');
-      const startDate = modalStartElem ? modalStartElem.value : '';
-      const endDate = modalEndElem ? modalEndElem.value : '';
-
-      expenses.forEach(item => {
-        if (item.mainCategory === 'Transportation') totalTranspo += item.amount;
-        else if (item.mainCategory === 'Terminal Fee') totalTerminalFee += item.amount;
-        else if (item.mainCategory === 'Miscellaneous' || item.mainCategory === 'Others') totalMisc += item.amount;
-        else if (item.mainCategory === 'Meals') totalMeals += item.amount;
-        else if (item.mainCategory === 'Per Diem') totalPerDiem += item.amount;
-      });
-
-      function renderMainTable(tbody, itemsList, isPrint) {
-        const grouped = {};
-        itemsList.forEach(item => {
-          if (!grouped[item.date]) grouped[item.date] = [];
-          grouped[item.date].push(item);
+        expenses.push({ 
+          id: Date.now(), 
+          date, 
+          mainCategory: category, 
+          subType: selectedSubType, 
+          customSubtype: customSubtypeVal, 
+          ticketNo: rawTicket, 
+          desc, 
+          amount, 
+          receiptImg 
         });
-
-        const sortedDates = Object.keys(grouped).sort((a, b) => new Date(a) - new Date(b));
-
-        sortedDates.forEach(date => {
-          const items = grouped[date];
-
-          items.sort((a, b) => {
-            const getRank = (cat) => {
-              if (cat === 'Meals') return 2;
-              if (cat === 'Per Diem') return 3;
-              return 1;
-            };
-            return getRank(a.mainCategory) - getRank(b.mainCategory);
-          });
-
-          let dayTranspoFee = 0;
-          let dayMealsPerDiem = 0;
-
-          items.forEach((item, index) => {
-            let typeDisplay = '';
-            let descDisplay = item.desc || '';
-            let isTranspoFee = false;
-            let isMealsPerDiem = false;
-
-            if (item.mainCategory === 'Transportation') {
-              isTranspoFee = true;
-              typeDisplay = item.subType === 'Others' ? (item.customSubtype || 'Others') : item.subType;
-            } else if (item.mainCategory === 'Terminal Fee') {
-              isTranspoFee = true;
-              typeDisplay = 'Terminal Fee';
-              if (!descDisplay) descDisplay = 'Terminal Fee';
-            } else if (item.mainCategory === 'Miscellaneous') {
-              isTranspoFee = true;
-              typeDisplay = 'Misc';
-            } else if (item.mainCategory === 'Others') {
-              isTranspoFee = true;
-              typeDisplay = item.customSubtype || 'Others';
-            } else if (item.mainCategory === 'Meals') {
-              isMealsPerDiem = true;
-              typeDisplay = 'Meals';
-              if (!descDisplay) descDisplay = 'Meals Allowance';
-            } else if (item.mainCategory === 'Per Diem') {
-              isMealsPerDiem = true;
-              typeDisplay = 'Per Diem';
-              if (!descDisplay) descDisplay = 'Per Diem Allowance';
-            }
-
-            const transpoAmt = isTranspoFee ? item.amount : 0;
-            const mealsAmt = isMealsPerDiem ? item.amount : 0;
-            dayTranspoFee += transpoAmt;
-            dayMealsPerDiem += mealsAmt;
-
-            const row = document.createElement('tr');
-            row.className = isPrint ? '' : 'hover:bg-slate-50/80';
-
-            let dateTd = index === 0 
-              ? `<td class="font-bold text-center" rowspan="${items.length + 1}">${formatDateShort(date)}</td>`
-              : '';
-
-            let receiptTd = isPrint ? '' : `
-              <td class="text-center whitespace-nowrap no-print">
-                ${item.receiptImg ? `<span class="bg-emerald-50 text-emerald-700 border border-emerald-200 px-1.5 py-0.5 rounded font-bold text-[10px]" title="Receipt attached">Attached ✓</span>` : `<span class="text-slate-400 text-[10px]">None</span>`}
-              </td>`;
-
-            let actionCol = isPrint ? '' : `
-              <td class="text-center whitespace-nowrap no-print">
-                ${isArchived 
-                  ? `<span class="text-slate-400 text-xs italic font-medium">Locked</span>` 
-                  : `<button onclick="editExpense(${item.id})" class="text-indigo-600 hover:text-indigo-900 font-semibold mr-2.5">Edit</button>
-                     <button onclick="deleteExpense(${item.id})" class="text-rose-600 hover:text-rose-800 font-semibold">✕</button>`
-                }
-              </td>`;
-
-            row.innerHTML = `
-              ${dateTd}
-              <td class="text-slate-800 w-auto whitespace-nowrap">${descDisplay}</td>
-              <td class="text-center text-slate-700">${typeDisplay}</td>
-              <td class="text-center text-slate-600">${item.ticketNo || ''}</td>
-              <td class="text-right text-slate-800">${formatNum(transpoAmt)}</td>
-              <td class="text-right text-slate-800">${formatNum(mealsAmt)}</td>
-              <td class="text-right font-bold text-slate-800"></td>
-              ${receiptTd}
-              ${actionCol}
-            `;
-            tbody.appendChild(row);
-          });
-
-          const subtotalRow = document.createElement('tr');
-          const dayTotal = dayTranspoFee + dayMealsPerDiem;
-          
-          let actionColEmpty = isPrint ? '' : `<td class="text-center no-print"></td><td class="text-center no-print"></td>`;
-
-          subtotalRow.innerHTML = `
-            <td></td>
-            <td></td>
-            <td class="text-center font-bold text-rose-600">subtotal</td>
-            <td class="text-right font-bold text-rose-600">${formatNum(dayTranspoFee)}</td>
-            <td class="text-right font-bold text-slate-800">${formatNum(dayMealsPerDiem)}</td>
-            <td class="text-right font-bold text-indigo-600">${formatNum(dayTotal)}</td>
-            ${actionColEmpty}
-          `;
-          tbody.appendChild(subtotalRow);
-        });
+        resetForm();
       }
 
-      const filteredReportExpenses = expenses.filter(item => {
-        if (startDate && item.date < startDate) return false;
-        if (endDate && item.date > endDate) return false;
-        return true;
-      });
-
-      renderMainTable(tbodyUI, expenses, false);
-      renderMainTable(tbodyPrintMainDetailed, filteredReportExpenses.filter(e => e.mainCategory !== 'Miscellaneous'), true);
-
-      const miscItemsDetailed = filteredReportExpenses.filter(e => e.mainCategory === 'Miscellaneous');
-      miscItemsDetailed.sort((a, b) => new Date(a.date) - new Date(b.date));
-      
-      miscItemsDetailed.forEach(item => {
-        const row = document.createElement('tr');
-        row.innerHTML = `
-          <td class="text-center font-bold text-gray-800">${formatDateFullYear(item.date)}</td>
-          <td class="text-center text-gray-800 w-auto whitespace-nowrap">${item.desc || ''}</td>
-          <td class="text-center text-gray-700">${item.ticketNo || ''}</td>
-          <td class="text-right text-gray-800 font-medium">${formatNum(item.amount)}</td>
-        `;
-        tbodyPrintMiscDetailed.appendChild(row);
-      });
-
-      const miscWrapperDetailed = document.getElementById('miscTableWrapperDetailed');
-      if (miscItemsDetailed.length > 0) {
-        const miscTotalRow = document.createElement('tr');
-        miscTotalRow.innerHTML = `
-          <td></td>
-          <td class="text-center font-bold text-gray-800">Total</td>
-          <td></td>
-          <td class="text-right font-bold text-gray-900">${formatNum(miscItemsDetailed.reduce((acc, i) => acc + i.amount, 0))}</td>
-        `;
-        tbodyPrintMiscDetailed.appendChild(miscTotalRow);
-        miscWrapperDetailed.classList.remove('hidden');
-      } else {
-        miscWrapperDetailed.classList.add('hidden');
-      }
-
-      let rTranspo = 0, rMeals = 0, rPerDiem = 0, rTerminal = 0, rMisc = 0;
-      filteredReportExpenses.forEach(i => {
-        if (i.mainCategory === 'Transportation') rTranspo += i.amount;
-        else if (i.mainCategory === 'Terminal Fee') rTerminal += i.amount;
-        else if (i.mainCategory === 'Meals') rMeals += i.amount;
-        else if (i.mainCategory === 'Per Diem') rPerDiem += i.amount;
-        else if (i.mainCategory === 'Miscellaneous' || i.mainCategory === 'Others') rMisc += i.amount;
-      });
-
-      const reportTotalSpent = rTranspo + rMeals + rPerDiem + rTerminal + rMisc;
-      
-      const hasDateRange = (startDate !== '' || endDate !== '');
-      const reportCA = hasDateRange ? (cashAdvance / 2) : cashAdvance;
-      const reportReturnRefund = reportCA - reportTotalSpent;
-
-      const currentDept = accountDepartment || 'StrikeForce/Fraud Audit-IAD';
-
-      const printDeptElem = document.getElementById('printDepartmentName');
-      const detailedDeptElem = document.getElementById('detailedDepartmentName');
-      if (printDeptElem) printDeptElem.textContent = currentDept;
-      if (detailedDeptElem) detailedDeptElem.textContent = currentDept;
-
-      document.getElementById('detailedCALabel').textContent = 'TOTAL Cash Advance';
-      document.getElementById('detailedTotalTranspo').textContent = formatNum(rTranspo);
-      document.getElementById('detailedTotalMeals').textContent = formatNum(rMeals);
-      document.getElementById('detailedTotalPerDiem').textContent = formatNum(rPerDiem);
-      document.getElementById('detailedTotalTerminalFee').textContent = formatNum(rTerminal);
-      document.getElementById('detailedTotalMisc').textContent = formatNum(rMisc);
-
-      document.getElementById('detailedTotalExpenses').textContent = formatNum(reportTotalSpent);
-      document.getElementById('detailedTotalCA').textContent = formatNum(reportCA);
-      document.getElementById('detailedReturnRefund').textContent = formatNum(reportReturnRefund);
-      
-      document.getElementById('detailedAccountName1').textContent = accountName || 'Name of Account';
-      document.getElementById('detailedAccountDesignation1').textContent = accountDesignation || 'Audit Specialist';
-      
-      const detailedAccountDept1 = document.getElementById('detailedAccountDepartment1');
-      if (detailedAccountDept1) detailedAccountDept1.textContent = accountDepartment || '';
-
-      const currentRegionText = regionName || 'N/A';
-      let dateRangeText = 'N/A';
-      if (startDate || endDate) {
-        dateRangeText = formatDateRangeLong(startDate, endDate);
-      } else if (filteredReportExpenses.length > 0) {
-        const sorted = filteredReportExpenses.map(e => e.date).sort();
-        dateRangeText = formatDateRangeLong(sorted[0], sorted[sorted.length - 1]);
-      }
-
-      document.getElementById('printRegionName').textContent = currentRegionText;
-      document.getElementById('printDateRange').textContent = dateRangeText;
-
-      const detailedRegElem = document.getElementById('detailedRegionName');
-      const detailedDateElem = document.getElementById('detailedDateRange');
-      if (detailedRegElem) detailedRegElem.textContent = currentRegionText;
-      if (detailedDateElem) detailedDateElem.textContent = dateRangeText;
-
-      const summaryCALabel2 = document.getElementById('summaryCALabel2');
-      if (summaryCALabel2) summaryCALabel2.textContent = 'TOTAL Cash Advance';
-
-      document.getElementById('printAccountNameMainSummary').textContent = accountName || 'Name of Account';
-      document.getElementById('printTotalTranspoSummary').textContent = formatNum(rTranspo);
-      document.getElementById('printTotalMealsSummary').textContent = formatNum(rMeals);
-      document.getElementById('printTotalPerDiemSummary').textContent = formatNum(rPerDiem);
-      document.getElementById('printTotalTerminalFeeSummary').textContent = formatNum(rTerminal);
-      document.getElementById('printTotalMiscSummary').textContent = formatNum(rMisc);
-
-      document.getElementById('printTotalExpensesSummary1').textContent = formatNum(reportTotalSpent);
-
-      document.getElementById('printSummaryTotalExpenses').textContent = formatNum(reportTotalSpent);
-      document.getElementById('printSummaryTotalCA').textContent = formatNum(reportCA);
-      document.getElementById('printSummaryReturnRefund').textContent = formatNum(reportReturnRefund);
-      
-      document.getElementById('printAccountNameSubSummary').textContent = accountName || 'Name of Account';
-      document.getElementById('printAccountDesignationSubSummary').textContent = accountDesignation || 'Audit Specialist';
-
-      const printAccountDeptSubSummary = document.getElementById('printAccountDepartmentSubSummary');
-      if (printAccountDeptSubSummary) printAccountDeptSubSummary.textContent = accountDepartment || '';
-
-      const totalSpent = totalTranspo + totalMeals + totalPerDiem + totalTerminalFee + totalMisc;
-      const returnRefund = cashAdvance - totalSpent;
-      document.getElementById('totalTranspoDisplay').textContent = formatCurrency(totalSpent ? totalTranspo : 0);
-      document.getElementById('totalMealsDisplay').textContent = formatCurrency(totalMeals);
-      document.getElementById('totalPerDiemDisplay').textContent = formatCurrency(totalPerDiem);
-      document.getElementById('totalTerminalFeeDisplay').textContent = formatCurrency(totalTerminalFee);
-      document.getElementById('totalMiscDisplay').textContent = formatCurrency(totalMisc);
-      document.getElementById('totalSpentDisplay').textContent = formatCurrency(totalSpent);
-      
-      const remElem = document.getElementById('remainingDisplay');
-      remElem.textContent = formatCurrency(returnRefund);
-      remElem.className = returnRefund < 0 ? 'text-xs sm:text-sm font-bold text-rose-600 mt-0.5' : 'text-xs sm:text-sm font-bold text-indigo-900 mt-0.5';
-    }
-
-    async function openPreviewModal(type) {
-      currentPreviewType = type;
+      saveActiveTravelData();
       updateTracker();
-      await renderModalContent(type);
-      document.getElementById('previewModal').classList.remove('hidden');
-    }
+    });
 
-    // HELPER FUNCTION TO RENDER ATTACHED EXPENSE RECEIPTS IN A 2x2 GRID (4 PER PAGE)
-    function renderExpenseReceiptsGrid(expensesList, targetContainer) {
-      if (!targetContainer) return;
-      targetContainer.innerHTML = '';
+    function editExpense(id) {
+      if (isArchived) return;
+      const item = expenses.find(e => e.id === id);
+      if (!item) return;
 
-      const itemsWithReceipts = expensesList.filter(e => e.receiptImg);
-      if (itemsWithReceipts.length === 0) return;
-
-      // Group into chunks of 4 receipts per page
-      for (let i = 0; i < itemsWithReceipts.length; i += 4) {
-        const chunk = itemsWithReceipts.slice(i, i + 4);
-
-        const pageDiv = document.createElement('div');
-        pageDiv.className = 'page-break w-full py-4 font-sans';
-
-        const grid = document.createElement('div');
-        grid.className = 'grid grid-cols-2 gap-6 w-full items-start';
-
-        chunk.forEach(item => {
-          const card = document.createElement('div');
-          card.className = 'flex flex-col justify-between items-center p-3 border border-gray-300 rounded bg-white text-center shadow-xs min-h-[4.2in]';
-
-          const imgBox = document.createElement('div');
-          imgBox.className = 'w-full flex-1 flex justify-center items-center overflow-hidden mb-2';
-
-          const img = document.createElement('img');
-          img.src = item.receiptImg;
-          img.className = 'grid-receipt-img';
-          imgBox.appendChild(img);
-
-          const descBox = document.createElement('div');
-          descBox.className = 'w-full border-t border-gray-200 pt-2 text-[8pt] text-gray-800 font-sans';
-          descBox.innerHTML = `
-            <p class="font-bold text-gray-900">Date: ${formatDateLong(item.date)}</p>
-            <p class="text-gray-700 font-semibold truncate max-w-full">${item.desc || item.mainCategory} (${formatCurrency(item.amount)})</p>
-          `;
-
-          card.appendChild(imgBox);
-          card.appendChild(descBox);
-          grid.appendChild(card);
-        });
-
-        pageDiv.appendChild(grid);
-        targetContainer.appendChild(pageDiv);
-      }
-    }
-
-    // HELPER FUNCTION TO RENDER PDF OR IMAGE ATTACHMENTS FOR MANUAL DTR
-    async function renderAttachmentPages(base64Data, title, targetContainer) {
-      if (!targetContainer) return;
-      targetContainer.innerHTML = '';
-      if (!base64Data) return;
-
-      if (base64Data.startsWith('data:image/')) {
-        const pageDiv = document.createElement('div');
-        pageDiv.className = 'w-full flex justify-center items-center py-2 page-break';
-        const img = document.createElement('img');
-        img.src = base64Data;
-        img.className = 'attachment-img border border-gray-300 shadow-xs';
-        pageDiv.appendChild(img);
-        targetContainer.appendChild(pageDiv);
-      } else if (base64Data.startsWith('data:application/pdf')) {
-        try {
-          const pdfBase64 = base64Data.split(',')[1];
-          const pdfData = atob(pdfBase64);
-          const loadingTask = pdfjsLib.getDocument({ data: pdfData });
-          const pdf = await loadingTask.promise;
-
-          for (let pageNum = 1; pageNum <= pdf.numPages; pageNum++) {
-            const page = await pdf.getPage(pageNum);
-            const viewport = page.getViewport({ scale: 1.5 });
-
-            const canvas = document.createElement('canvas');
-            const context = canvas.getContext('2d');
-            canvas.height = viewport.height;
-            canvas.width = viewport.width;
-
-            await page.render({ canvasContext: context, viewport: viewport }).promise;
-
-            const pageDiv = document.createElement('div');
-            pageDiv.className = 'page-break w-full flex justify-center items-center py-2';
-            const pageImg = document.createElement('img');
-            pageImg.src = canvas.toDataURL('image/png');
-            pageImg.className = 'attachment-img border border-gray-300 shadow-xs';
-            pageDiv.appendChild(pageImg);
-            targetContainer.appendChild(pageDiv);
-          }
-        } catch (err) {
-          console.error(`Error rendering ${title} PDF:`, err);
-          const errDiv = document.createElement('div');
-          errDiv.className = 'text-center text-red-600 text-xs font-bold py-4 page-break';
-          errDiv.textContent = `[Failed to load ${title} PDF]`;
-          targetContainer.appendChild(errDiv);
-        }
-      }
-    }
-
-    async function renderModalContent(type) {
-      const modalContent = document.getElementById('modalContent');
-      const titleElem = document.getElementById('modalTitle');
+      editingId = id;
+      document.getElementById('dateInput').value = item.date;
+      document.getElementById('category').value = item.mainCategory || 'Transportation';
       
-      document.getElementById('printAreaDetailed').classList.remove('print-active', 'page-break');
-      document.getElementById('printAreaSummary').classList.remove('print-active', 'page-break');
-      document.getElementById('printAreaReceipts').classList.remove('print-active', 'page-break');
-      document.getElementById('printAreaDtr').classList.remove('print-active', 'page-break');
+      handleCategoryChange();
 
-      modalContent.innerHTML = '';
-      titleElem.textContent = ''; 
+      if (item.mainCategory === 'Transportation') {
+        document.getElementById('subOptionSelect').value = item.subType || 'Boat';
+        handleSubOptionChange();
+        if (item.subType === 'Others') {
+          document.getElementById('customSubtype').value = item.customSubtype || '';
+        }
+      } else if (item.mainCategory === 'Others') {
+        document.getElementById('customSubtype').value = item.customSubtype || '';
+      } else if (item.mainCategory === 'Meals' || item.mainCategory === 'Per Diem') {
+        document.getElementById('subOptionSelect').value = item.amount;
+      }
 
-      // Render Expense Receipts Grid
-      renderExpenseReceiptsGrid(expenses, document.getElementById('printAreaReceiptsContent'));
+      document.getElementById('ticketNo').value = item.ticketNo || '';
+      document.getElementById('desc').value = item.desc || '';
+      document.getElementById('amount').value = item.amount;
 
-      // Pre-render Manual DTR Attachment
-      if (dtrPdfDataUrl) {
-        await renderAttachmentPages(dtrPdfDataUrl, 'ATTACHED MANUAL DTR', document.getElementById('printAreaDtrContent'));
+      tempExpenseReceiptDataUrl = item.receiptImg || '';
+      const statusText = document.getElementById('expenseReceiptStatusText');
+      const btnLabel = document.getElementById('expenseReceiptBtnLabel');
+
+      if (item.receiptImg) {
+        if (statusText) statusText.textContent = 'Receipt Attached ✓';
+        if (btnLabel) btnLabel.className = "w-full bg-emerald-50 text-emerald-700 border border-emerald-300 font-bold p-2 rounded-lg hover:bg-emerald-100 cursor-pointer transition flex items-center justify-center gap-1.5 text-xs shadow-xs";
       } else {
-        document.getElementById('printAreaDtrContent').innerHTML = '';
+        if (statusText) statusText.textContent = '📎 Attach Receipt';
+        if (btnLabel) btnLabel.className = "w-full bg-white text-slate-700 border border-slate-300 font-semibold p-2 rounded-lg hover:bg-slate-50 cursor-pointer transition flex items-center justify-center gap-1.5 text-xs shadow-xs";
       }
 
-      if (type === 'summary') {
-        document.getElementById('printAreaSummary').classList.add('print-active');
-        const clone = document.getElementById('printAreaSummary').cloneNode(true);
-        clone.classList.remove('hidden');
-        modalContent.appendChild(clone);
-
-      } else if (type === 'detailed') {
-        document.getElementById('printAreaDetailed').classList.add('print-active');
-        const clone = document.getElementById('printAreaDetailed').cloneNode(true);
-        clone.classList.remove('hidden');
-        modalContent.appendChild(clone);
-
-      } else if (type === 'combined') {
-        document.getElementById('printAreaSummary').classList.add('print-active');
-        document.getElementById('printAreaDetailed').classList.add('print-active', 'page-break');
-
-        const summaryClone = document.getElementById('printAreaSummary').cloneNode(true);
-        summaryClone.classList.remove('hidden');
-        modalContent.appendChild(summaryClone);
-
-        const separator1 = document.createElement('div');
-        separator1.className = 'my-6 border-t-2 border-dashed border-slate-300 text-center py-2 text-slate-400 text-xs font-bold uppercase tracking-wider no-print';
-        separator1.textContent = '--- Page Break (Detailed Liquidation Report Below) ---';
-        modalContent.appendChild(separator1);
-
-        const detailedClone = document.getElementById('printAreaDetailed').cloneNode(true);
-        detailedClone.classList.remove('hidden');
-        detailedClone.classList.add('page-break');
-        modalContent.appendChild(detailedClone);
-
-        // APPEND ATTACHED EXPENSE RECEIPT(S) ON A STRICTLY SEPARATE NEW PAGE (2x2 GRID)
-        const hasExpenseReceipts = expenses.some(e => e.receiptImg);
-        if (hasExpenseReceipts) {
-          document.getElementById('printAreaReceipts').classList.add('print-active', 'page-break');
-
-          const separator2 = document.createElement('div');
-          separator2.className = 'my-6 border-t-2 border-dashed border-slate-300 text-center py-2 text-slate-400 text-xs font-bold uppercase tracking-wider no-print';
-          separator2.textContent = '--- Page Break (Attached Receipt(s) Below) ---';
-          modalContent.appendChild(separator2);
-
-          const receiptsClone = document.getElementById('printAreaReceipts').cloneNode(true);
-          receiptsClone.classList.remove('hidden');
-          receiptsClone.classList.add('page-break');
-          modalContent.appendChild(receiptsClone);
-        }
-
-        // APPEND ATTACHED MANUAL DTR ON ANOTHER STRICTLY SEPARATE NEW PAGE
-        if (dtrPdfDataUrl) {
-          document.getElementById('printAreaDtr').classList.add('print-active', 'page-break');
-
-          const separator3 = document.createElement('div');
-          separator3.className = 'my-6 border-t-2 border-dashed border-slate-300 text-center py-2 text-slate-400 text-xs font-bold uppercase tracking-wider no-print';
-          separator3.textContent = '--- Page Break (Attached Manual DTR Below) ---';
-          modalContent.appendChild(separator3);
-
-          const dtrClone = document.getElementById('printAreaDtr').cloneNode(true);
-          dtrClone.classList.remove('hidden');
-          dtrClone.classList.add('page-break');
-          modalContent.appendChild(dtrClone);
-        }
-      }
+      const submitBtn = document.getElementById('submitBtn');
+      submitBtn.textContent = 'Save';
+      submitBtn.className = 'bg-emerald-600 text-white font-bold p-2 rounded-lg hover:bg-emerald-700 w-full text-xs shadow-xs transition';
+      document.getElementById('cancelEditBtn').classList.remove('hidden');
     }
 
-    function closePreviewModal() {
-      document.getElementById('previewModal').classList.add('hidden');
+    function cancelEdit() {
+      editingId = null;
+      const submitBtn = document.getElementById('submitBtn');
+      submitBtn.textContent = '+ Add Expense';
+      submitBtn.className = 'bg-indigo-600 text-white font-bold p-2 rounded-lg hover:bg-indigo-700 w-full text-xs shadow-xs transition';
+      document.getElementById('cancelEditBtn').classList.add('hidden');
+      resetForm();
+    }
+
+    function resetForm() {
+      document.getElementById('desc').value = '';
+      document.getElementById('amount').value = '';
+      document.getElementById('ticketNo').value = '';
+      document.getElementById('customSubtype').value = '';
+      document.getElementById('expenseReceiptInput').value = '';
+      tempExpenseReceiptDataUrl = '';
+      
+      const statusText = document.getElementById('expenseReceiptStatusText');
+      const btnLabel = document.getElementById('expenseReceiptBtnLabel');
+      if (statusText) statusText.textContent = '📎 Attach Receipt';
+      if (btnLabel) btnLabel.className = "w-full bg-white text-slate-700 border border-slate-300 font-semibold p-2 rounded-lg hover:bg-slate-50 cursor-pointer transition flex items-center justify-center gap-1.5 text-xs shadow-xs";
+
+      setCurrentDateInput();
+      handleCategoryChange();
+    }
+
+    function deleteExpense(id) {
+      if (isArchived) return;
+      expenses = expenses.filter(item => item.id !== id);
+      saveActiveTravelData();
+      if (editingId === id) cancelEdit();
+      updateTracker();
+    }
+
+    function formatNum(val) {
+      if (val === 0 || !val) return '0.00';
+      return val.toLocaleString('en-US', {minimumFractionDigits: 2, maximumFractionDigits: 2});
+    }
+
+    function formatCurrency(val) {
+      return '₱' + val.toLocaleString('en-US', {minimumFractionDigits: 2, maximumFractionDigits: 2});
+    }
+
+    function applyModalDateFilter() {
+      updateTracker();
+      renderModalContent(currentPreviewType);
+    }
+
+    function clearModalDateFilter() {
+      const startElem = document.getElementById('modalFilterStartDate');
+      const endElem = document.getElementById('modalFilterEndDate');
+      if (startElem) startElem.value = '';
+      if (endElem) endElem.value = '';
+      applyModalDateFilter();
     }
 
     // SAFE DOM CONTENT LOADED INITIALIZATION
