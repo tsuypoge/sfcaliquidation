@@ -146,7 +146,7 @@
 
 
   <!-- ========================================== -->
-  <!-- 1. TRAVEL LIQUIDATION LIST SCREEN (AFTER LOGIN) -->
+  <!-- 1. TRAVEL LIQUIDATION LIST SCREEN          -->
   <!-- ========================================== -->
   <div id="travelListScreen" class="hidden p-3 sm:p-6 md:p-8">
     <div class="max-w-7xl mx-auto bg-white rounded-xl shadow-md p-4 sm:p-6">
@@ -154,8 +154,7 @@
       <!-- User Info Bar -->
       <div class="mb-4 p-2.5 bg-blue-50/80 rounded-lg border border-blue-100 flex flex-col sm:flex-row items-center justify-between gap-3 text-xs sm:text-sm">
         <div class="flex items-center gap-2">
-          <span class="font-bold text-blue-900">User:</span>
-          <span id="listUserDisplay" class="font-bold text-gray-800">Name of Account</span>
+          <span id="listUserDisplay" class="font-bold text-blue-900">Welcome Account Name</span>
         </div>
         <div class="flex items-center gap-3">
           <button onclick="createNewTravel()" class="bg-blue-600 text-white font-bold text-xs px-3 py-1.5 rounded hover:bg-blue-700 transition">+ New Liquidation</button>
@@ -163,7 +162,7 @@
         </div>
       </div>
 
-      <!-- Red Styled Title Matching Image -->
+      <!-- Red Styled Title -->
       <h2 class="text-xl sm:text-2xl font-bold text-red-600 text-center mb-6">Travel Liquidation Template / Dashboard</h2>
 
       <!-- Liquidations Table -->
@@ -182,7 +181,7 @@
             </tr>
           </thead>
           <tbody id="travelListTableBody">
-            <!-- Dynamic rows will be inserted here -->
+            <!-- Dynamic rows inserted here -->
           </tbody>
         </table>
       </div>
@@ -202,12 +201,12 @@
         Syncing to Cloud...
       </div>
 
-      <!-- Top Utility Bar: Back to Travel List, Live Clock, User, Signature, & Logout -->
+      <!-- Top Utility Bar: Exit Button (Red Bold), Live Clock, User, Signature, & Logout -->
       <div class="mb-4 p-2 bg-blue-50/80 rounded-lg border border-blue-100 flex flex-col md:flex-row items-stretch md:items-center justify-between gap-3 text-xs sm:text-sm">
         
-        <!-- Back to Travels List Button -->
-        <button onclick="backToTravelList()" class="bg-slate-700 text-white font-bold px-3 py-1.5 rounded hover:bg-slate-800 transition text-xs whitespace-nowrap">
-          ⬅️ Back to Travels List
+        <!-- Red Bold Exit Button -->
+        <button onclick="backToTravelList()" class="bg-red-600 text-white font-bold px-4 py-1.5 rounded hover:bg-red-700 transition text-xs whitespace-nowrap shadow-sm">
+          Exit
         </button>
 
         <!-- Live Date & Time -->
@@ -219,7 +218,7 @@
         <div class="flex flex-wrap items-center justify-between sm:justify-end gap-3 w-full md:w-auto">
           
           <div class="flex items-center gap-1.5 bg-blue-100/80 px-2.5 py-1 rounded-md border border-blue-200">
-            <span id="loggedInUserDisplay" class="font-bold text-blue-900">Name of Account</span>
+            <span id="loggedInUserDisplay" class="font-bold text-blue-900">Welcome Account Name</span>
           </div>
 
           <!-- Signature PNG Upload Button -->
@@ -239,10 +238,10 @@
 
       </div>
 
-      <!-- Header Section: Logo Words & Action Buttons -->
+      <!-- Header Section: Region Name Liquidation Title -->
       <div class="flex flex-col md:flex-row justify-between items-center mb-4 gap-3">
         <h1 class="text-xl sm:text-2xl font-bold text-gray-800 text-center md:text-left flex items-center justify-center md:justify-start">
-          <span class="text-blue-600 font-black mr-2 tracking-wide">SF</span> Travel Expense Tracker
+          <span id="headerRegionDisplay" class="text-blue-600 font-black mr-1 tracking-wide">Region Name</span> <span class="ml-1">Liquidation</span>
           <span id="archiveStatusBadge" class="hidden ml-3 bg-red-100 text-red-700 border border-red-300 text-xs px-2.5 py-0.5 rounded-full font-bold">LOCKED / ARCHIVED</span>
         </h1>
         
@@ -667,17 +666,15 @@
       const isLoggedIn = sessionStorage.getItem('travel_is_logged_in') === 'true';
       if (isLoggedIn) {
         document.getElementById('loginScreen').classList.add('hidden');
-        document.getElementById('mainDashboard').classList.add('hidden');
-        document.getElementById('travelListScreen').classList.remove('hidden');
         
         currentUsername = sessionStorage.getItem('travel_logged_username') || '';
         accountName = sessionStorage.getItem('travel_logged_user_name') || 'User Account';
         
         const listUserDisplay = document.getElementById('listUserDisplay');
-        if (listUserDisplay) listUserDisplay.textContent = accountName;
+        if (listUserDisplay) listUserDisplay.textContent = "Welcome " + accountName;
 
         const userDisplay = document.getElementById('loggedInUserDisplay');
-        if (userDisplay) userDisplay.textContent = accountName;
+        if (userDisplay) userDisplay.textContent = "Welcome " + accountName;
 
         loadUserData();
         resetInactivityTimer();
@@ -693,7 +690,7 @@
       travels = JSON.parse(localStorage.getItem(getStorageKey('travel_list_v1'))) || [];
       signatureDataUrl = localStorage.getItem(getStorageKey('travel_signature_image')) || '';
 
-      // Fallback/Migration for single travel data to list structure
+      // Migration for single travel data
       if (travels.length === 0) {
         const oldExpenses = JSON.parse(localStorage.getItem(getStorageKey('travel_expenses_v40')));
         if (oldExpenses && oldExpenses.length > 0) {
@@ -711,6 +708,15 @@
 
       renderTravelListTable();
 
+      // AUTO-OPEN ACTIVE LIQUIDATION IF AT LEAST ONE IS ACTIVE
+      const activeTravel = travels.find(t => !t.isArchived);
+      if (activeTravel) {
+        openTravel(activeTravel.id);
+      } else {
+        document.getElementById('travelListScreen').classList.remove('hidden');
+        document.getElementById('mainDashboard').classList.add('hidden');
+      }
+
       if (GOOGLE_SCRIPT_URL && GOOGLE_SCRIPT_URL !== "IBUTANG_ANG_IMONG_WEB_APP_URL_DIRI") {
         try {
           const res = await fetch(`${GOOGLE_SCRIPT_URL}?action=read&username=${encodeURIComponent(currentUsername)}&_t=${Date.now()}`);
@@ -721,6 +727,11 @@
               signatureDataUrl = cloudData.signatureDataUrl || '';
               saveDataToStorage(false);
               renderTravelListTable();
+
+              const currentActive = travels.find(t => !t.isArchived);
+              if (currentActive && document.getElementById('mainDashboard').classList.contains('hidden')) {
+                openTravel(currentActive.id);
+              }
             }
           }
         } catch (e) {
@@ -816,6 +827,9 @@
 
       document.getElementById('travelListScreen').classList.add('hidden');
       document.getElementById('mainDashboard').classList.remove('hidden');
+
+      const headerReg = document.getElementById('headerRegionDisplay');
+      if (headerReg) headerReg.textContent = regionName || 'Travel';
 
       updateUIFields();
     }
@@ -988,6 +1002,8 @@
     function handleRegionNameInput(elem) {
       if (isArchived) return;
       regionName = elem.value.trim();
+      const headerReg = document.getElementById('headerRegionDisplay');
+      if (headerReg) headerReg.textContent = regionName || 'Travel';
       saveActiveTravelData();
       updateTracker();
     }
@@ -1306,6 +1322,9 @@
       const formElem = document.getElementById('expenseForm');
       const caInput = document.getElementById('cashAdvanceInput');
       const regInput = document.getElementById('regionNameInput');
+      const headerReg = document.getElementById('headerRegionDisplay');
+
+      if (headerReg) headerReg.textContent = regionName || 'Travel';
 
       if (isArchived) {
         if (archiveBtn) archiveBtn.textContent = 'Unarchive';
