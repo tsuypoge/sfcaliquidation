@@ -17,7 +17,13 @@
       -webkit-overflow-scrolling: touch;
     }
 
-    /* Standardized Report Header - Reduced to 7pt */
+    /* Page Break Utility for Multi-page Printing */
+    .page-break {
+      page-break-before: always !important;
+      break-before: page !important;
+    }
+
+    /* Standardized Report Header - Strictly 7pt */
     .report-header, .report-header p {
       font-size: 7pt !important;
       font-weight: bold !important;
@@ -83,10 +89,14 @@
         display: block !important;
         width: 100% !important;
       }
-      /* Ensure Page 1 Summary strictly breaks to Page 2 */
+      /* Force Page 1 Summary to strictly break to Page 2 */
       #printAreaSummary.print-active {
         page-break-after: always !important;
         break-after: page !important;
+      }
+      #printAreaDetailed.print-active {
+        page-break-before: always !important;
+        break-before: page !important;
       }
       #printAreaDetailed:not(.print-active),
       #printAreaSummary:not(.print-active) {
@@ -437,7 +447,88 @@
   <!-- PRINT / PREVIEW TEMPLATES                   -->
   <!-- ========================================== -->
   
-  <!-- DETAILED PREVIEW VIEW -->
+  <!-- PAGE 1: PRINT SUMMARY VIEW (Letter Size 1 Page Strict) -->
+  <div id="printAreaSummary" class="hidden font-sans">
+    
+    <!-- Centered Logo -->
+    <div class="text-center mb-2">
+      <img src="logo.png" alt="Logo" class="mx-auto block" style="max-height: 40px; width: auto;">
+    </div>
+
+    <!-- 7pt Header -->
+    <div class="mb-3 report-header">
+      <p>Region / Area : StrikeForce/Fraud Audit-IAD</p>
+      <p>Cash Advance Expenses Liquidation</p>
+      <p>Region: <span id="printRegionName">N/A</span></p>
+      <p>Date: <span id="printDateRange">N/A</span></p>
+    </div>
+
+    <!-- HORIZONTAL TABLE -->
+    <div class="overflow-x-auto mb-6">
+      <table class="w-full text-center border-collapse border border-gray-400">
+        <thead>
+          <tr class="bg-gray-100 font-bold text-gray-800">
+            <th class="border border-gray-400 p-1.5 text-left">Name of Account</th>
+            <th class="border border-gray-400 p-1.5 text-right">Total Transpo</th>
+            <th class="border border-gray-400 p-1.5 text-right">Total Meals</th>
+            <th class="border border-gray-400 p-1.5 text-right">Total Per Diem</th>
+            <th class="border border-gray-400 p-1.5 text-right">Terminal Fee</th>
+            <th class="border border-gray-400 p-1.5 text-right">Miscellaneous</th>
+            <th class="border border-gray-400 p-1.5 text-right bg-gray-200">Total Expenses</th>
+          </tr>
+        </thead>
+        <tbody>
+          <tr>
+            <td id="printAccountNameMainSummary" class="border border-gray-400 p-1.5 font-bold text-left">Name of Account</td>
+            <td id="printTotalTranspoSummary" class="border border-gray-400 p-1.5 text-right">0.00</td>
+            <td id="printTotalMealsSummary" class="border border-gray-400 p-1.5 text-right">0.00</td>
+            <td id="printTotalPerDiemSummary" class="border border-gray-400 p-1.5 text-right">0.00</td>
+            <td id="printTotalTerminalFeeSummary" class="border border-gray-400 p-1.5 text-right">0.00</td>
+            <td id="printTotalMiscSummary" class="border border-gray-400 p-1.5 text-right">0.00</td>
+            <td id="printTotalExpensesSummary1" class="border border-gray-400 p-1.5 text-right font-bold bg-gray-100">0.00</td>
+          </tr>
+        </tbody>
+      </table>
+    </div>
+
+    <!-- SUMMARY BOX BELOW -->
+    <div class="space-y-8">
+      <div class="w-72">
+        <h3 class="font-bold text-xs text-gray-800 mb-1">Summary</h3>
+        <table class="w-full text-left border-collapse border border-gray-400">
+          <tbody>
+            <tr><td class="text-gray-800 font-bold">TOTAL Expenses</td><td id="printSummaryTotalExpenses" class="text-right font-bold text-gray-900 w-28">0.00</td></tr>
+            <tr><td id="summaryCALabel2" class="text-gray-800 font-bold">TOTAL Cash Advance</td><td id="printSummaryTotalCA" class="text-right font-bold text-gray-900 w-28">0.00</td></tr>
+            <tr><td class="text-gray-800 font-bold">Amount for Return(Refund)</td><td id="printSummaryReturnRefund" class="text-right font-bold text-gray-900 w-28">0.00</td></tr>
+          </tbody>
+        </table>
+      </div>
+
+      <!-- SIGNATURES SECTION -->
+      <table class="w-full mt-6 no-border-table" style="border: none !important;">
+        <tr style="border: none !important;">
+          <td style="border: none !important; width: 50%; vertical-align: bottom; padding-right: 30px;">
+            <p class="font-bold text-gray-800 text-xs" style="margin-bottom: 4px;">Submitted by:</p>
+            <div style="height: 40px; display: flex; align-items: flex-end;">
+              <img id="summarySignatureImg" src="" class="hidden" style="max-height: 40px; max-width: 140px; object-fit: contain; margin-bottom: -4px;" />
+            </div>
+            <p id="printAccountNameSubSummary" class="font-bold text-gray-800 text-xs" style="margin:0; padding:0;">Name of Account</p>
+            <div style="border-top: 1px solid black; width: 100%; margin-top: 2px;"></div>
+            <p class="text-[10px] text-gray-600 mt-0.5">Signature over printed name</p>
+          </td>
+          <td style="border: none !important; width: 50%; vertical-align: bottom; padding-left: 30px;">
+            <p class="font-bold text-gray-800 text-xs" style="margin-bottom: 40px;">Checked by:</p>
+            <p class="font-bold text-gray-800 text-xs" style="margin:0; padding:0;">&nbsp;</p>
+            <div style="border-top: 1px solid black; width: 100%; margin-top: 2px;"></div>
+            <p class="text-[10px] text-gray-600 mt-0.5">Signature over printed name</p>
+          </td>
+        </tr>
+      </table>
+    </div>
+  </div>
+
+
+  <!-- PAGE 2+: DETAILED PREVIEW VIEW -->
   <div id="printAreaDetailed" class="hidden font-sans print-active">
     
     <!-- Centered Logo -->
@@ -510,87 +601,6 @@
               <img id="detailedSignatureImg" src="" class="hidden" style="max-height: 40px; max-width: 140px; object-fit: contain; margin-bottom: -4px;" />
             </div>
             <p id="detailedAccountName1" class="font-bold text-gray-800 text-xs" style="margin:0; padding:0;">Name of Account</p>
-            <div style="border-top: 1px solid black; width: 100%; margin-top: 2px;"></div>
-            <p class="text-[10px] text-gray-600 mt-0.5">Signature over printed name</p>
-          </td>
-          <td style="border: none !important; width: 50%; vertical-align: bottom; padding-left: 30px;">
-            <p class="font-bold text-gray-800 text-xs" style="margin-bottom: 40px;">Checked by:</p>
-            <p class="font-bold text-gray-800 text-xs" style="margin:0; padding:0;">&nbsp;</p>
-            <div style="border-top: 1px solid black; width: 100%; margin-top: 2px;"></div>
-            <p class="text-[10px] text-gray-600 mt-0.5">Signature over printed name</p>
-          </td>
-        </tr>
-      </table>
-    </div>
-  </div>
-
-
-  <!-- PRINT SUMMARY VIEW -->
-  <div id="printAreaSummary" class="hidden font-sans">
-    
-    <!-- Centered Logo -->
-    <div class="text-center mb-2">
-      <img src="logo.png" alt="Logo" class="mx-auto block" style="max-height: 40px; width: auto;">
-    </div>
-
-    <!-- 7pt Header -->
-    <div class="mb-3 report-header">
-      <p>Region / Area : StrikeForce/Fraud Audit-IAD</p>
-      <p>Cash Advance Expenses Liquidation</p>
-      <p>Region: <span id="printRegionName">N/A</span></p>
-      <p>Date: <span id="printDateRange">N/A</span></p>
-    </div>
-
-    <!-- HORIZONTAL TABLE -->
-    <div class="overflow-x-auto mb-6">
-      <table class="w-full text-center border-collapse border border-gray-400">
-        <thead>
-          <tr class="bg-gray-100 font-bold text-gray-800">
-            <th class="border border-gray-400 p-1.5 text-left">Name of Account</th>
-            <th class="border border-gray-400 p-1.5 text-right">Total Transpo</th>
-            <th class="border border-gray-400 p-1.5 text-right">Total Meals</th>
-            <th class="border border-gray-400 p-1.5 text-right">Total Per Diem</th>
-            <th class="border border-gray-400 p-1.5 text-right">Terminal Fee</th>
-            <th class="border border-gray-400 p-1.5 text-right">Miscellaneous</th>
-            <th class="border border-gray-400 p-1.5 text-right bg-gray-200">Total Expenses</th>
-          </tr>
-        </thead>
-        <tbody>
-          <tr>
-            <td id="printAccountNameMainSummary" class="border border-gray-400 p-1.5 font-bold text-left">Name of Account</td>
-            <td id="printTotalTranspoSummary" class="border border-gray-400 p-1.5 text-right">0.00</td>
-            <td id="printTotalMealsSummary" class="border border-gray-400 p-1.5 text-right">0.00</td>
-            <td id="printTotalPerDiemSummary" class="border border-gray-400 p-1.5 text-right">0.00</td>
-            <td id="printTotalTerminalFeeSummary" class="border border-gray-400 p-1.5 text-right">0.00</td>
-            <td id="printTotalMiscSummary" class="border border-gray-400 p-1.5 text-right">0.00</td>
-            <td id="printTotalExpensesSummary1" class="border border-gray-400 p-1.5 text-right font-bold bg-gray-100">0.00</td>
-          </tr>
-        </tbody>
-      </table>
-    </div>
-
-    <!-- SUMMARY BOX BELOW -->
-    <div class="space-y-8">
-      <div class="w-72">
-        <h3 class="font-bold text-xs text-gray-800 mb-1">Summary</h3>
-        <table class="w-full text-left border-collapse border border-gray-400">
-          <tbody>
-            <tr><td class="text-gray-800 font-bold">TOTAL Expenses</td><td id="printSummaryTotalExpenses" class="text-right font-bold text-gray-900 w-28">0.00</td></tr>
-            <tr><td id="summaryCALabel2" class="text-gray-800 font-bold">TOTAL Cash Advance</td><td id="printSummaryTotalCA" class="text-right font-bold text-gray-900 w-28">0.00</td></tr>
-            <tr><td class="text-gray-800 font-bold">Amount for Return(Refund)</td><td id="printSummaryReturnRefund" class="text-right font-bold text-gray-900 w-28">0.00</td></tr>
-          </tbody>
-        </table>
-      </div>
-
-      <!-- SIGNATURES SECTION -->
-      <table class="w-full mt-6 no-border-table" style="border: none !important;">
-        <tr style="border: none !important;">
-          <td style="border: none !important; width: 50%; vertical-align: bottom; padding-right: 30px;">
-            <p class="font-bold text-gray-800 text-xs" style="margin-bottom: 4px;">Submitted by:</p>
-            <div style="height: 40px; display: flex; align-items: flex-end;">
-              <img id="summarySignatureImg" src="" class="hidden" style="max-height: 40px; max-width: 140px; object-fit: contain; margin-bottom: -4px;" />
-            </div>
-            <p id="printAccountNameSubSummary" class="font-bold text-gray-800 text-xs" style="margin:0; padding:0;">Name of Account</p>
             <div style="border-top: 1px solid black; width: 100%; margin-top: 2px;"></div>
             <p class="text-[10px] text-gray-600 mt-0.5">Signature over printed name</p>
           </td>
@@ -1653,7 +1663,7 @@
       } else if (type === 'combined') {
         titleElem.textContent = 'Print Liquidation Package (Summary Page 1 + Detailed Page 2+)';
 
-        // Enable both print areas for printing
+        // Enable both print areas for printing in correct order (Summary first, Detailed second)
         document.getElementById('printAreaSummary').classList.add('print-active');
         document.getElementById('printAreaDetailed').classList.add('print-active', 'page-break');
 
