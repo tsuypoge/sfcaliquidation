@@ -586,7 +586,6 @@
       return currentUsername ? currentUsername.replace(/[^a-zA-Z0-9]/g, '_') : 'guest';
     }
 
-    // HELPER TO SHOW A SPECIFIC SCREEN SAFELY
     function showScreen(screenId) {
       const login = document.getElementById('loginScreen');
       const list = document.getElementById('travelListScreen');
@@ -651,7 +650,7 @@
           } else {
             const activeTravel = travels.find(t => !t.isArchived);
             if (activeTravel) {
-              openTravel(activeTravel.id);
+              openTravel(activeTravel.id, true);
             } else {
               showScreen('travelListScreen');
             }
@@ -753,7 +752,12 @@
       }
     }
 
-    function openTravel(trvId) {
+    // OPEN TRAVEL WITH DELAY SPINNER (SKIP DELAY WHEN AUTO-SYNCING)
+    async function openTravel(trvId, skipDelay = false) {
+      if (!skipDelay) {
+        await showLoading('Opening Liquidation...', 400);
+      }
+
       const found = travels.find(t => t.id === trvId);
       if (!found) return;
 
@@ -771,13 +775,13 @@
       updateUIFields();
     }
 
-    function openTravelSummaryPreview(trvId) {
-      openTravel(trvId);
+    async function openTravelSummaryPreview(trvId) {
+      await openTravel(trvId);
       openPreviewModal('combined');
     }
 
     async function backToTravelList() {
-      await showLoading('Returning to Dashboard...', 300);
+      await showLoading('Returning to Dashboard...', 400);
       saveActiveTravelData();
       activeTravelId = null;
       showScreen('travelListScreen');
@@ -850,7 +854,7 @@
     }
 
     async function handleLogout() {
-      await showLoading('Logging out...', 400);
+      await showLoading('Logging out...', 500);
       sessionStorage.removeItem('travel_is_logged_in');
       sessionStorage.removeItem('travel_logged_username');
       sessionStorage.removeItem('travel_logged_user_name');
