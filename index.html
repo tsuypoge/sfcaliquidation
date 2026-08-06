@@ -840,12 +840,29 @@
       pdfjsLib.GlobalWorkerOptions.workerSrc = 'https://cdnjs.cloudflare.com/ajax/libs/pdf.js/2.16.105/pdf.worker.min.js';
     }
 
+    // FIREBASE GLOBAL LISTENER REFERENCE
+    let activeUserListenerRef = null;
+
     // HELPER CONVERTER: ENFORCE ARRAY TYPE (CONVERTS FIREBASE OBJECTS TO ARRAYS SAFELY)
     function ensureArray(val) {
       if (!val) return [];
       if (Array.isArray(val)) return val;
       if (typeof val === 'object') return Object.values(val);
       return [];
+    }
+
+    // HELPER FUNCTION: RESET ALL CURRENT STATE TO PREVENT DATA LEAKS
+    function resetActiveUserState() {
+      travels = [];
+      expenses = [];
+      activeTravelId = null;
+      regionName = '';
+      cashAdvance = 0;
+      signatureDataUrl = '';
+      dtrFiles = [];
+      tempExpenseReceiptDataUrl = '';
+      isArchived = false;
+      editingId = null;
     }
 
     // AUTOMATIC CANVAS IMAGE COMPRESSOR FUNCTION
@@ -955,6 +972,13 @@
       sessionStorage.removeItem('travel_logged_designation');
       sessionStorage.removeItem('travel_logged_department');
       sessionStorage.removeItem('travel_logged_email');
+      
+      if (activeUserListenerRef) {
+        activeUserListenerRef.off();
+        activeUserListenerRef = null;
+      }
+      resetActiveUserState();
+
       checkAuthStatus();
     }
 
@@ -1027,6 +1051,12 @@
 
         if (foundUser) {
           await showLoading('Google Account Verified! Logging in...', 500);
+
+          if (activeUserListenerRef) {
+            activeUserListenerRef.off();
+            activeUserListenerRef = null;
+          }
+          resetActiveUserState();
 
           let userKey = foundUser.username.replace(/[^a-zA-Z0-9]/g, '_');
           let dynamicName = foundUser.name;
@@ -1170,6 +1200,13 @@
       } else {
         clearTimeout(inactivityTimer);
         sessionStorage.removeItem('admin_override_personal_mode');
+        
+        if (activeUserListenerRef) {
+          activeUserListenerRef.off();
+          activeUserListenerRef = null;
+        }
+        resetActiveUserState();
+
         showScreen('loginScreen');
       }
     }
@@ -1178,63 +1215,72 @@
       if (!currentUsername || !db) return;
       const userKey = getSanitizedUsername();
 
+      // Detach old listener if any
+      if (activeUserListenerRef) {
+        activeUserListenerRef.off();
+        activeUserListenerRef = null;
+      }
+
+      // Reset state before loading new user data to prevent cross-account contamination
+      resetActiveUserState();
+
       // LocalStorage Recovery Backup
       const localBackup = localStorage.getItem('backup_travels_' + userKey);
       if (localBackup) {
         try {
           const parsed = JSON.parse(localBackup);
-          if (Array.isArray(parsed) && parsed.length > 0 && travels.length === 0) {
+          if (Array.isArray(parsed) && parsed.length > 0) {
             travels = ensureArray(parsed);
           }
         } catch(e) {}
       }
 
-      try {
-        db.ref('users/' + userKey).on('value', (snapshot) => {
-          const val = snapshot.val();
-          if (val && val.travels) {
-            travels = ensureArray(val.travels);
-            localStorage.setItem('backup_travels_' + userKey, JSON.stringify(travels));
-          }
-          signatureDataUrl = (val && val.signatureDataUrl) ? val.signatureDataUrl : '';
-          
-          renderTravelListTable();
+      activeUserListenerRef = db.ref('users/' + userKey);
+      activeUserListenerRef.on('value', (snapshot) => {
+        const val = snapshot.val();
+        if (val && val.travels) {
+          travels = ensureArray(val.travels);
+          localStorage.setItem('backup_travels_' + userKey, JSON.stringify(travels));
+        } else if (!val) {
+          // New user without cloud data
+          travels = [];
+        }
+        signatureDataUrl = (val && val.signatureDataUrl) ? val.signatureDataUrl : '';
+        
+        renderTravelListTable();
 
-          if (activeTravelId) {
-            const found = travels.find(t => t.id === activeTravelId);
-            if (found) {
-              regionName = found.regionName || '';
-              cashAdvance = found.cashAdvance || 0;
-              isArchived = found.isArchived === true;
-              expenses = ensureArray(found.expenses);
-              
-              if (found.dtrFiles) {
-                dtrFiles = ensureArray(found.dtrFiles);
-              } else if (found.dtrPdf) {
-                dtrFiles = [{ id: 'legacy_dtr', name: 'Manual DTR.pdf', data: found.dtrPdf }];
-              } else {
-                dtrFiles = [];
-              }
-              sortDtrFiles();
-
-              updateUIFields();
-              showScreen('mainDashboard');
+        if (activeTravelId) {
+          const found = travels.find(t => t.id === activeTravelId);
+          if (found) {
+            regionName = found.regionName || '';
+            cashAdvance = found.cashAdvance || 0;
+            isArchived = found.isArchived === true;
+            expenses = ensureArray(found.expenses);
+            
+            if (found.dtrFiles) {
+              dtrFiles = ensureArray(found.dtrFiles);
+            } else if (found.dtrPdf) {
+              dtrFiles = [{ id: 'legacy_dtr', name: 'Manual DTR.pdf', data: found.dtrPdf }];
             } else {
-              activeTravelId = null;
-              showScreen('travelListScreen');
+              dtrFiles = [];
             }
+            sortDtrFiles();
+
+            updateUIFields();
+            showScreen('mainDashboard');
           } else {
-            const activeTravel = travels.find(t => !t.isArchived);
-            if (activeTravel) {
-              openTravel(activeTravel.id, true);
-            } else {
-              showScreen('travelListScreen');
-            }
+            activeTravelId = null;
+            showScreen('travelListScreen');
           }
-        });
-      } catch(e) {
-        console.warn("Firebase Read Listener Notice:", e);
-      }
+        } else {
+          const activeTravel = travels.find(t => !t.isArchived);
+          if (activeTravel) {
+            openTravel(activeTravel.id, true);
+          } else {
+            showScreen('travelListScreen');
+          }
+        }
+      });
     }
 
     function saveDataToStorage() {
@@ -1516,6 +1562,12 @@
       
       const foundUserObj = USERS_DB.find(u => u.username.replace(/[^a-zA-Z0-9]/g, '_') === uKey);
       const customCreds = allCredentialsGlobalData[uKey] || {};
+
+      if (activeUserListenerRef) {
+        activeUserListenerRef.off();
+        activeUserListenerRef = null;
+      }
+      resetActiveUserState();
 
       currentUsername = foundUserObj ? foundUserObj.username : uKey;
       accountName = customCreds.name || (foundUserObj ? foundUserObj.name : uKey);
@@ -1993,6 +2045,13 @@
 
       if (pass === validPass) {
         await showLoading('Signing in & Syncing Realtime...', 600);
+
+        if (activeUserListenerRef) {
+          activeUserListenerRef.off();
+          activeUserListenerRef = null;
+        }
+        resetActiveUserState();
+
         sessionStorage.setItem('travel_is_logged_in', 'true');
         sessionStorage.setItem('travel_logged_username', foundUser.username);
         sessionStorage.setItem('travel_logged_user_name', dynamicName);
@@ -2024,7 +2083,13 @@
       sessionStorage.removeItem('travel_logged_department');
       sessionStorage.removeItem('travel_logged_email');
       sessionStorage.removeItem('admin_override_personal_mode');
-      activeTravelId = null;
+      
+      if (activeUserListenerRef) {
+        activeUserListenerRef.off();
+        activeUserListenerRef = null;
+      }
+      resetActiveUserState();
+
       checkAuthStatus();
     }
 
