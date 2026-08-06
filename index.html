@@ -920,6 +920,7 @@
       travels = [];
       expenses = [];
       activeTravelId = null;
+      sessionStorage.removeItem('travel_active_id');
       regionName = '';
       cashAdvance = 0;
       signatureDataUrl = '';
@@ -1002,7 +1003,7 @@
     let accountEmail = sessionStorage.getItem('travel_logged_email') || '';
     
     let travels = [];
-    let activeTravelId = null;
+    let activeTravelId = sessionStorage.getItem('travel_active_id') || null;
 
     let allUsersGlobalData = {};
     let allCredentialsGlobalData = {};
@@ -1036,6 +1037,7 @@
       sessionStorage.removeItem('travel_logged_designation');
       sessionStorage.removeItem('travel_logged_department');
       sessionStorage.removeItem('travel_logged_email');
+      sessionStorage.removeItem('travel_active_id');
       
       if (activeUserListenerRef) {
         activeUserListenerRef.off();
@@ -1284,7 +1286,11 @@
         activeUserListenerRef = null;
       }
 
-      resetActiveUserState();
+      // Check for saved active travel ID on page refresh
+      const savedActiveId = sessionStorage.getItem('travel_active_id');
+      if (savedActiveId) {
+        activeTravelId = savedActiveId;
+      }
 
       // LocalStorage Recovery Backup
       const localBackup = localStorage.getItem('backup_travels_' + userKey);
@@ -1331,15 +1337,11 @@
             showScreen('mainDashboard');
           } else {
             activeTravelId = null;
+            sessionStorage.removeItem('travel_active_id');
             showScreen('travelListScreen');
           }
         } else {
-          const activeTravel = travels.find(t => !t.isArchived);
-          if (activeTravel) {
-            openTravel(activeTravel.id, true);
-          } else {
-            showScreen('travelListScreen');
-          }
+          showScreen('travelListScreen');
         }
       });
     }
@@ -1898,7 +1900,10 @@
 
       if (confirm(`Are you sure you want to PERMANENTLY DELETE "${found.regionName}"? This action cannot be undone.`)) {
         travels = travels.filter(t => t.id !== trvId);
-        if (activeTravelId === trvId) activeTravelId = null;
+        if (activeTravelId === trvId) {
+          activeTravelId = null;
+          sessionStorage.removeItem('travel_active_id');
+        }
         saveDataToStorage();
         renderTravelListTable();
       }
@@ -1935,6 +1940,8 @@
       if (!found) return;
 
       activeTravelId = trvId;
+      sessionStorage.setItem('travel_active_id', trvId); // Save active travel ID to persist across refreshes
+
       regionName = found.regionName || '';
       cashAdvance = found.cashAdvance || 0;
       isArchived = found.isArchived === true;
@@ -1960,7 +1967,9 @@
     async function backToTravelList() {
       await showLoading('Returning to Dashboard...', 400);
       saveActiveTravelData();
+      
       activeTravelId = null;
+      sessionStorage.removeItem('travel_active_id'); // Clear active travel ID when exiting
       
       if (currentUsername.toLowerCase() === 'admin' && !sessionStorage.getItem('admin_override_personal_mode')) {
         showScreen('adminDashboardScreen');
@@ -2219,6 +2228,7 @@
       sessionStorage.removeItem('travel_logged_department');
       sessionStorage.removeItem('travel_logged_email');
       sessionStorage.removeItem('admin_override_personal_mode');
+      sessionStorage.removeItem('travel_active_id');
       
       if (activeUserListenerRef) {
         activeUserListenerRef.off();
@@ -2985,7 +2995,7 @@
       document.getElementById('previewModal').classList.remove('hidden');
     }
 
-    // HELPER FUNCTION TO RENDER ATTACHED EXPENSE RECEIPTS IN A 2x2 GRID (4 PER PAGE) - SORTED BY DATE
+    // HELPER FUNCTION TO RENDER ATTACHED EXPENSE RECEIPTS IN A 2x2 GRID (4 PER PAGE) - SORTED CHRONOLOGICALLY BY DATE
     function renderExpenseReceiptsGrid(expensesList, targetContainer) {
       if (!targetContainer) return;
       targetContainer.innerHTML = '';
