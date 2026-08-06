@@ -2,11 +2,11 @@
 <html lang="en">
 <head>
   <link rel="manifest" href="manifest.json">
-<meta name="theme-color" content="#dc2626">
-<meta name="apple-mobile-web-app-capable" content="yes">
-<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
-<meta name="apple-mobile-web-app-title" content="IAD Tracker">
-<link rel="apple-touch-icon" href="logo.png">
+  <meta name="theme-color" content="#dc2626">
+  <meta name="apple-mobile-web-app-capable" content="yes">
+  <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+  <meta name="apple-mobile-web-app-title" content="IAD Tracker">
+  <link rel="apple-touch-icon" href="logo.png">
   
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
@@ -1712,7 +1712,7 @@
       accountEmail = customCreds.email || (foundUserObj ? foundUserObj.email : '');
 
       travels = ensureArray(uData.travels);
-      signatureDataUrl = uData.signatureDataUrl || ''; // <-- LOAD USER SIGNATURE FOR ADMIN INSPECT/PRINT!
+      signatureDataUrl = uData.signatureDataUrl || ''; 
       activeTravelId = trvId;
 
       openTravel(trvId, false);
@@ -2985,12 +2985,16 @@
       document.getElementById('previewModal').classList.remove('hidden');
     }
 
-    // HELPER FUNCTION TO RENDER ATTACHED EXPENSE RECEIPTS IN A 2x2 GRID (4 PER PAGE)
+    // HELPER FUNCTION TO RENDER ATTACHED EXPENSE RECEIPTS IN A 2x2 GRID (4 PER PAGE) - SORTED BY DATE
     function renderExpenseReceiptsGrid(expensesList, targetContainer) {
       if (!targetContainer) return;
       targetContainer.innerHTML = '';
 
-      const itemsWithReceipts = ensureArray(expensesList).filter(e => e.receiptImg);
+      // Filter receipts and sort CHRONOLOGICALLY BY DATE
+      const itemsWithReceipts = ensureArray(expensesList)
+        .filter(e => e.receiptImg)
+        .sort((a, b) => new Date(a.date) - new Date(b.date));
+
       if (itemsWithReceipts.length === 0) return;
 
       for (let i = 0; i < itemsWithReceipts.length; i += 4) {
@@ -3125,8 +3129,20 @@
       expenses = ensureArray(expenses);
       dtrFiles = ensureArray(dtrFiles);
 
-      // Render Expense Receipts Grid
-      renderExpenseReceiptsGrid(expenses, document.getElementById('printAreaReceiptsContent'));
+      // Extract Date Range Filters from Modal
+      const modalStartElem = document.getElementById('modalFilterStartDate');
+      const modalEndElem = document.getElementById('modalFilterEndDate');
+      const startDate = modalStartElem ? modalStartElem.value : '';
+      const endDate = modalEndElem ? modalEndElem.value : '';
+
+      const filteredReportExpenses = expenses.filter(item => {
+        if (startDate && item.date < startDate) return false;
+        if (endDate && item.date > endDate) return false;
+        return true;
+      });
+
+      // Render Expense Receipts Grid with Filtered & Chronologically Sorted Expenses
+      renderExpenseReceiptsGrid(filteredReportExpenses, document.getElementById('printAreaReceiptsContent'));
 
       // Pre-render Manual DTR Attachments (Alphabetical)
       if (dtrFiles.length > 0) {
@@ -3175,7 +3191,7 @@
         }
 
         // APPEND ATTACHED EXPENSE RECEIPT(S) ON A STRICTLY SEPARATE NEW PAGE (2x2 GRID)
-        const hasExpenseReceipts = expenses.some(e => e.receiptImg);
+        const hasExpenseReceipts = filteredReportExpenses.some(e => e.receiptImg);
         if (hasExpenseReceipts && printReceipts) {
           printReceipts.classList.add('print-active', 'page-break');
 
