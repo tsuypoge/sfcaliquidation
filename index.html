@@ -1282,7 +1282,7 @@
     }
 
     function setupRealtimeFirebaseListener() {
-      if (!currentUsername || !db) return;
+      if (!currentUsername) return;
       const userKey = getSanitizedUsername();
 
       if (activeUserListenerRef) {
@@ -1290,13 +1290,13 @@
         activeUserListenerRef = null;
       }
 
-      // Check for saved active travel ID on page refresh
+      // 1. Check for saved active travel ID on page refresh
       const savedActiveId = sessionStorage.getItem('travel_active_id');
       if (savedActiveId) {
         activeTravelId = savedActiveId;
       }
 
-      // LocalStorage Recovery Backup
+      // 2. Load LocalStorage Recovery Backup IMMEDIATELY so screen is NEVER blank
       const localBackup = localStorage.getItem('backup_travels_' + userKey);
       if (localBackup) {
         try {
@@ -1304,19 +1304,52 @@
           if (Array.isArray(parsed) && parsed.length > 0) {
             travels = ensureArray(parsed);
           }
-        } catch(e) {}
+        } catch(e) {
+          console.warn("Error reading local backup:", e);
+        }
       }
+
+      // 3. Immediately render local data so user sees their data right away with ZERO delay
+      renderTravelListTable();
+
+      // If activeTravelId is set and found in local travels, show main dashboard right away
+      if (activeTravelId) {
+        const found = travels.find(t => String(t.id) === String(activeTravelId));
+        if (found) {
+          regionName = found.regionName || '';
+          cashAdvance = found.cashAdvance || 0;
+          isArchived = found.isArchived === true;
+          expenses = ensureArray(found.expenses);
+          dtrFiles = found.dtrFiles ? ensureArray(found.dtrFiles) : (found.dtrPdf ? [{ id: 'legacy_dtr', name: 'Manual DTR.pdf', data: found.dtrPdf }] : []);
+          sortDtrFiles();
+          updateUIFields();
+          showScreen('mainDashboard');
+        }
+      }
+
+      // 4. Connect to Firebase Realtime Database
+      if (!db) return;
 
       activeUserListenerRef = db.ref('users/' + userKey);
       activeUserListenerRef.on('value', (snapshot) => {
         const val = snapshot.val();
         if (val && val.travels) {
-          travels = ensureArray(val.travels);
-          localStorage.setItem('backup_travels_' + userKey, JSON.stringify(travels));
+          const serverTravels = ensureArray(val.travels);
+          if (serverTravels.length > 0) {
+            travels = serverTravels;
+            localStorage.setItem('backup_travels_' + userKey, JSON.stringify(travels));
+          } else if (travels.length > 0) {
+            // Server returned empty array but we have local travels -> Push local travels to server!
+            saveDataToStorage();
+          }
+        } else if (!val && travels.length > 0) {
+          // Server returned null but we have local travels -> Sync local travels to server!
+          saveDataToStorage();
         } else if (!val) {
           travels = [];
         }
-        signatureDataUrl = (val && val.signatureDataUrl) ? val.signatureDataUrl : '';
+
+        signatureDataUrl = (val && val.signatureDataUrl) ? val.signatureDataUrl : signatureDataUrl;
         
         renderTravelListTable();
 
@@ -1347,6 +1380,10 @@
         } else {
           showScreen('travelListScreen');
         }
+      }, (error) => {
+        console.error("Firebase listener error:", error);
+        // On Firebase error, keep local travels rendered!
+        renderTravelListTable();
       });
     }
 
@@ -1839,47 +1876,52 @@
       if (!tbody) return;
       tbody.innerHTML = '';
 
-      travels = ensureArray(travels);
+      try {
+        travels = ensureArray(travels);
 
-      if (travels.length === 0) {
-        tbody.innerHTML = `<tr><td colspan="6" class="text-center p-6 text-slate-500 font-medium">No liquidation records found. Click "+ New Liquidation" above to create one.</td></tr>`;
-        return;
-      }
-
-      travels.forEach((trv, idx) => {
-        if (!trv) return;
-        const trvExpenses = ensureArray(trv.expenses);
-        const totalSpent = trvExpenses.reduce((acc, curr) => acc + (parseFloat(curr ? curr.amount : 0) || 0), 0);
-
-        let dateRange = 'N/A';
-        if (trvExpenses.length > 0) {
-          const dates = trvExpenses.map(e => e ? e.date : '').filter(Boolean).sort();
-          if (dates.length > 0) {
-            dateRange = formatDateRangeLong(dates[0], dates[dates.length - 1]);
-          }
+        if (travels.length === 0) {
+          tbody.innerHTML = `<tr><td colspan="6" class="text-center p-6 text-slate-500 font-medium">No liquidation records found. Click "+ New Liquidation" above to create one.</td></tr>`;
+          return;
         }
 
-        const row = document.createElement('tr');
-        row.className = idx % 2 === 0 ? 'bg-white hover:bg-slate-50' : 'bg-slate-50/50 hover:bg-slate-100';
+        travels.forEach((trv, idx) => {
+          if (!trv) return;
+          const trvExpenses = ensureArray(trv.expenses);
+          const totalSpent = trvExpenses.reduce((acc, curr) => acc + (parseFloat(curr ? curr.amount : 0) || 0), 0);
 
-        row.innerHTML = `
-          <td class="p-3 font-bold text-slate-800">${trv.regionName || 'Unspecified Region'}</td>
-          <td class="p-3 text-center text-slate-600 font-medium">${dateRange}</td>
-          <td class="p-3 text-right font-bold text-slate-900">${formatNum(trv.cashAdvance)}</td>
-          <td class="p-3 text-right font-bold text-indigo-600">${formatNum(totalSpent)}</td>
-          <td class="p-3 text-center">
-            ${trv.isArchived 
-              ? `<span class="bg-slate-100 text-slate-600 border border-slate-200 px-2 py-0.5 rounded-full font-bold text-[10px]">Archived</span>` 
-              : `<span class="bg-emerald-50 text-emerald-700 border border-emerald-200 px-2 py-0.5 rounded-full font-bold text-[10px]">Active</span>`}
-          </td>
-          <td class="p-3 text-center whitespace-nowrap space-x-1">
-            <button onclick="openTravel('${trv.id}')" class="bg-indigo-600 text-white font-semibold px-2 py-1 rounded-lg hover:bg-indigo-700 transition text-xs shadow-xs">Open</button>
-            <button onclick="toggleArchiveFromList('${trv.id}')" class="bg-amber-500 text-white font-semibold px-2 py-1 rounded-lg hover:bg-amber-600 transition text-xs shadow-xs">${trv.isArchived ? 'Unarchive' : 'Archive'}</button>
-            <button onclick="deleteTravelFromList('${trv.id}')" class="bg-rose-600 text-white font-semibold px-2 py-1 rounded-lg hover:bg-rose-700 transition text-xs shadow-xs">Delete</button>
-          </td>
-        `;
-        tbody.appendChild(row);
-      });
+          let dateRange = 'N/A';
+          if (trvExpenses.length > 0) {
+            const dates = trvExpenses.map(e => e ? e.date : '').filter(Boolean).sort();
+            if (dates.length > 0) {
+              dateRange = formatDateRangeLong(dates[0], dates[dates.length - 1]);
+            }
+          }
+
+          const row = document.createElement('tr');
+          row.className = idx % 2 === 0 ? 'bg-white hover:bg-slate-50' : 'bg-slate-50/50 hover:bg-slate-100';
+
+          row.innerHTML = `
+            <td class="p-3 font-bold text-slate-800">${trv.regionName || 'Unspecified Region'}</td>
+            <td class="p-3 text-center text-slate-600 font-medium">${dateRange}</td>
+            <td class="p-3 text-right font-bold text-slate-900">${formatNum(trv.cashAdvance)}</td>
+            <td class="p-3 text-right font-bold text-indigo-600">${formatNum(totalSpent)}</td>
+            <td class="p-3 text-center">
+              ${trv.isArchived 
+                ? `<span class="bg-slate-100 text-slate-600 border border-slate-200 px-2 py-0.5 rounded-full font-bold text-[10px]">Archived</span>` 
+                : `<span class="bg-emerald-50 text-emerald-700 border border-emerald-200 px-2 py-0.5 rounded-full font-bold text-[10px]">Active</span>`}
+            </td>
+            <td class="p-3 text-center whitespace-nowrap space-x-1">
+              <button onclick="openTravel('${trv.id}')" class="bg-indigo-600 text-white font-semibold px-2 py-1 rounded-lg hover:bg-indigo-700 transition text-xs shadow-xs">Open</button>
+              <button onclick="toggleArchiveFromList('${trv.id}')" class="bg-amber-500 text-white font-semibold px-2 py-1 rounded-lg hover:bg-amber-600 transition text-xs shadow-xs">${trv.isArchived ? 'Unarchive' : 'Archive'}</button>
+              <button onclick="deleteTravelFromList('${trv.id}')" class="bg-rose-600 text-white font-semibold px-2 py-1 rounded-lg hover:bg-rose-700 transition text-xs shadow-xs">Delete</button>
+            </td>
+          `;
+          tbody.appendChild(row);
+        });
+      } catch (err) {
+        console.error("Render travel list error:", err);
+        tbody.innerHTML = `<tr><td colspan="6" class="text-center p-6 text-rose-500 font-medium">Error loading liquidations. Please refresh or create a new entry.</td></tr>`;
+      }
     }
 
     function toggleArchiveFromList(trvId) {
