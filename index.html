@@ -174,6 +174,9 @@
         </div>
 
         <div class="flex items-center gap-2">
+          <button onclick="openChangePasswordModal()" class="bg-slate-800 hover:bg-slate-700 border border-slate-700 text-white font-semibold text-[11px] px-3 py-1.5 rounded-lg transition shadow-xs">
+            🔑 Change Password
+          </button>
           <button onclick="switchToPersonalView()" class="bg-indigo-600 hover:bg-indigo-700 text-white font-semibold text-[11px] px-3 py-1.5 rounded-lg transition shadow-xs">
             👤 Switch to Personal View
           </button>
@@ -244,6 +247,13 @@
 
       <!-- TAB 2: USER CREDENTIALS & PROFILE MANAGEMENT TABLE -->
       <div id="adminTabUsers" class="hidden space-y-3">
+        <div class="flex flex-col sm:flex-row items-stretch sm:items-center justify-between gap-2.5">
+          <p class="text-[11px] text-slate-500 font-medium">Manage corporate user profiles, passwords, and enroll new team members</p>
+          <button onclick="openEnrollUserModal()" class="bg-indigo-600 text-white font-bold text-xs px-3.5 py-1.5 rounded-xl hover:bg-indigo-700 transition shadow-xs">
+            ➕ Enroll New User
+          </button>
+        </div>
+
         <div class="overflow-x-auto rounded-xl border border-slate-200">
           <table class="w-full text-left border-collapse text-xs">
             <thead>
@@ -803,6 +813,53 @@
     </div>
   </div>
 
+  <!-- ADMIN ENROLL NEW USER MODAL -->
+  <div id="adminEnrollUserModal" class="hidden fixed inset-0 bg-slate-900/60 backdrop-blur-sm flex justify-center items-center p-4 z-[60] no-print">
+    <div class="bg-white rounded-2xl shadow-2xl max-w-sm w-full p-5 sm:p-6 border border-slate-200">
+      <div class="flex justify-between items-center mb-4 border-b border-slate-100 pb-2">
+        <h3 class="text-base font-bold text-slate-900">➕ Enroll New User</h3>
+        <button onclick="closeEnrollUserModal()" class="text-slate-400 hover:text-slate-600 font-bold text-lg">✕</button>
+      </div>
+
+      <form onsubmit="handleAdminEnrollUser(event)" class="space-y-3 text-xs">
+        <div>
+          <label class="block text-[10px] font-bold uppercase tracking-wider text-slate-600 mb-1">Username</label>
+          <input type="text" id="enrollUsernameInput" required placeholder="e.g. j.doe" class="w-full p-2 border rounded-xl border-slate-300 focus:ring-2 focus:ring-indigo-500 focus:outline-none">
+        </div>
+
+        <div>
+          <label class="block text-[10px] font-bold uppercase tracking-wider text-slate-600 mb-1">Full Name</label>
+          <input type="text" id="enrollNameInput" required placeholder="e.g. Jane Doe" class="w-full p-2 border rounded-xl border-slate-300 focus:ring-2 focus:ring-indigo-500 focus:outline-none">
+        </div>
+
+        <div>
+          <label class="block text-[10px] font-bold uppercase tracking-wider text-slate-600 mb-1">Designation / Position</label>
+          <input type="text" id="enrollDesigInput" required placeholder="e.g. Audit Specialist" class="w-full p-2 border rounded-xl border-slate-300 focus:ring-2 focus:ring-indigo-500 focus:outline-none">
+        </div>
+
+        <div>
+          <label class="block text-[10px] font-bold uppercase tracking-wider text-slate-600 mb-1">Department</label>
+          <input type="text" id="enrollDeptInput" required placeholder="e.g. StrikeForce/Fraud Audit-IAD" class="w-full p-2 border rounded-xl border-slate-300 focus:ring-2 focus:ring-indigo-500 focus:outline-none">
+        </div>
+
+        <div>
+          <label class="block text-[10px] font-bold uppercase tracking-wider text-slate-600 mb-1">Email Address</label>
+          <input type="email" id="enrollEmailInput" required placeholder="e.g. j.doe@sfcaliquidation.biz" class="w-full p-2 border rounded-xl border-slate-300 focus:ring-2 focus:ring-indigo-500 focus:outline-none">
+        </div>
+
+        <div>
+          <label class="block text-[10px] font-bold uppercase tracking-wider text-slate-600 mb-1">Default Password</label>
+          <input type="password" id="enrollPasswordInput" required placeholder="Set password" class="w-full p-2 border rounded-xl border-slate-300 focus:ring-2 focus:ring-indigo-500 focus:outline-none">
+        </div>
+
+        <div class="flex justify-end gap-2 pt-2 border-t border-slate-100">
+          <button type="button" onclick="closeEnrollUserModal()" class="bg-slate-100 text-slate-700 font-semibold px-3 py-1.5 rounded-xl hover:bg-slate-200">Cancel</button>
+          <button type="submit" class="bg-indigo-600 text-white font-bold px-4 py-1.5 rounded-xl hover:bg-indigo-700 shadow-xs">+ Enroll User</button>
+        </div>
+      </form>
+    </div>
+  </div>
+
   <!-- MANUAL DTR MANAGEMENT MODAL -->
   <div id="dtrModal" class="hidden fixed inset-0 bg-slate-900/60 backdrop-blur-sm flex justify-center items-center p-4 z-[60] no-print">
     <div class="bg-white rounded-2xl shadow-2xl max-w-md w-full p-5 sm:p-6 border border-slate-200">
@@ -1215,13 +1272,11 @@
       if (!currentUsername || !db) return;
       const userKey = getSanitizedUsername();
 
-      // Detach old listener if any
       if (activeUserListenerRef) {
         activeUserListenerRef.off();
         activeUserListenerRef = null;
       }
 
-      // Reset state before loading new user data to prevent cross-account contamination
       resetActiveUserState();
 
       // LocalStorage Recovery Backup
@@ -1242,7 +1297,6 @@
           travels = ensureArray(val.travels);
           localStorage.setItem('backup_travels_' + userKey, JSON.stringify(travels));
         } else if (!val) {
-          // New user without cloud data
           travels = [];
         }
         signatureDataUrl = (val && val.signatureDataUrl) ? val.signatureDataUrl : '';
@@ -1287,14 +1341,12 @@
       if (!currentUsername) return;
       const userKey = getSanitizedUsername();
 
-      // LocalStorage Hard Backup
       try {
         localStorage.setItem('backup_travels_' + userKey, JSON.stringify(travels));
       } catch(e) {
         console.warn("LocalStorage Backup Warning:", e);
       }
 
-      // Firebase Sync
       if (db) {
         try {
           db.ref('users/' + userKey).set({
@@ -1321,8 +1373,85 @@
 
       db.ref('credentials').on('value', (snapshot) => {
         allCredentialsGlobalData = snapshot.val() || {};
+
+        // DYNAMICALLY ENROLL NEW USERS FROM FIREBASE CREDENTIALS INTO USERS_DB
+        Object.keys(allCredentialsGlobalData).forEach(uKey => {
+          const cred = allCredentialsGlobalData[uKey];
+          if (cred && cred.username) {
+            const exists = USERS_DB.find(u => u.username.toLowerCase() === cred.username.toLowerCase());
+            if (!exists) {
+              USERS_DB.push({
+                username: cred.username,
+                email: cred.email || `${cred.username}@sfcaliquidation.biz`,
+                password: cred.password || '1234',
+                name: cred.name || uKey,
+                designation: cred.designation || 'Audit Specialist',
+                department: cred.department || 'StrikeForce/Fraud Audit-IAD'
+              });
+            }
+          }
+        });
+
         renderAdminDashboard();
       });
+    }
+
+    function openEnrollUserModal() {
+      document.getElementById('enrollUsernameInput').value = '';
+      document.getElementById('enrollNameInput').value = '';
+      document.getElementById('enrollDesigInput').value = 'Audit Specialist';
+      document.getElementById('enrollDeptInput').value = 'StrikeForce/Fraud Audit-IAD';
+      document.getElementById('enrollEmailInput').value = '';
+      document.getElementById('enrollPasswordInput').value = '';
+      document.getElementById('adminEnrollUserModal').classList.remove('hidden');
+    }
+
+    function closeEnrollUserModal() {
+      document.getElementById('adminEnrollUserModal').classList.add('hidden');
+    }
+
+    async function handleAdminEnrollUser(e) {
+      e.preventDefault();
+      const username = document.getElementById('enrollUsernameInput').value.trim().toLowerCase();
+      const userKey = username.replace(/[^a-zA-Z0-9]/g, '_');
+      const name = document.getElementById('enrollNameInput').value.trim();
+      const designation = document.getElementById('enrollDesigInput').value.trim();
+      const department = document.getElementById('enrollDeptInput').value.trim();
+      const email = document.getElementById('enrollEmailInput').value.trim().toLowerCase();
+      const password = document.getElementById('enrollPasswordInput').value.trim();
+
+      if (!username || !name || !password) {
+        alert("Please fill in all required fields.");
+        return;
+      }
+
+      const existingInDb = USERS_DB.find(u => u.username.toLowerCase() === username);
+      if (existingInDb) {
+        alert(`Username "@${username}" already exists in the system!`);
+        return;
+      }
+
+      const newUserObj = {
+        username: username,
+        name: name,
+        designation: designation,
+        department: department,
+        email: email,
+        password: password
+      };
+
+      try {
+        if (db) {
+          await db.ref('credentials/' + userKey).set(newUserObj);
+        }
+        USERS_DB.push(newUserObj);
+        alert(`New user "@${username}" (${name}) enrolled successfully!`);
+        closeEnrollUserModal();
+        renderAdminUsersTable();
+      } catch (err) {
+        console.error("Error enrolling user:", err);
+        alert("Failed to enroll user. Please check your network connection.");
+      }
     }
 
     function switchToAdminConsole() {
@@ -1492,7 +1621,7 @@
             <p class="font-bold text-slate-800">@${u.username}</p>
             <p class="text-[10px] text-slate-500">${displayEmail}</p>
           </td>
-          <td class="p-3 text-center font-mono text-slate-500 text-xs">${u.password}</td>
+          <td class="p-3 text-center font-mono text-slate-500 text-xs">${customCreds.password || u.password}</td>
           <td class="p-3 text-center">
             ${isCustomProfile || isCustomPass 
               ? `<span class="bg-indigo-50 text-indigo-700 border border-indigo-200 px-2 py-0.5 rounded-full font-bold text-[10px]">Updated</span>` 
@@ -1661,7 +1790,7 @@
 
       const userKey = getSanitizedUsername();
       const foundUser = USERS_DB.find(u => u.username.toLowerCase() === currentUsername.toLowerCase());
-      let validPass = foundUser ? foundUser.password : '';
+      let validPass = foundUser ? foundUser.password : '1234';
 
       try {
         if (db) {
@@ -2009,23 +2138,19 @@
       const pass = document.getElementById('passwordInput').value.trim();
       const errorDiv = document.getElementById('loginError');
 
-      const foundUser = USERS_DB.find(u => 
+      // First check local USERS_DB
+      let foundUser = USERS_DB.find(u => 
         u.username.toLowerCase() === userOrEmailInput || 
         (u.email && u.email.toLowerCase() === userOrEmailInput)
       );
 
-      if (!foundUser) {
-        errorDiv.classList.remove('hidden');
-        return;
-      }
+      let validPass = foundUser ? foundUser.password : null;
+      let dynamicName = foundUser ? foundUser.name : '';
+      let dynamicDesig = foundUser ? foundUser.designation : 'Audit Specialist';
+      let dynamicDept = foundUser ? foundUser.department : 'StrikeForce/Fraud Audit-IAD';
+      let dynamicEmail = foundUser ? foundUser.email : '';
 
-      let validPass = foundUser.password;
-      let dynamicName = foundUser.name;
-      let dynamicDesig = foundUser.designation || 'Audit Specialist';
-      let dynamicDept = foundUser.department || 'StrikeForce/Fraud Audit-IAD';
-      let dynamicEmail = foundUser.email || `${foundUser.username}@sfcaliquidation.biz`;
-
-      const userKey = foundUser.username.replace(/[^a-zA-Z0-9]/g, '_');
+      let userKey = foundUser ? foundUser.username.replace(/[^a-zA-Z0-9]/g, '_') : userOrEmailInput.replace(/[^a-zA-Z0-9]/g, '_');
 
       try {
         if (db) {
@@ -2037,13 +2162,16 @@
             if (val.designation) dynamicDesig = val.designation;
             if (val.department) dynamicDept = val.department;
             if (val.email) dynamicEmail = val.email;
+            if (!foundUser) {
+              foundUser = { username: val.username || userOrEmailInput };
+            }
           }
         }
       } catch(e) {
         console.warn("Password check error:", e);
       }
 
-      if (pass === validPass) {
+      if (foundUser && pass === validPass) {
         await showLoading('Signing in & Syncing Realtime...', 600);
 
         if (activeUserListenerRef) {
