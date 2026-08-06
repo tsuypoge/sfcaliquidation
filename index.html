@@ -1705,6 +1705,7 @@
       accountEmail = customCreds.email || (foundUserObj ? foundUserObj.email : '');
 
       travels = ensureArray(uData.travels);
+      signatureDataUrl = uData.signatureDataUrl || ''; // <-- LOAD USER SIGNATURE FOR ADMIN INSPECT/PRINT!
       activeTravelId = trvId;
 
       openTravel(trvId, false);
