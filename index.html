@@ -907,12 +907,16 @@
     // FIREBASE GLOBAL LISTENER REFERENCE
     let activeUserListenerRef = null;
 
-    // HELPER CONVERTER: ENFORCE ARRAY TYPE (CONVERTS FIREBASE OBJECTS TO ARRAYS SAFELY)
+    // SAFE ARRAY CONVERTER: SAFELY FILTERS OUT NULL & UNDEFINED ITEMS FROM FIREBASE OBJECTS/ARRAYS
     function ensureArray(val) {
       if (!val) return [];
-      if (Array.isArray(val)) return val;
-      if (typeof val === 'object') return Object.values(val);
-      return [];
+      let arr = [];
+      if (Array.isArray(val)) {
+        arr = val;
+      } else if (typeof val === 'object' && val !== null) {
+        arr = Object.values(val);
+      }
+      return arr.filter(item => item !== null && item !== undefined);
     }
 
     // HELPER FUNCTION: RESET ALL CURRENT STATE TO PREVENT DATA LEAKS
@@ -1317,7 +1321,7 @@
         renderTravelListTable();
 
         if (activeTravelId) {
-          const found = travels.find(t => t.id === activeTravelId);
+          const found = travels.find(t => String(t.id) === String(activeTravelId));
           if (found) {
             regionName = found.regionName || '';
             cashAdvance = found.cashAdvance || 0;
@@ -1730,7 +1734,7 @@
         const uData = allUsersGlobalData[uKey];
         if (uData && uData.travels) {
           const uTravels = ensureArray(uData.travels);
-          const idx = uTravels.findIndex(t => t.id === trvId);
+          const idx = uTravels.findIndex(t => String(t.id) === String(trvId));
           if (idx !== -1) {
             uTravels[idx].isArchived = false;
             await db.ref('users/' + uKey + '/travels').set(uTravels);
@@ -1843,13 +1847,16 @@
       }
 
       travels.forEach((trv, idx) => {
+        if (!trv) return;
         const trvExpenses = ensureArray(trv.expenses);
-        const totalSpent = trvExpenses.reduce((acc, curr) => acc + (parseFloat(curr.amount) || 0), 0);
+        const totalSpent = trvExpenses.reduce((acc, curr) => acc + (parseFloat(curr ? curr.amount : 0) || 0), 0);
 
         let dateRange = 'N/A';
         if (trvExpenses.length > 0) {
-          const dates = trvExpenses.map(e => e.date).sort();
-          dateRange = formatDateRangeLong(dates[0], dates[dates.length - 1]);
+          const dates = trvExpenses.map(e => e ? e.date : '').filter(Boolean).sort();
+          if (dates.length > 0) {
+            dateRange = formatDateRangeLong(dates[0], dates[dates.length - 1]);
+          }
         }
 
         const row = document.createElement('tr');
@@ -1876,7 +1883,7 @@
     }
 
     function toggleArchiveFromList(trvId) {
-      const found = travels.find(t => t.id === trvId);
+      const found = travels.find(t => String(t.id) === String(trvId));
       if (!found) return;
 
       if (found.isArchived) {
@@ -1895,12 +1902,12 @@
     }
 
     function deleteTravelFromList(trvId) {
-      const found = travels.find(t => t.id === trvId);
+      const found = travels.find(t => String(t.id) === String(trvId));
       if (!found) return;
 
       if (confirm(`Are you sure you want to PERMANENTLY DELETE "${found.regionName}"? This action cannot be undone.`)) {
-        travels = travels.filter(t => t.id !== trvId);
-        if (activeTravelId === trvId) {
+        travels = travels.filter(t => String(t.id) !== String(trvId));
+        if (String(activeTravelId) === String(trvId)) {
           activeTravelId = null;
           sessionStorage.removeItem('travel_active_id');
         }
@@ -1936,7 +1943,7 @@
         await showLoading('Opening Liquidation...', 400);
       }
 
-      const found = travels.find(t => t.id === trvId);
+      const found = travels.find(t => String(t.id) === String(trvId));
       if (!found) return;
 
       activeTravelId = trvId;
@@ -1979,15 +1986,30 @@
       }
     }
 
+    // SAFE DATA SAVING WITH AUTOMATIC FALLBACK CREATION
     function saveActiveTravelData() {
       if (!activeTravelId) return;
-      const idx = travels.findIndex(t => t.id === activeTravelId);
+      expenses = ensureArray(expenses);
+      dtrFiles = ensureArray(dtrFiles);
+      travels = ensureArray(travels);
+
+      const idx = travels.findIndex(t => String(t.id) === String(activeTravelId));
       if (idx !== -1) {
         travels[idx].regionName = regionName;
         travels[idx].cashAdvance = cashAdvance;
         travels[idx].isArchived = isArchived;
-        travels[idx].expenses = ensureArray(expenses);
-        travels[idx].dtrFiles = ensureArray(dtrFiles);
+        travels[idx].expenses = expenses;
+        travels[idx].dtrFiles = dtrFiles;
+      } else {
+        // Fallback: If travel not found in array, add it automatically
+        travels.unshift({
+          id: activeTravelId,
+          regionName: regionName || 'Travel',
+          cashAdvance: cashAdvance || 0,
+          isArchived: isArchived || false,
+          expenses: expenses,
+          dtrFiles: dtrFiles
+        });
       }
       saveDataToStorage();
     }
@@ -2099,7 +2121,7 @@
     function removeDtrFile(id) {
       if (isArchived) return;
       if (confirm("Remove this DTR file attachment?")) {
-        dtrFiles = dtrFiles.filter(f => f.id !== id);
+        dtrFiles = dtrFiles.filter(f => String(f.id) !== String(id));
         saveActiveTravelData();
         updateTracker();
         renderDtrModalFileList();
@@ -2119,6 +2141,7 @@
       }
 
       dtrFiles.forEach((fileObj) => {
+        if (!fileObj) return;
         const item = document.createElement('div');
         item.className = 'flex items-center justify-between p-2 bg-slate-50 border border-slate-200 rounded-lg text-xs';
         item.innerHTML = `
@@ -2518,7 +2541,7 @@
       const receiptImg = tempExpenseReceiptDataUrl || '';
 
       if (editingId !== null) {
-        const index = expenses.findIndex(item => item.id === editingId);
+        const index = expenses.findIndex(item => String(item.id) === String(editingId));
         if (index !== -1) {
           const oldReceipt = expenses[index].receiptImg || '';
           expenses[index] = { 
@@ -2556,7 +2579,7 @@
     function editExpense(id) {
       if (isArchived) return;
       expenses = ensureArray(expenses);
-      const item = expenses.find(e => e.id === id);
+      const item = expenses.find(e => String(e.id) === String(id));
       if (!item) return;
 
       editingId = id;
@@ -2627,9 +2650,9 @@
 
     function deleteExpense(id) {
       if (isArchived) return;
-      expenses = ensureArray(expenses).filter(item => item.id !== id);
+      expenses = ensureArray(expenses).filter(item => String(item.id) !== String(id));
       saveActiveTravelData();
-      if (editingId === id) cancelEdit();
+      if (String(editingId) === String(id)) cancelEdit();
       updateTracker();
     }
 
@@ -2731,6 +2754,7 @@
       const endDate = modalEndElem ? modalEndElem.value : '';
 
       expenses.forEach(item => {
+        if (!item) return;
         const amt = parseFloat(item.amount) || 0;
         if (item.mainCategory === 'Transportation') totalTranspo += amt;
         else if (item.mainCategory === 'Terminal Fee') totalTerminalFee += amt;
@@ -2741,8 +2765,11 @@
 
       function renderMainTable(tbody, itemsList, isPrint) {
         if (!tbody) return;
+        itemsList = ensureArray(itemsList);
+
         const grouped = {};
         itemsList.forEach(item => {
+          if (!item || !item.date) return;
           if (!grouped[item.date]) grouped[item.date] = [];
           grouped[item.date].push(item);
         });
@@ -2765,6 +2792,7 @@
           let dayMealsPerDiem = 0;
 
           items.forEach((item, index) => {
+            if (!item) return;
             let typeDisplay = '';
             let descDisplay = item.desc || '';
             let isTranspoFee = false;
@@ -2843,6 +2871,7 @@
             <td></td>
             <td></td>
             <td class="text-center font-bold text-rose-600">subtotal</td>
+            <td></td>
             <td class="text-right font-bold text-rose-600">${formatNum(dayTranspoFee)}</td>
             <td class="text-right font-bold text-slate-800">${formatNum(dayMealsPerDiem)}</td>
             <td class="text-right font-bold text-indigo-600">${formatNum(dayTotal)}</td>
@@ -2853,18 +2882,20 @@
       }
 
       const filteredReportExpenses = expenses.filter(item => {
+        if (!item) return false;
         if (startDate && item.date < startDate) return false;
         if (endDate && item.date > endDate) return false;
         return true;
       });
 
       renderMainTable(tbodyUI, expenses, false);
-      renderMainTable(tbodyPrintMainDetailed, filteredReportExpenses.filter(e => e.mainCategory !== 'Miscellaneous'), true);
+      renderMainTable(tbodyPrintMainDetailed, filteredReportExpenses.filter(e => e && e.mainCategory !== 'Miscellaneous'), true);
 
-      const miscItemsDetailed = filteredReportExpenses.filter(e => e.mainCategory === 'Miscellaneous');
+      const miscItemsDetailed = filteredReportExpenses.filter(e => e && e.mainCategory === 'Miscellaneous');
       miscItemsDetailed.sort((a, b) => new Date(a.date) - new Date(b.date));
       
       miscItemsDetailed.forEach(item => {
+        if (!item) return;
         const row = document.createElement('tr');
         row.innerHTML = `
           <td class="text-center font-bold text-gray-800">${formatDateFullYear(item.date)}</td>
@@ -2882,7 +2913,7 @@
           <td></td>
           <td class="text-center font-bold text-gray-800">Total</td>
           <td></td>
-          <td class="text-right font-bold text-gray-900">${formatNum(miscItemsDetailed.reduce((acc, i) => acc + (parseFloat(i.amount) || 0), 0))}</td>
+          <td class="text-right font-bold text-gray-900">${formatNum(miscItemsDetailed.reduce((acc, i) => acc + (parseFloat(i ? i.amount : 0) || 0), 0))}</td>
         `;
         if (tbodyPrintMiscDetailed) tbodyPrintMiscDetailed.appendChild(miscTotalRow);
         if (miscWrapperDetailed) miscWrapperDetailed.classList.remove('hidden');
@@ -2892,6 +2923,7 @@
 
       let rTranspo = 0, rMeals = 0, rPerDiem = 0, rTerminal = 0, rMisc = 0;
       filteredReportExpenses.forEach(i => {
+        if (!i) return;
         const amt = parseFloat(i.amount) || 0;
         if (i.mainCategory === 'Transportation') rTranspo += amt;
         else if (i.mainCategory === 'Terminal Fee') rTerminal += amt;
@@ -2940,8 +2972,10 @@
       if (startDate || endDate) {
         dateRangeText = formatDateRangeLong(startDate, endDate);
       } else if (filteredReportExpenses.length > 0) {
-        const sorted = filteredReportExpenses.map(e => e.date).sort();
-        dateRangeText = formatDateRangeLong(sorted[0], sorted[sorted.length - 1]);
+        const sorted = filteredReportExpenses.map(e => e ? e.date : '').filter(Boolean).sort();
+        if (sorted.length > 0) {
+          dateRangeText = formatDateRangeLong(sorted[0], sorted[sorted.length - 1]);
+        }
       }
 
       setTxt('printRegionName', currentRegionText);
@@ -3002,7 +3036,7 @@
 
       // Filter receipts and sort CHRONOLOGICALLY BY DATE
       const itemsWithReceipts = ensureArray(expensesList)
-        .filter(e => e.receiptImg)
+        .filter(e => e && e.receiptImg)
         .sort((a, b) => new Date(a.date) - new Date(b.date));
 
       if (itemsWithReceipts.length === 0) return;
@@ -3017,6 +3051,7 @@
         grid.className = 'grid grid-cols-2 gap-6 w-full items-start';
 
         chunk.forEach(item => {
+          if (!item) return;
           const card = document.createElement('div');
           card.className = 'flex flex-col justify-between items-center p-3 border border-gray-300 rounded bg-white text-center shadow-xs min-h-[4.2in]';
 
@@ -3056,6 +3091,7 @@
       sortDtrFiles();
 
       for (let fileObj of dtrFiles) {
+        if (!fileObj) continue;
         const base64Data = fileObj.data;
         if (!base64Data) continue;
 
@@ -3146,6 +3182,7 @@
       const endDate = modalEndElem ? modalEndElem.value : '';
 
       const filteredReportExpenses = expenses.filter(item => {
+        if (!item) return false;
         if (startDate && item.date < startDate) return false;
         if (endDate && item.date > endDate) return false;
         return true;
@@ -3201,7 +3238,7 @@
         }
 
         // APPEND ATTACHED EXPENSE RECEIPT(S) ON A STRICTLY SEPARATE NEW PAGE (2x2 GRID)
-        const hasExpenseReceipts = filteredReportExpenses.some(e => e.receiptImg);
+        const hasExpenseReceipts = filteredReportExpenses.some(e => e && e.receiptImg);
         if (hasExpenseReceipts && printReceipts) {
           printReceipts.classList.add('print-active', 'page-break');
 
