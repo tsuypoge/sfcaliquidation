@@ -840,6 +840,14 @@
       pdfjsLib.GlobalWorkerOptions.workerSrc = 'https://cdnjs.cloudflare.com/ajax/libs/pdf.js/2.16.105/pdf.worker.min.js';
     }
 
+    // HELPER CONVERTER: ENFORCE ARRAY TYPE (CONVERTS FIREBASE OBJECTS TO ARRAYS SAFELY)
+    function ensureArray(val) {
+      if (!val) return [];
+      if (Array.isArray(val)) return val;
+      if (typeof val === 'object') return Object.values(val);
+      return [];
+    }
+
     // AUTOMATIC CANVAS IMAGE COMPRESSOR FUNCTION
     function compressImageFile(file, maxWidth = 1000, quality = 0.65) {
       return new Promise((resolve) => {
@@ -922,7 +930,7 @@
     let cashAdvance = 0;
     let regionName = '';
     let signatureDataUrl = '';
-    let dtrFiles = []; // Array of DTR objects: { id, name, data }
+    let dtrFiles = []; 
     let tempExpenseReceiptDataUrl = '';
     let isArchived = false;
     let editingId = null;
@@ -983,7 +991,6 @@
       return firstNameParts.join(' ') || parts[0];
     }
 
-    // HANDLE GOOGLE AUTH POPUP / ONE-TAP CHROME LOGIN
     async function handleGoogleLogin() {
       if (typeof firebase === 'undefined' || !firebase.auth) {
         alert("Firebase Auth is preparing. Please try again in a moment.");
@@ -1177,7 +1184,7 @@
         try {
           const parsed = JSON.parse(localBackup);
           if (Array.isArray(parsed) && parsed.length > 0 && travels.length === 0) {
-            travels = parsed;
+            travels = ensureArray(parsed);
           }
         } catch(e) {}
       }
@@ -1185,8 +1192,8 @@
       try {
         db.ref('users/' + userKey).on('value', (snapshot) => {
           const val = snapshot.val();
-          if (val && val.travels && Array.isArray(val.travels)) {
-            travels = val.travels;
+          if (val && val.travels) {
+            travels = ensureArray(val.travels);
             localStorage.setItem('backup_travels_' + userKey, JSON.stringify(travels));
           }
           signatureDataUrl = (val && val.signatureDataUrl) ? val.signatureDataUrl : '';
@@ -1199,10 +1206,10 @@
               regionName = found.regionName || '';
               cashAdvance = found.cashAdvance || 0;
               isArchived = found.isArchived === true;
-              expenses = found.expenses || [];
+              expenses = ensureArray(found.expenses);
               
-              if (Array.isArray(found.dtrFiles)) {
-                dtrFiles = found.dtrFiles;
+              if (found.dtrFiles) {
+                dtrFiles = ensureArray(found.dtrFiles);
               } else if (found.dtrPdf) {
                 dtrFiles = [{ id: 'legacy_dtr', name: 'Manual DTR.pdf', data: found.dtrPdf }];
               } else {
@@ -1311,11 +1318,12 @@
       Object.keys(allUsersGlobalData).forEach(uKey => {
         const uData = allUsersGlobalData[uKey];
         if (uData && uData.travels) {
-          totalTravelsCount += uData.travels.length;
-          uData.travels.forEach(trv => {
-            totalCAAmount += (trv.cashAdvance || 0);
-            const trvExpenses = trv.expenses || [];
-            totalSpentAmount += trvExpenses.reduce((acc, curr) => acc + (curr.amount || 0), 0);
+          const uTravels = ensureArray(uData.travels);
+          totalTravelsCount += uTravels.length;
+          uTravels.forEach(trv => {
+            totalCAAmount += (parseFloat(trv.cashAdvance) || 0);
+            const trvExpenses = ensureArray(trv.expenses);
+            totalSpentAmount += trvExpenses.reduce((acc, curr) => acc + (parseFloat(curr.amount) || 0), 0);
           });
         }
       });
@@ -1352,10 +1360,11 @@
 
         const uData = allUsersGlobalData[uKey];
 
-        if (uData && uData.travels && uData.travels.length > 0) {
-          uData.travels.forEach(trv => {
-            const trvExpenses = trv.expenses || [];
-            const totalSpent = trvExpenses.reduce((acc, curr) => acc + (curr.amount || 0), 0);
+        if (uData && uData.travels) {
+          const uTravels = ensureArray(uData.travels);
+          uTravels.forEach(trv => {
+            const trvExpenses = ensureArray(trv.expenses);
+            const totalSpent = trvExpenses.reduce((acc, curr) => acc + (parseFloat(curr.amount) || 0), 0);
             
             let dateRange = 'N/A';
             if (trvExpenses.length > 0) {
@@ -1514,7 +1523,7 @@
       accountDepartment = customCreds.department || (foundUserObj ? foundUserObj.department : 'StrikeForce/Fraud Audit-IAD');
       accountEmail = customCreds.email || (foundUserObj ? foundUserObj.email : '');
 
-      travels = uData.travels;
+      travels = ensureArray(uData.travels);
       activeTravelId = trvId;
 
       openTravel(trvId, false);
@@ -1529,10 +1538,11 @@
       if (confirm("Admin Force Unlock: Re-open this archived travel liquidation for editing?")) {
         const uData = allUsersGlobalData[uKey];
         if (uData && uData.travels) {
-          const idx = uData.travels.findIndex(t => t.id === trvId);
+          const uTravels = ensureArray(uData.travels);
+          const idx = uTravels.findIndex(t => t.id === trvId);
           if (idx !== -1) {
-            uData.travels[idx].isArchived = false;
-            await db.ref('users/' + uKey + '/travels').set(uData.travels);
+            uTravels[idx].isArchived = false;
+            await db.ref('users/' + uKey + '/travels').set(uTravels);
             alert("Travel liquidation unlocked successfully!");
           }
         }
@@ -1634,14 +1644,16 @@
       if (!tbody) return;
       tbody.innerHTML = '';
 
+      travels = ensureArray(travels);
+
       if (travels.length === 0) {
         tbody.innerHTML = `<tr><td colspan="6" class="text-center p-6 text-slate-500 font-medium">No liquidation records found. Click "+ New Liquidation" above to create one.</td></tr>`;
         return;
       }
 
       travels.forEach((trv, idx) => {
-        const trvExpenses = trv.expenses || [];
-        const totalSpent = trvExpenses.reduce((acc, curr) => acc + (curr.amount || 0), 0);
+        const trvExpenses = ensureArray(trv.expenses);
+        const totalSpent = trvExpenses.reduce((acc, curr) => acc + (parseFloat(curr.amount) || 0), 0);
 
         let dateRange = 'N/A';
         if (trvExpenses.length > 0) {
@@ -1737,10 +1749,10 @@
       regionName = found.regionName || '';
       cashAdvance = found.cashAdvance || 0;
       isArchived = found.isArchived === true;
-      expenses = found.expenses || [];
+      expenses = ensureArray(found.expenses);
       
-      if (Array.isArray(found.dtrFiles)) {
-        dtrFiles = found.dtrFiles;
+      if (found.dtrFiles) {
+        dtrFiles = ensureArray(found.dtrFiles);
       } else if (found.dtrPdf) {
         dtrFiles = [{ id: 'legacy_dtr', name: 'Manual DTR.pdf', data: found.dtrPdf }];
       } else {
@@ -1776,8 +1788,8 @@
         travels[idx].regionName = regionName;
         travels[idx].cashAdvance = cashAdvance;
         travels[idx].isArchived = isArchived;
-        travels[idx].expenses = expenses;
-        travels[idx].dtrFiles = dtrFiles;
+        travels[idx].expenses = ensureArray(expenses);
+        travels[idx].dtrFiles = ensureArray(dtrFiles);
       }
       saveDataToStorage();
     }
@@ -1840,6 +1852,7 @@
 
     // MULTIPLE DTR LOGIC & ALPHABETICAL SORTING WITH COMPRESSION
     function sortDtrFiles() {
+      dtrFiles = ensureArray(dtrFiles);
       dtrFiles.sort((a, b) => a.name.localeCompare(b.name, undefined, { numeric: true, sensitivity: 'base' }));
     }
 
@@ -1899,6 +1912,8 @@
       const container = document.getElementById('dtrModalFileList');
       if (!container) return;
       container.innerHTML = '';
+
+      dtrFiles = ensureArray(dtrFiles);
 
       if (dtrFiles.length === 0) {
         container.innerHTML = `<p class="text-slate-400 italic text-[11px] py-2 text-center">No DTR files uploaded yet.</p>`;
@@ -2268,6 +2283,8 @@
       e.preventDefault();
       if (isArchived) return;
 
+      expenses = ensureArray(expenses);
+
       const date = document.getElementById('dateInput').value;
       const category = document.getElementById('category').value;
       const subOptionSelect = document.getElementById('subOptionSelect');
@@ -2286,7 +2303,7 @@
 
       const rawTicket = document.getElementById('ticketNo').value.trim();
       let desc = document.getElementById('desc').value.trim();
-      const amount = parseFloat(document.getElementById('amount').value);
+      const amount = parseFloat(document.getElementById('amount').value) || 0;
       const receiptImg = tempExpenseReceiptDataUrl || '';
 
       if (editingId !== null) {
@@ -2327,6 +2344,7 @@
 
     function editExpense(id) {
       if (isArchived) return;
+      expenses = ensureArray(expenses);
       const item = expenses.find(e => e.id === id);
       if (!item) return;
 
@@ -2398,7 +2416,7 @@
 
     function deleteExpense(id) {
       if (isArchived) return;
-      expenses = expenses.filter(item => item.id !== id);
+      expenses = ensureArray(expenses).filter(item => item.id !== id);
       saveActiveTravelData();
       if (editingId === id) cancelEdit();
       updateTracker();
@@ -2406,11 +2424,12 @@
 
     function formatNum(val) {
       if (val === 0 || !val) return '0.00';
-      return val.toLocaleString('en-US', {minimumFractionDigits: 2, maximumFractionDigits: 2});
+      return parseFloat(val).toLocaleString('en-US', {minimumFractionDigits: 2, maximumFractionDigits: 2});
     }
 
     function formatCurrency(val) {
-      return '₱' + val.toLocaleString('en-US', {minimumFractionDigits: 2, maximumFractionDigits: 2});
+      const num = parseFloat(val) || 0;
+      return '₱' + num.toLocaleString('en-US', {minimumFractionDigits: 2, maximumFractionDigits: 2});
     }
 
     function applyModalDateFilter() {
@@ -2426,12 +2445,351 @@
       applyModalDateFilter();
     }
 
+    function updateTracker() {
+      const archiveBtn = document.getElementById('archiveBtn');
+      const statusBadge = document.getElementById('archiveStatusBadge');
+      const formElem = document.getElementById('expenseForm');
+      const caInput = document.getElementById('cashAdvanceInput');
+      const regInput = document.getElementById('regionNameInput');
+      const headerReg = document.getElementById('headerRegionDisplay');
+
+      if (headerReg) headerReg.textContent = regionName || 'Travel';
+
+      expenses = ensureArray(expenses);
+      dtrFiles = ensureArray(dtrFiles);
+
+      if (isArchived) {
+        if (archiveBtn) archiveBtn.textContent = 'Unarchive';
+        if (statusBadge) statusBadge.classList.remove('hidden');
+        if (formElem) {
+          formElem.querySelectorAll('input, select, button').forEach(el => el.disabled = true);
+          formElem.classList.add('opacity-60', 'pointer-events-none');
+        }
+        if (caInput) caInput.disabled = true;
+        if (regInput) regInput.disabled = true;
+      } else {
+        if (archiveBtn) archiveBtn.textContent = 'Archive';
+        if (statusBadge) statusBadge.classList.add('hidden');
+        if (formElem) {
+          formElem.querySelectorAll('input, select, button').forEach(el => el.disabled = false);
+          formElem.classList.remove('opacity-60', 'pointer-events-none');
+        }
+        if (caInput) caInput.disabled = false;
+        if (regInput) regInput.disabled = false;
+        handleCategoryChange();
+      }
+
+      const sigImgDetailed = document.getElementById('detailedSignatureImg');
+      const sigImgSummary = document.getElementById('summarySignatureImg');
+      const sigUploadContainer = document.getElementById('signatureUploadContainer');
+
+      if (signatureDataUrl) {
+        if (sigImgDetailed) { sigImgDetailed.src = signatureDataUrl; sigImgDetailed.classList.remove('hidden'); }
+        if (sigImgSummary) { sigImgSummary.src = signatureDataUrl; sigImgSummary.classList.remove('hidden'); }
+        if (sigUploadContainer) sigUploadContainer.classList.add('hidden');
+      } else {
+        if (sigImgDetailed) { sigImgDetailed.src = ''; sigImgDetailed.classList.add('hidden'); }
+        if (sigImgSummary) { sigImgSummary.src = ''; sigImgSummary.classList.add('hidden'); }
+        if (sigUploadContainer) sigUploadContainer.classList.remove('hidden');
+      }
+
+      // UPDATE MANUAL DTR ATTACHMENT BUTTON LABEL/BADGE
+      const dtrBtnLabel = document.getElementById('dtrBtnLabel');
+      const dtrBtnText = document.getElementById('dtrBtnText');
+      if (dtrFiles.length > 0) {
+        if (dtrBtnLabel) dtrBtnLabel.className = "bg-emerald-50 text-emerald-700 border border-emerald-300 text-[11px] font-semibold px-2.5 py-1.5 rounded-lg hover:bg-emerald-100 cursor-pointer flex-1 sm:flex-none text-center transition flex items-center justify-center gap-1";
+        if (dtrBtnText) dtrBtnText.textContent = `📅 Manual DTR (${dtrFiles.length}) ✓`;
+      } else {
+        if (dtrBtnLabel) dtrBtnLabel.className = "bg-white text-slate-700 border border-slate-300 text-[11px] font-semibold px-2.5 py-1.5 rounded-lg hover:bg-slate-50 cursor-pointer flex-1 sm:flex-none text-center transition flex items-center justify-center gap-1";
+        if (dtrBtnText) dtrBtnText.textContent = "📅 Manual DTR";
+      }
+
+      const tbodyUI = document.getElementById('uiTableBody');
+      const tbodyPrintMainDetailed = document.getElementById('printMainTableBodyDetailed');
+      const tbodyPrintMiscDetailed = document.getElementById('printMiscTableBodyDetailed');
+      
+      if (tbodyUI) tbodyUI.innerHTML = '';
+      if (tbodyPrintMainDetailed) tbodyPrintMainDetailed.innerHTML = '';
+      if (tbodyPrintMiscDetailed) tbodyPrintMiscDetailed.innerHTML = '';
+
+      let totalTranspo = 0, totalMeals = 0, totalPerDiem = 0, totalTerminalFee = 0, totalMisc = 0;
+
+      const modalStartElem = document.getElementById('modalFilterStartDate');
+      const modalEndElem = document.getElementById('modalFilterEndDate');
+      const startDate = modalStartElem ? modalStartElem.value : '';
+      const endDate = modalEndElem ? modalEndElem.value : '';
+
+      expenses.forEach(item => {
+        const amt = parseFloat(item.amount) || 0;
+        if (item.mainCategory === 'Transportation') totalTranspo += amt;
+        else if (item.mainCategory === 'Terminal Fee') totalTerminalFee += amt;
+        else if (item.mainCategory === 'Miscellaneous' || item.mainCategory === 'Others') totalMisc += amt;
+        else if (item.mainCategory === 'Meals') totalMeals += amt;
+        else if (item.mainCategory === 'Per Diem') totalPerDiem += amt;
+      });
+
+      function renderMainTable(tbody, itemsList, isPrint) {
+        if (!tbody) return;
+        const grouped = {};
+        itemsList.forEach(item => {
+          if (!grouped[item.date]) grouped[item.date] = [];
+          grouped[item.date].push(item);
+        });
+
+        const sortedDates = Object.keys(grouped).sort((a, b) => new Date(a) - new Date(b));
+
+        sortedDates.forEach(date => {
+          const items = grouped[date];
+
+          items.sort((a, b) => {
+            const getRank = (cat) => {
+              if (cat === 'Meals') return 2;
+              if (cat === 'Per Diem') return 3;
+              return 1;
+            };
+            return getRank(a.mainCategory) - getRank(b.mainCategory);
+          });
+
+          let dayTranspoFee = 0;
+          let dayMealsPerDiem = 0;
+
+          items.forEach((item, index) => {
+            let typeDisplay = '';
+            let descDisplay = item.desc || '';
+            let isTranspoFee = false;
+            let isMealsPerDiem = false;
+
+            if (item.mainCategory === 'Transportation') {
+              isTranspoFee = true;
+              typeDisplay = item.subType === 'Others' ? (item.customSubtype || 'Others') : item.subType;
+            } else if (item.mainCategory === 'Terminal Fee') {
+              isTranspoFee = true;
+              typeDisplay = 'Terminal Fee';
+              if (!descDisplay) descDisplay = 'Terminal Fee';
+            } else if (item.mainCategory === 'Miscellaneous') {
+              isTranspoFee = true;
+              typeDisplay = 'Misc';
+            } else if (item.mainCategory === 'Others') {
+              isTranspoFee = true;
+              typeDisplay = item.customSubtype || 'Others';
+            } else if (item.mainCategory === 'Meals') {
+              isMealsPerDiem = true;
+              typeDisplay = 'Meals';
+              if (!descDisplay) descDisplay = 'Meals Allowance';
+            } else if (item.mainCategory === 'Per Diem') {
+              isMealsPerDiem = true;
+              typeDisplay = 'Per Diem';
+              if (!descDisplay) descDisplay = 'Per Diem Allowance';
+            }
+
+            const itemAmt = parseFloat(item.amount) || 0;
+            const transpoAmt = isTranspoFee ? itemAmt : 0;
+            const mealsAmt = isMealsPerDiem ? itemAmt : 0;
+            dayTranspoFee += transpoAmt;
+            dayMealsPerDiem += mealsAmt;
+
+            const row = document.createElement('tr');
+            row.className = isPrint ? '' : 'hover:bg-slate-50/80';
+
+            let dateTd = index === 0 
+              ? `<td class="font-bold text-center" rowspan="${items.length + 1}">${formatDateShort(date)}</td>`
+              : '';
+
+            let receiptTd = isPrint ? '' : `
+              <td class="text-center whitespace-nowrap no-print">
+                ${item.receiptImg ? `<span class="bg-emerald-50 text-emerald-700 border border-emerald-200 px-1.5 py-0.5 rounded font-bold text-[10px]" title="Receipt attached">Attached ✓</span>` : `<span class="text-slate-400 text-[10px]">None</span>`}
+              </td>`;
+
+            let actionCol = isPrint ? '' : `
+              <td class="text-center whitespace-nowrap no-print">
+                ${isArchived 
+                  ? `<span class="text-slate-400 text-xs italic font-medium">Locked</span>` 
+                  : `<button onclick="editExpense(${item.id})" class="text-indigo-600 hover:text-indigo-900 font-semibold mr-2.5">Edit</button>
+                     <button onclick="deleteExpense(${item.id})" class="text-rose-600 hover:text-rose-800 font-semibold">✕</button>`
+                }
+              </td>`;
+
+            row.innerHTML = `
+              ${dateTd}
+              <td class="text-slate-800 w-auto whitespace-nowrap">${descDisplay}</td>
+              <td class="text-center text-slate-700">${typeDisplay}</td>
+              <td class="text-center text-slate-600">${item.ticketNo || ''}</td>
+              <td class="text-right text-slate-800">${formatNum(transpoAmt)}</td>
+              <td class="text-right text-slate-800">${formatNum(mealsAmt)}</td>
+              <td class="text-right font-bold text-slate-800"></td>
+              ${receiptTd}
+              ${actionCol}
+            `;
+            tbody.appendChild(row);
+          });
+
+          const subtotalRow = document.createElement('tr');
+          const dayTotal = dayTranspoFee + dayMealsPerDiem;
+          
+          let actionColEmpty = isPrint ? '' : `<td class="text-center no-print"></td><td class="text-center no-print"></td>`;
+
+          subtotalRow.innerHTML = `
+            <td></td>
+            <td></td>
+            <td class="text-center font-bold text-rose-600">subtotal</td>
+            <td class="text-right font-bold text-rose-600">${formatNum(dayTranspoFee)}</td>
+            <td class="text-right font-bold text-slate-800">${formatNum(dayMealsPerDiem)}</td>
+            <td class="text-right font-bold text-indigo-600">${formatNum(dayTotal)}</td>
+            ${actionColEmpty}
+          `;
+          tbody.appendChild(subtotalRow);
+        });
+      }
+
+      const filteredReportExpenses = expenses.filter(item => {
+        if (startDate && item.date < startDate) return false;
+        if (endDate && item.date > endDate) return false;
+        return true;
+      });
+
+      renderMainTable(tbodyUI, expenses, false);
+      renderMainTable(tbodyPrintMainDetailed, filteredReportExpenses.filter(e => e.mainCategory !== 'Miscellaneous'), true);
+
+      const miscItemsDetailed = filteredReportExpenses.filter(e => e.mainCategory === 'Miscellaneous');
+      miscItemsDetailed.sort((a, b) => new Date(a.date) - new Date(b.date));
+      
+      miscItemsDetailed.forEach(item => {
+        const row = document.createElement('tr');
+        row.innerHTML = `
+          <td class="text-center font-bold text-gray-800">${formatDateFullYear(item.date)}</td>
+          <td class="text-center text-gray-800 w-auto whitespace-nowrap">${item.desc || ''}</td>
+          <td class="text-center text-gray-700">${item.ticketNo || ''}</td>
+          <td class="text-right text-gray-800 font-medium">${formatNum(item.amount)}</td>
+        `;
+        if (tbodyPrintMiscDetailed) tbodyPrintMiscDetailed.appendChild(row);
+      });
+
+      const miscWrapperDetailed = document.getElementById('miscTableWrapperDetailed');
+      if (miscItemsDetailed.length > 0) {
+        const miscTotalRow = document.createElement('tr');
+        miscTotalRow.innerHTML = `
+          <td></td>
+          <td class="text-center font-bold text-gray-800">Total</td>
+          <td></td>
+          <td class="text-right font-bold text-gray-900">${formatNum(miscItemsDetailed.reduce((acc, i) => acc + (parseFloat(i.amount) || 0), 0))}</td>
+        `;
+        if (tbodyPrintMiscDetailed) tbodyPrintMiscDetailed.appendChild(miscTotalRow);
+        if (miscWrapperDetailed) miscWrapperDetailed.classList.remove('hidden');
+      } else {
+        if (miscWrapperDetailed) miscWrapperDetailed.classList.add('hidden');
+      }
+
+      let rTranspo = 0, rMeals = 0, rPerDiem = 0, rTerminal = 0, rMisc = 0;
+      filteredReportExpenses.forEach(i => {
+        const amt = parseFloat(i.amount) || 0;
+        if (i.mainCategory === 'Transportation') rTranspo += amt;
+        else if (i.mainCategory === 'Terminal Fee') rTerminal += amt;
+        else if (i.mainCategory === 'Meals') rMeals += amt;
+        else if (i.mainCategory === 'Per Diem') rPerDiem += amt;
+        else if (i.mainCategory === 'Miscellaneous' || i.mainCategory === 'Others') rMisc += amt;
+      });
+
+      const reportTotalSpent = rTranspo + rMeals + rPerDiem + rTerminal + rMisc;
+      
+      const hasDateRange = (startDate !== '' || endDate !== '');
+      const reportCA = hasDateRange ? (cashAdvance / 2) : cashAdvance;
+      const reportReturnRefund = reportCA - reportTotalSpent;
+
+      const currentDept = accountDepartment || 'StrikeForce/Fraud Audit-IAD';
+
+      const printDeptElem = document.getElementById('printDepartmentName');
+      const detailedDeptElem = document.getElementById('detailedDepartmentName');
+      if (printDeptElem) printDeptElem.textContent = currentDept;
+      if (detailedDeptElem) detailedDeptElem.textContent = currentDept;
+
+      const detailedCALabel = document.getElementById('detailedCALabel');
+      if (detailedCALabel) detailedCALabel.textContent = 'TOTAL Cash Advance';
+      
+      const setTxt = (id, txt) => {
+        const el = document.getElementById(id);
+        if (el) el.textContent = txt;
+      };
+
+      setTxt('detailedTotalTranspo', formatNum(rTranspo));
+      setTxt('detailedTotalMeals', formatNum(rMeals));
+      setTxt('detailedTotalPerDiem', formatNum(rPerDiem));
+      setTxt('detailedTotalTerminalFee', formatNum(rTerminal));
+      setTxt('detailedTotalMisc', formatNum(rMisc));
+
+      setTxt('detailedTotalExpenses', formatNum(reportTotalSpent));
+      setTxt('detailedTotalCA', formatNum(reportCA));
+      setTxt('detailedReturnRefund', formatNum(reportReturnRefund));
+      
+      setTxt('detailedAccountName1', accountName || 'Name of Account');
+      setTxt('detailedAccountDesignation1', accountDesignation || 'Audit Specialist');
+      setTxt('detailedAccountDepartment1', accountDepartment || '');
+
+      const currentRegionText = regionName || 'N/A';
+      let dateRangeText = 'N/A';
+      if (startDate || endDate) {
+        dateRangeText = formatDateRangeLong(startDate, endDate);
+      } else if (filteredReportExpenses.length > 0) {
+        const sorted = filteredReportExpenses.map(e => e.date).sort();
+        dateRangeText = formatDateRangeLong(sorted[0], sorted[sorted.length - 1]);
+      }
+
+      setTxt('printRegionName', currentRegionText);
+      setTxt('printDateRange', dateRangeText);
+      setTxt('detailedRegionName', currentRegionText);
+      setTxt('detailedDateRange', dateRangeText);
+      setTxt('summaryCALabel2', 'TOTAL Cash Advance');
+
+      setTxt('printAccountNameMainSummary', accountName || 'Name of Account');
+      setTxt('printTotalTranspoSummary', formatNum(rTranspo));
+      setTxt('printTotalMealsSummary', formatNum(rMeals));
+      setTxt('printTotalPerDiemSummary', formatNum(rPerDiem));
+      setTxt('printTotalTerminalFeeSummary', formatNum(rTerminal));
+      setTxt('printTotalMiscSummary', formatNum(rMisc));
+
+      setTxt('printTotalExpensesSummary1', formatNum(reportTotalSpent));
+
+      setTxt('printSummaryTotalExpenses', formatNum(reportTotalSpent));
+      setTxt('printSummaryTotalCA', formatNum(reportCA));
+      setTxt('printSummaryReturnRefund', formatNum(reportReturnRefund));
+      
+      setTxt('printAccountNameSubSummary', accountName || 'Name of Account');
+      setTxt('printAccountDesignationSubSummary', accountDesignation || 'Audit Specialist');
+      setTxt('printAccountDepartmentSubSummary', accountDepartment || '');
+
+      const totalSpent = totalTranspo + totalMeals + totalPerDiem + totalTerminalFee + totalMisc;
+      const returnRefund = cashAdvance - totalSpent;
+
+      setTxt('totalTranspoDisplay', formatCurrency(totalSpent ? totalTranspo : 0));
+      setTxt('totalMealsDisplay', formatCurrency(totalMeals));
+      setTxt('totalPerDiemDisplay', formatCurrency(totalPerDiem));
+      setTxt('totalTerminalFeeDisplay', formatCurrency(totalTerminalFee));
+      setTxt('totalMiscDisplay', formatCurrency(totalMisc));
+      setTxt('totalSpentDisplay', formatCurrency(totalSpent));
+      
+      const remElem = document.getElementById('remainingDisplay');
+      if (remElem) {
+        remElem.textContent = formatCurrency(returnRefund);
+        remElem.className = returnRefund < 0 ? 'text-xs sm:text-sm font-bold text-rose-600 mt-0.5' : 'text-xs sm:text-sm font-bold text-indigo-900 mt-0.5';
+      }
+    }
+
+    async function openPreviewModal(type) {
+      currentPreviewType = type;
+      try {
+        updateTracker();
+        await renderModalContent(type);
+      } catch (err) {
+        console.error("Preview modal render error:", err);
+      }
+      document.getElementById('previewModal').classList.remove('hidden');
+    }
+
     // HELPER FUNCTION TO RENDER ATTACHED EXPENSE RECEIPTS IN A 2x2 GRID (4 PER PAGE)
     function renderExpenseReceiptsGrid(expensesList, targetContainer) {
       if (!targetContainer) return;
       targetContainer.innerHTML = '';
 
-      const itemsWithReceipts = expensesList.filter(e => e.receiptImg);
+      const itemsWithReceipts = ensureArray(expensesList).filter(e => e.receiptImg);
       if (itemsWithReceipts.length === 0) return;
 
       for (let i = 0; i < itemsWithReceipts.length; i += 4) {
@@ -2476,7 +2834,9 @@
     async function renderDtrAttachmentPages(targetContainer) {
       if (!targetContainer) return;
       targetContainer.innerHTML = '';
-      if (!dtrFiles || dtrFiles.length === 0) return;
+      
+      dtrFiles = ensureArray(dtrFiles);
+      if (dtrFiles.length === 0) return;
 
       sortDtrFiles();
 
@@ -2548,13 +2908,21 @@
       const modalContent = document.getElementById('modalContent');
       const titleElem = document.getElementById('modalTitle');
       
-      document.getElementById('printAreaDetailed').classList.remove('print-active', 'page-break');
-      document.getElementById('printAreaSummary').classList.remove('print-active', 'page-break');
-      document.getElementById('printAreaReceipts').classList.remove('print-active', 'page-break');
-      document.getElementById('printAreaDtr').classList.remove('print-active', 'page-break');
+      const printDetailed = document.getElementById('printAreaDetailed');
+      const printSummary = document.getElementById('printAreaSummary');
+      const printReceipts = document.getElementById('printAreaReceipts');
+      const printDtr = document.getElementById('printAreaDtr');
 
-      modalContent.innerHTML = '';
-      titleElem.textContent = ''; 
+      if (printDetailed) printDetailed.classList.remove('print-active', 'page-break');
+      if (printSummary) printSummary.classList.remove('print-active', 'page-break');
+      if (printReceipts) printReceipts.classList.remove('print-active', 'page-break');
+      if (printDtr) printDtr.classList.remove('print-active', 'page-break');
+
+      if (modalContent) modalContent.innerHTML = '';
+      if (titleElem) titleElem.textContent = ''; 
+
+      expenses = ensureArray(expenses);
+      dtrFiles = ensureArray(dtrFiles);
 
       // Render Expense Receipts Grid
       renderExpenseReceiptsGrid(expenses, document.getElementById('printAreaReceiptsContent'));
@@ -2563,68 +2931,77 @@
       if (dtrFiles.length > 0) {
         await renderDtrAttachmentPages(document.getElementById('printAreaDtrContent'));
       } else {
-        document.getElementById('printAreaDtrContent').innerHTML = '';
+        const dtrCont = document.getElementById('printAreaDtrContent');
+        if (dtrCont) dtrCont.innerHTML = '';
       }
 
       if (type === 'summary') {
-        document.getElementById('printAreaSummary').classList.add('print-active');
-        const clone = document.getElementById('printAreaSummary').cloneNode(true);
-        clone.classList.remove('hidden');
-        modalContent.appendChild(clone);
+        if (printSummary) {
+          printSummary.classList.add('print-active');
+          const clone = printSummary.cloneNode(true);
+          clone.classList.remove('hidden');
+          if (modalContent) modalContent.appendChild(clone);
+        }
 
       } else if (type === 'detailed') {
-        document.getElementById('printAreaDetailed').classList.add('print-active');
-        const clone = document.getElementById('printAreaDetailed').cloneNode(true);
-        clone.classList.remove('hidden');
-        modalContent.appendChild(clone);
+        if (printDetailed) {
+          printDetailed.classList.add('print-active');
+          const clone = printDetailed.cloneNode(true);
+          clone.classList.remove('hidden');
+          if (modalContent) modalContent.appendChild(clone);
+        }
 
       } else if (type === 'combined') {
-        document.getElementById('printAreaSummary').classList.add('print-active');
-        document.getElementById('printAreaDetailed').classList.add('print-active', 'page-break');
+        if (printSummary) printSummary.classList.add('print-active');
+        if (printDetailed) printDetailed.classList.add('print-active', 'page-break');
 
-        const summaryClone = document.getElementById('printAreaSummary').cloneNode(true);
-        summaryClone.classList.remove('hidden');
-        modalContent.appendChild(summaryClone);
+        if (printSummary && modalContent) {
+          const summaryClone = printSummary.cloneNode(true);
+          summaryClone.classList.remove('hidden');
+          modalContent.appendChild(summaryClone);
+        }
 
         const separator1 = document.createElement('div');
         separator1.className = 'my-6 border-t-2 border-dashed border-slate-300 text-center py-2 text-slate-400 text-xs font-bold uppercase tracking-wider no-print';
         separator1.textContent = '--- Page Break (Detailed Liquidation Report Below) ---';
-        modalContent.appendChild(separator1);
+        if (modalContent) modalContent.appendChild(separator1);
 
-        const detailedClone = document.getElementById('printAreaDetailed').cloneNode(true);
-        detailedClone.classList.remove('hidden');
-        detailedClone.classList.add('page-break');
-        modalContent.appendChild(detailedClone);
+        if (printDetailed && modalContent) {
+          const detailedClone = printDetailed.cloneNode(true);
+          detailedClone.classList.remove('hidden');
+          detailedClone.classList.add('page-break');
+          modalContent.appendChild(detailedClone);
+        }
 
         // APPEND ATTACHED EXPENSE RECEIPT(S) ON A STRICTLY SEPARATE NEW PAGE (2x2 GRID)
         const hasExpenseReceipts = expenses.some(e => e.receiptImg);
-        if (hasExpenseReceipts) {
-          document.getElementById('printAreaReceipts').classList.add('print-active', 'page-break');
+        if (hasExpenseReceipts && printReceipts) {
+          printReceipts.classList.add('print-active', 'page-break');
 
           const separator2 = document.createElement('div');
           separator2.className = 'my-6 border-t-2 border-dashed border-slate-300 text-center py-2 text-slate-400 text-xs font-bold uppercase tracking-wider no-print';
           separator2.textContent = '--- Page Break (Attached Receipt(s) Below) ---';
-          modalContent.appendChild(separator2);
+          if (modalContent) modalContent.appendChild(separator2);
 
-          const receiptsClone = document.getElementById('printAreaReceipts').cloneNode(true);
+          const receiptsClone = printReceipts.cloneNode(true);
           receiptsClone.classList.remove('hidden');
           receiptsClone.classList.add('page-break');
-          modalContent.appendChild(receiptsClone);
+          if (modalContent) modalContent.appendChild(receiptsClone);
         }
 
         // APPEND ATTACHED MANUAL DTR ON ANOTHER STRICTLY SEPARATE NEW PAGE
-        if (dtrFiles.length > 0) {
-          document.getElementById('printAreaDtr').classList.add('print-active', 'page-break');
+        if (dtrFiles.length > 0 && printDtr) {
+          printDtr.classList.add('print-active', 'page-break');
 
           const separator3 = document.createElement('div');
           separator3.className = 'my-6 border-t-2 border-dashed border-slate-300 text-center py-2 text-slate-400 text-xs font-bold uppercase tracking-wider no-print';
           separator3.textContent = '--- Page Break (Attached Manual DTR(s) Below) ---';
-          modalContent.appendChild(separator3);
+          if (modalContent) modalContent.appendChild(separator3);
 
-          const dtrClone = document.getElementById('printAreaDtr').cloneNode(true);
+          const dtrClone = printDtr.cloneNode(true);
           dtrClone.classList.remove('hidden');
           dtrClone.classList.add('page-break');
-          modalContent.appendChild(dtrClone);
+          if (modalContent) modalContent.appendChild(dtrClone);
         }
       }
     }
